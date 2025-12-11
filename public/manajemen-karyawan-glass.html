@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manajemen Karyawan - Sistem Absensi</title>
+    <link rel="stylesheet" href="glass-style.css">
+    <style>
+        body { background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%); min-height: 100vh; }
+        .main-content-with-sidebar .container { max-width: 1400px; margin: 0 auto; padding: var(--space-6); }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-6); flex-wrap: wrap; gap: var(--space-4); }
+        .page-title { font-size: var(--text-2xl); font-weight: var(--weight-bold); background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .header-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; }
+
+        .btn-action { padding: var(--space-2) var(--space-4); border: none; border-radius: var(--radius-md); cursor: pointer; font-size: var(--text-sm); font-weight: var(--weight-medium); transition: all var(--transition-base); display: flex; align-items: center; gap: var(--space-2); }
+        .btn-primary { background: var(--gradient-primary); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); }
+        .btn-secondary { background: rgba(255,255,255,0.1); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.2); }
+        .btn-secondary:hover { background: rgba(255,255,255,0.15); }
+        .btn-success { background: rgba(34, 197, 94, 0.2); color: #86efac; }
+        .btn-danger { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+        .btn-danger:hover { background: rgba(239, 68, 68, 0.4); }
+
+        .filter-bar { display: flex; gap: var(--space-3); margin-bottom: var(--space-4); flex-wrap: wrap; align-items: center; }
+        .search-input { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-md); padding: var(--space-2) var(--space-3); color: var(--text-primary); font-size: var(--text-sm); min-width: 250px; }
+        .search-input:focus { outline: none; border-color: var(--primary-start); }
+        .filter-select { background: #1a1a2e; border: 1px solid rgba(255,255,255,0.2); border-radius: var(--radius-md); padding: var(--space-2) var(--space-3); color: white; font-size: var(--text-sm); cursor: pointer; }
+        .filter-select option { background: #1a1a2e; color: white; padding: 10px; }
+
+        .data-card { background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: var(--radius-xl); padding: var(--space-6); box-shadow: var(--shadow-glass-lg); }
+        .table-container { overflow-x: auto; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+        .data-table th { text-align: left; padding: var(--space-3); background: rgba(255,255,255,0.05); color: var(--text-secondary); font-weight: var(--weight-semibold); border-bottom: 1px solid rgba(255,255,255,0.1); white-space: nowrap; }
+        .data-table td { padding: var(--space-3); border-bottom: 1px solid rgba(255,255,255,0.05); color: var(--text-primary); vertical-align: middle; }
+        .data-table tr:hover td { background: rgba(255,255,255,0.03); }
+
+        .employee-info { display: flex; align-items: center; gap: var(--space-3); }
+        .employee-photo { width: 40px; height: 40px; border-radius: var(--radius-full); object-fit: cover; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        .employee-name { font-weight: var(--weight-medium); }
+        .employee-nip { font-size: var(--text-xs); color: var(--text-tertiary); font-family: monospace; }
+
+        .badge { display: inline-block; padding: 2px 8px; border-radius: var(--radius-sm); font-size: var(--text-xs); font-weight: var(--weight-medium); }
+        .badge-aktif { background: rgba(34, 197, 94, 0.2); color: #86efac; }
+        .badge-nonaktif { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+        .badge-position { background: rgba(102, 126, 234, 0.2); color: #a5b4fc; }
+
+        .action-btns { display: flex; gap: var(--space-2); }
+        .btn-sm { padding: 4px 8px; border: none; border-radius: var(--radius-sm); cursor: pointer; font-size: 11px; transition: all var(--transition-base); }
+        .btn-edit { background: rgba(59, 130, 246, 0.2); color: #93c5fd; }
+        .btn-edit:hover { background: rgba(59, 130, 246, 0.4); }
+
+        /* Modal Styles */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 1000; padding: var(--space-4); }
+        .modal-overlay.active { display: flex; }
+        .modal { background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: var(--radius-xl); padding: var(--space-6); max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4); }
+        .modal-title { font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--text-primary); }
+        .modal-close { background: none; border: none; color: var(--text-tertiary); font-size: 24px; cursor: pointer; }
+        .form-group { margin-bottom: var(--space-4); }
+        .form-label { display: block; font-size: var(--text-sm); color: var(--text-secondary); margin-bottom: var(--space-2); }
+        .form-input { width: 100%; padding: var(--space-3); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-md); color: var(--text-primary); font-size: var(--text-sm); box-sizing: border-box; }
+        .form-input:focus { outline: none; border-color: var(--primary-start); }
+        select.form-input { background: #1a1a2e; cursor: pointer; }
+        select.form-input option { background: #1a1a2e; color: white; padding: 10px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+        .modal-footer { display: flex; justify-content: flex-end; gap: var(--space-3); margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid rgba(255,255,255,0.1); }
+
+        .notification { position: fixed; top: var(--space-6); right: var(--space-6); background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); padding: var(--space-4); min-width: 300px; z-index: 1100; animation: slideIn 0.3s ease-out; }
+        .notification.success { border-left: 4px solid var(--success); }
+        .notification.error { border-left: 4px solid var(--error); }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(100px); } to { opacity: 1; transform: translateX(0); } }
+
+        .empty-state { text-align: center; padding: var(--space-8); color: var(--text-tertiary); }
+        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-6); }
+        .stat-card { background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); padding: var(--space-4); text-align: center; }
+        .stat-value { font-size: var(--text-2xl); font-weight: var(--weight-bold); background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; transition: transform 0.3s ease; }
+        .stat-value.updated { animation: statPulse 0.5s ease; }
+        @keyframes statPulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+        .stat-label { font-size: var(--text-sm); color: var(--text-secondary); margin-top: var(--space-1); }
+        .btn-toggle { background: rgba(251, 191, 36, 0.2); color: #fde047; }
+        .btn-toggle:hover { background: rgba(251, 191, 36, 0.4); }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7V17L12 22L22 17V7L12 2Z" fill="url(#gradient1)"/><defs><linearGradient id="gradient1" x1="2" y1="2" x2="22" y2="22"><stop offset="0%" style="stop-color:#667eea"/><stop offset="100%" style="stop-color:#764ba2"/></linearGradient></defs></svg>
+            <span>Sistem Absensi</span>
+        </div>
+        <div class="navbar-menu">
+            <div id="notification-bell" style="position: relative; margin: 0 8px;"></div>
+            <a href="#" class="navbar-link" onclick="logout()">Logout</a>
+        </div>
+    </nav>
+
+    <aside class="sidebar">
+        <div class="sidebar-item" onclick="location.href='dashboard-glass.html'"><span class="sidebar-icon">📊</span><span>Dashboard</span></div>
+        <div class="sidebar-item" onclick="location.href='riwayat-glass.html'"><span class="sidebar-icon">📜</span><span>Riwayat</span></div>
+        <div class="sidebar-item active"><span class="sidebar-icon">👥</span><span>Karyawan</span></div>
+        <div class="sidebar-item" onclick="location.href='cuti-glass.html'"><span class="sidebar-icon">📋</span><span>Cuti/Izin</span></div>
+        <div class="sidebar-item" onclick="location.href='jadwal-shift-glass.html'"><span class="sidebar-icon">📅</span><span>Jadwal</span></div>
+        <div class="sidebar-item" onclick="location.href='payroll-glass.html'"><span class="sidebar-icon">💰</span><span>Payroll</span></div>
+        <div class="sidebar-item" onclick="location.href='laporan-glass.html'"><span class="sidebar-icon">📈</span><span>Laporan</span></div>
+        <div class="sidebar-item" onclick="location.href='settings-glass.html'"><span class="sidebar-icon">⚙️</span><span>Settings</span></div>
+        <div class="sidebar-item" onclick="logout()"><span class="sidebar-icon">🚪</span><span>Logout</span></div>
+    </aside>
+
+    <div class="main-content-with-sidebar">
+        <div class="container">
+            <div class="page-header">
+                <h1 class="page-title">👥 Manajemen Karyawan</h1>
+                <div class="header-actions">
+                    <button class="btn-action btn-secondary" onclick="showImportModal()">📥 Import CSV</button>
+                    <button class="btn-action btn-primary" onclick="location.href='tambah-karyawan.html'">➕ Tambah Karyawan</button>
+                </div>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat-card"><div class="stat-value" id="total-karyawan">0</div><div class="stat-label">Total Karyawan</div></div>
+                <div class="stat-card"><div class="stat-value" id="karyawan-aktif">0</div><div class="stat-label">Aktif</div></div>
+                <div class="stat-card"><div class="stat-value" id="karyawan-nonaktif">0</div><div class="stat-label">Nonaktif</div></div>
+                <div class="stat-card"><div class="stat-value" id="dengan-fingerprint">0</div><div class="stat-label">Dengan Fingerprint</div></div>
+            </div>
+
+            <div class="data-card">
+                <div class="filter-bar">
+                    <input type="text" class="search-input" id="searchInput" placeholder="🔍 Cari nama, NIP, atau posisi..." oninput="filterTable()">
+                    <select class="filter-select" id="filterStatus" onchange="filterTable()">
+                        <option value="">Semua Status</option>
+                        <option value="Aktif">Aktif</option>
+                        <option value="Nonaktif">Nonaktif</option>
+                    </select>
+                    <select class="filter-select" id="filterDivisi" onchange="filterTable()">
+                        <option value="">Semua Divisi</option>
+                    </select>
+                </div>
+
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Karyawan</th>
+                                <th>Posisi</th>
+                                <th>Divisi</th>
+                                <th>Kontak</th>
+                                <th>Fingerprint</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="employeeTable">
+                            <tr><td colspan="7"><div class="empty-state">Memuat data...</div></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">✏️ Edit Karyawan</h3>
+                <button class="modal-close" onclick="closeModal('editModal')">&times;</button>
+            </div>
+            <form id="editForm">
+                <input type="hidden" id="edit-id">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">NIP</label>
+                        <input type="text" class="form-input" id="edit-nip" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Nama Lengkap</label>
+                        <input type="text" class="form-input" id="edit-nama" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Posisi</label>
+                        <select class="form-input" id="edit-posisi">
+                            <option value="Karyawan">Karyawan</option>
+                            <option value="Supervisor">Supervisor</option>
+                            <option value="Manager">Manager</option>
+                            <option value="Admin">Admin</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Divisi</label>
+                        <select class="form-input" id="edit-divisi">
+                            <option value="">Pilih Divisi</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-input" id="edit-email">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">No. Telepon</label>
+                        <input type="tel" class="form-input" id="edit-telepon">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Gaji Pokok (Rp)</label>
+                        <input type="number" class="form-input" id="edit-gaji" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Status</label>
+                        <select class="form-input" id="edit-status">
+                            <option value="Aktif">Aktif</option>
+                            <option value="Nonaktif">Nonaktif</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-action btn-secondary" onclick="closeModal('editModal')">Batal</button>
+                    <button type="submit" class="btn-action btn-primary">💾 Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Import Modal -->
+    <div class="modal-overlay" id="importModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">📥 Import Data Karyawan</h3>
+                <button class="modal-close" onclick="closeModal('importModal')">&times;</button>
+            </div>
+            <form id="importForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label class="form-label">File CSV</label>
+                    <input type="file" class="form-input" id="import-file" accept=".csv" required>
+                    <p style="font-size: 12px; color: var(--text-tertiary); margin-top: 8px;">
+                        Format CSV: NIP, Nama, Posisi, Email, No Telepon<br>
+                        Baris pertama adalah header
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-action btn-secondary" onclick="closeModal('importModal')">Batal</button>
+                    <button type="submit" class="btn-action btn-primary">📥 Import</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        let allEmployees = [];
+        let divisiList = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadEmployees();
+            loadDivisi();
+        });
+
+        async function loadEmployees() {
+            try {
+                const res = await fetch('/stats/employees');
+                const result = await res.json();
+
+                if (result.success) {
+                    allEmployees = result.data;
+                    renderTable(allEmployees);
+                    updateStats(allEmployees);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Gagal memuat data', 'error');
+            }
+        }
+
+        async function loadDivisi() {
+            try {
+                const res = await fetch('/api/divisi');
+                const result = await res.json();
+                divisiList = result.data || [];
+
+                const filterSelect = document.getElementById('filterDivisi');
+                const editSelect = document.getElementById('edit-divisi');
+
+                divisiList.forEach(d => {
+                    filterSelect.innerHTML += `<option value="${d.nama_divisi}">${d.nama_divisi}</option>`;
+                    editSelect.innerHTML += `<option value="${d.nama_divisi}">${d.nama_divisi}</option>`;
+                });
+            } catch (error) {
+                console.error('Error loading divisi:', error);
+            }
+        }
+
+        function updateStats(employees, animate = false) {
+            const total = employees.length;
+            const aktif = employees.filter(e => e.status === 'Aktif' || !e.status).length;
+            const nonaktif = employees.filter(e => e.status === 'Nonaktif').length;
+            const withFp = employees.filter(e => e.fingerprint_id).length;
+
+            const elements = {
+                'total-karyawan': total,
+                'karyawan-aktif': aktif,
+                'karyawan-nonaktif': nonaktif,
+                'dengan-fingerprint': withFp
+            };
+
+            Object.entries(elements).forEach(([id, value]) => {
+                const el = document.getElementById(id);
+                const oldValue = parseInt(el.textContent) || 0;
+                el.textContent = value;
+
+                // Animate if value changed
+                if (animate && oldValue !== value) {
+                    el.classList.add('updated');
+                    setTimeout(() => el.classList.remove('updated'), 500);
+                }
+            });
+        }
+
+        // Quick toggle status function
+        async function toggleStatus(id) {
+            const emp = allEmployees.find(e => e.id_pegawai === id);
+            if (!emp) return;
+
+            const newStatus = (emp.status === 'Nonaktif') ? 'Aktif' : 'Nonaktif';
+
+            try {
+                const res = await fetch(`/api/pegawai/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: newStatus })
+                });
+
+                const result = await res.json();
+
+                if (result.success) {
+                    // Update local data immediately for real-time feel
+                    emp.status = newStatus;
+
+                    // Re-render table and update stats with animation
+                    renderTable(allEmployees);
+                    updateStats(allEmployees, true);
+
+                    showNotification(`Status ${emp.nama_pegawai} diubah ke ${newStatus}`, 'success');
+                } else {
+                    showNotification(result.message, 'error');
+                }
+            } catch (error) {
+                showNotification('Gagal update status', 'error');
+            }
+        }
+
+        function renderTable(employees) {
+            const tbody = document.getElementById('employeeTable');
+
+            if (employees.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state">Tidak ada data</div></td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = employees.map(emp => `
+                <tr data-id="${emp.id_pegawai}">
+                    <td>
+                        <div class="employee-info">
+                            <div class="employee-photo">${emp.foto ? `<img src="${emp.foto}" alt="" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">` : '👤'}</div>
+                            <div>
+                                <div class="employee-name">${emp.nama_pegawai}</div>
+                                <div class="employee-nip">${emp.nip}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td><span class="badge badge-position">${emp.posisi || '-'}</span></td>
+                    <td>${emp.divisi || '-'}</td>
+                    <td>
+                        <div style="font-size:12px;">${emp.email || '-'}</div>
+                        <div style="font-size:11px;color:var(--text-tertiary);">${emp.no_telepon || '-'}</div>
+                    </td>
+                    <td>${emp.fingerprint_id ? `<span class="badge badge-aktif">ID: ${emp.fingerprint_id}</span>` : '<span class="badge badge-nonaktif">Belum</span>'}</td>
+                    <td><span class="badge ${emp.status === 'Nonaktif' ? 'badge-nonaktif' : 'badge-aktif'}">${emp.status || 'Aktif'}</span></td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="btn-sm btn-edit" onclick="editEmployee(${emp.id_pegawai})" title="Edit">✏️</button>
+                            <button class="btn-sm btn-danger" onclick="deleteEmployee(${emp.id_pegawai}, '${emp.nama_pegawai}')" title="Hapus">🗑️</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function filterTable() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const status = document.getElementById('filterStatus').value;
+            const divisi = document.getElementById('filterDivisi').value;
+
+            const filtered = allEmployees.filter(emp => {
+                const matchSearch = emp.nama_pegawai.toLowerCase().includes(search) ||
+                                  emp.nip.toLowerCase().includes(search) ||
+                                  (emp.posisi && emp.posisi.toLowerCase().includes(search));
+                const matchStatus = !status || (emp.status || 'Aktif') === status;
+                const matchDivisi = !divisi || emp.divisi === divisi;
+                return matchSearch && matchStatus && matchDivisi;
+            });
+
+            renderTable(filtered);
+        }
+
+        function editEmployee(id) {
+            const emp = allEmployees.find(e => e.id_pegawai === id);
+            if (!emp) return;
+
+            document.getElementById('edit-id').value = emp.id_pegawai;
+            document.getElementById('edit-nip').value = emp.nip;
+            document.getElementById('edit-nama').value = emp.nama_pegawai;
+            document.getElementById('edit-posisi').value = emp.posisi || 'Karyawan';
+            document.getElementById('edit-divisi').value = emp.divisi || '';
+            document.getElementById('edit-email').value = emp.email || '';
+            document.getElementById('edit-telepon').value = emp.no_telepon || '';
+            document.getElementById('edit-gaji').value = emp.gaji_pokok || 0;
+            document.getElementById('edit-status').value = emp.status || 'Aktif';
+
+            document.getElementById('editModal').classList.add('active');
+        }
+
+        document.getElementById('editForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const id = document.getElementById('edit-id').value;
+            const data = {
+                nama_pegawai: document.getElementById('edit-nama').value,
+                posisi: document.getElementById('edit-posisi').value,
+                divisi: document.getElementById('edit-divisi').value,
+                email: document.getElementById('edit-email').value,
+                no_telepon: document.getElementById('edit-telepon').value,
+                gaji_pokok: document.getElementById('edit-gaji').value,
+                status: document.getElementById('edit-status').value
+            };
+
+            try {
+                const res = await fetch(`/api/pegawai/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await res.json();
+
+                if (result.success) {
+                    // Update local data for immediate feedback
+                    const emp = allEmployees.find(e => e.id_pegawai === parseInt(id));
+                    if (emp) {
+                        emp.nama_pegawai = data.nama_pegawai;
+                        emp.posisi = data.posisi;
+                        emp.divisi = data.divisi;
+                        emp.email = data.email;
+                        emp.no_telepon = data.no_telepon;
+                        emp.gaji_pokok = data.gaji_pokok;
+                        emp.status = data.status;
+                    }
+
+                    // Re-render and animate stats
+                    renderTable(allEmployees);
+                    updateStats(allEmployees, true);
+
+                    showNotification('Data berhasil diupdate', 'success');
+                    closeModal('editModal');
+                } else {
+                    showNotification(result.message, 'error');
+                }
+            } catch (error) {
+                showNotification('Gagal update data', 'error');
+            }
+        });
+
+        async function deleteEmployee(id, nama) {
+            if (!confirm(`Hapus karyawan "${nama}"? Data absensi juga akan terhapus.`)) return;
+
+            try {
+                const res = await fetch(`/pegawai/delete/${id}`, { method: 'DELETE' });
+                const result = await res.json();
+
+                if (result.success) {
+                    showNotification('Karyawan berhasil dihapus', 'success');
+                    loadEmployees();
+                } else {
+                    showNotification(result.message, 'error');
+                }
+            } catch (error) {
+                showNotification('Gagal menghapus karyawan', 'error');
+            }
+        }
+
+        function showImportModal() {
+            document.getElementById('importModal').classList.add('active');
+        }
+
+        document.getElementById('importForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const fileInput = document.getElementById('import-file');
+            if (!fileInput.files[0]) return;
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                const res = await fetch('/api/pegawai/import', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await res.json();
+                showNotification(result.message, result.success ? 'success' : 'error');
+
+                if (result.success) {
+                    closeModal('importModal');
+                    loadEmployees();
+                }
+            } catch (error) {
+                showNotification('Gagal import data', 'error');
+            }
+        });
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideIn 0.3s ease-out reverse';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        function logout() {
+            localStorage.removeItem('isLoggedIn');
+            window.location.href = '/index-glass.html';
+        }
+    </script>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script src="/notification-component.js"></script>
+    <script>
+        // Initialize notification for admin
+        window.notificationComponent = new NotificationComponent({
+            isAdmin: true,
+            containerId: 'notification-bell'
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Riwayat Absensi - Sistem Absensi">
+    <meta name="theme-color" content="#667eea">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <title>Riwayat Absensi - Glassmorphism</title>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+
+    <link rel="stylesheet" href="glass-style.css">
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <style>
+        .filter-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--space-4);
+            margin-bottom: var(--space-6);
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: var(--space-4);
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: var(--text-lg);
+            color: var(--text-tertiary);
+        }
+
+        .search-input {
+            padding-left: calc(var(--space-4) * 2 + 24px);
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-left: var(--space-8);
+            padding-bottom: var(--space-6);
+            border-left: 2px solid rgba(102, 126, 234, 0.3);
+        }
+
+        .timeline-item:last-child {
+            border-left: none;
+            padding-bottom: 0;
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: -9px;
+            top: 4px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--gradient-primary);
+            box-shadow: var(--glow-primary);
+        }
+
+        .timeline-content {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-md);
+            padding: var(--space-4);
+            transition: all var(--transition-base);
+        }
+
+        .timeline-content:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(102, 126, 234, 0.5);
+            transform: translateX(4px);
+        }
+
+        @media (max-width: 768px) {
+            .filter-section {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2L2 7V17L12 22L22 17V7L12 2Z" fill="url(#gradient1)"/>
+                <defs>
+                    <linearGradient id="gradient1" x1="2" y1="2" x2="22" y2="22">
+                        <stop offset="0%" style="stop-color:#667eea"/>
+                        <stop offset="100%" style="stop-color:#764ba2"/>
+                    </linearGradient>
+                </defs>
+            </svg>
+            <span>Sistem Absensi</span>
+        </div>
+        <div class="navbar-menu">
+            <div id="notification-bell" style="position: relative; margin: 0 8px;"></div>
+            <a href="#" class="navbar-link" onclick="logout()">Logout</a>
+        </div>
+    </nav>
+
+    <!-- Sidebar (Desktop) -->
+    <aside class="sidebar">
+        <div class="sidebar-item" onclick="location.href='dashboard-glass.html'"><span class="sidebar-icon">📊</span><span>Dashboard</span></div>
+        <div class="sidebar-item active"><span class="sidebar-icon">📜</span><span>Riwayat</span></div>
+        <div class="sidebar-item" onclick="location.href='manajemen-karyawan-glass.html'"><span class="sidebar-icon">👥</span><span>Karyawan</span></div>
+        <div class="sidebar-item" onclick="location.href='cuti-glass.html'"><span class="sidebar-icon">📋</span><span>Cuti/Izin</span></div>
+        <div class="sidebar-item" onclick="location.href='jadwal-shift-glass.html'"><span class="sidebar-icon">📅</span><span>Jadwal</span></div>
+        <div class="sidebar-item" onclick="location.href='payroll-glass.html'"><span class="sidebar-icon">💰</span><span>Payroll</span></div>
+        <div class="sidebar-item" onclick="location.href='laporan-glass.html'"><span class="sidebar-icon">📈</span><span>Laporan</span></div>
+        <div class="sidebar-item" onclick="location.href='settings-glass.html'"><span class="sidebar-icon">⚙️</span><span>Settings</span></div>
+        <div class="sidebar-item" onclick="logout()"><span class="sidebar-icon">🚪</span><span>Logout</span></div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-content-with-sidebar">
+        <div class="container">
+            <!-- Page Header -->
+            <div class="page-header fade-in-up">
+                <h1 class="page-title">📜 Riwayat Absensi</h1>
+                <p class="page-subtitle">Monitoring aktivitas absensi karyawan real-time</p>
+            </div>
+
+            <!-- Real-time Status Bar -->
+            <div class="glass-card-no-hover fade-in-up" style="margin-bottom: var(--space-6); padding: var(--space-4);">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-4);">
+                    <div style="display: flex; align-items: center; gap: var(--space-3);">
+                        <div id="connection-status" style="display: flex; align-items: center; gap: var(--space-2);">
+                            <div class="status-dot status-connecting"></div>
+                            <span style="font-size: var(--text-sm); color: var(--text-secondary);">Connecting...</span>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); color: var(--text-tertiary);">
+                        <span>🔄 Last Update:</span>
+                        <span id="last-update">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Summary -->
+            <div class="stats-grid fade-in-up" style="animation-delay: 0.1s;">
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-value" id="total-records">0</div>
+                    <div class="stat-label">Total Records</div>
+                    <div class="stat-change" id="total-change">+0 baru</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-value" id="hadir-count">0</div>
+                    <div class="stat-label">Hadir</div>
+                    <div class="stat-change success" id="hadir-change">+0</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">⏰</div>
+                    <div class="stat-value" id="terlambat-count">0</div>
+                    <div class="stat-label">Terlambat</div>
+                    <div class="stat-change warning" id="terlambat-change">+0</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">⏱️</div>
+                    <div class="stat-value" id="lembur-count">0</div>
+                    <div class="stat-label">Lembur</div>
+                    <div class="stat-change warning" id="lembur-change">+0</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">🕐</div>
+                    <div class="stat-value" id="latest-time">-</div>
+                    <div class="stat-label">Absensi Terakhir</div>
+                    <div class="stat-change" id="latest-name">-</div>
+                </div>
+            </div>
+
+            <!-- Filter & Search -->
+            <div class="glass-card-no-hover fade-in-up" style="animation-delay: 0.2s; margin-bottom: var(--space-8);">
+                <h3 style="margin-bottom: var(--space-6);">🔍 Filter & Pencarian</h3>
+
+                <div class="filter-section">
+                    <div class="search-box">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" class="glass-input search-input focusable" id="searchInput" placeholder="Cari nama karyawan...">
+                    </div>
+
+                    <div>
+                        <select class="glass-select focusable" id="filterKeterangan">
+                            <option value="">Semua Keterangan</option>
+                            <option value="Hadir">Hadir</option>
+                            <option value="Terlambat">Terlambat</option>
+                            <option value="Izin">Izin</option>
+                            <option value="Sakit">Sakit</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <input type="date" class="glass-input focusable" id="filterDate">
+                    </div>
+
+                    <div style="display: flex; gap: var(--space-2);">
+                        <button class="btn-glass" onclick="applyFilter()" style="flex: 1;">
+                            ✓ Terapkan
+                        </button>
+                        <button class="btn-glass" onclick="resetFilter()" style="flex: 1;">
+                            ↺ Reset
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- View Toggle -->
+            <div class="glass-card-no-hover fade-in-up" style="animation-delay: 0.3s;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-6); flex-wrap: wrap; gap: var(--space-4);">
+                    <h3 style="margin: 0;">📋 Data Absensi</h3>
+                    <div style="display: flex; gap: var(--space-2);">
+                        <button class="btn-glass" id="viewTable" onclick="switchView('table')">
+                            📊 Tabel
+                        </button>
+                        <button class="btn-glass" id="viewTimeline" onclick="switchView('timeline')">
+                            📅 Timeline
+                        </button>
+                        <button class="btn-primary" onclick="loadRiwayat()">
+                            🔄 Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Table View -->
+                <div id="tableView">
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>Nama Karyawan</th>
+                                    <th>NIP</th>
+                                    <th>Waktu Masuk</th>
+                                    <th>Waktu Keluar</th>
+                                    <th>Durasi Kerja</th>
+                                    <th>Lembur</th>
+                                    <th>Status</th>
+                                    <th>Keterangan</th>
+                                    <th>Tanggal</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabel-riwayat">
+                                <tr>
+                                    <td colspan="10" style="text-align: center; padding: var(--space-8);">
+                                        <div style="display: inline-block; width: 40px; height: 40px; border: 3px solid rgba(102, 126, 234, 0.3); border-top: 3px solid var(--primary-start); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                                        <p style="margin-top: var(--space-3); color: var(--text-secondary);">Memuat data...</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Timeline View -->
+                <div id="timelineView" style="display: none;">
+                    <div id="timeline-container" style="max-height: 600px; overflow-y: auto; padding: var(--space-4);">
+                        <!-- Timeline items will be inserted here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation (Mobile) -->
+    <div class="bottom-nav">
+        <div class="nav-item" onclick="window.location.href='dashboard-glass.html'">
+            <span class="nav-item-icon">📊</span>
+            <span>Dashboard</span>
+        </div>
+        <div class="nav-item active">
+            <span class="nav-item-icon">📜</span>
+            <span>Riwayat</span>
+        </div>
+        <div class="nav-item" onclick="window.location.href='manajemen-karyawan-glass.html'">
+            <span class="nav-item-icon">👥</span>
+            <span>Karyawan</span>
+        </div>
+        <div class="nav-item" onclick="logout()">
+            <span class="nav-item-icon">🚪</span>
+            <span>Logout</span>
+        </div>
+    </div>
+
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Real-time Status Indicator */
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-connecting {
+            background: var(--warning);
+        }
+
+        .status-connected {
+            background: var(--success);
+        }
+
+        .status-disconnected {
+            background: var(--error);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.1); }
+        }
+
+        /* Stat Change Indicator */
+        .stat-change {
+            font-size: var(--text-xs);
+            color: var(--text-tertiary);
+            margin-top: var(--space-1);
+        }
+
+        .stat-change.success {
+            color: var(--success);
+        }
+
+        .stat-change.warning {
+            color: var(--warning);
+        }
+
+        /* New Data Highlight */
+        .new-data-highlight {
+            animation: highlightFade 3s ease-out;
+            background: rgba(102, 126, 234, 0.2) !important;
+        }
+
+        @keyframes highlightFade {
+            0% { background: rgba(102, 126, 234, 0.3); }
+            100% { background: rgba(255, 255, 255, 0.03); }
+        }
+
+        /* Pulse animation for stat cards */
+        .stat-pulse {
+            animation: statPulse 0.5s ease-out;
+        }
+
+        @keyframes statPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    </style>
+
+    <script>
+        // Check if user is logged in
+        if (!sessionStorage.getItem('isLoggedIn')) {
+            window.location.href = 'index-glass.html';
+        }
+
+        // PWA Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+                .then(reg => console.log('SW registered:', reg.scope))
+                .catch(err => console.log('SW registration failed:', err));
+        }
+
+        // Logout function
+        function logout() {
+            sessionStorage.removeItem('isLoggedIn');
+            sessionStorage.removeItem('username');
+            window.location.href = 'index-glass.html';
+        }
+
+        const socket = io();
+        let allData = [];
+        let filteredData = [];
+        let currentView = 'table';
+
+        // Real-time tracking
+        let previousStats = {
+            total: 0,
+            hadir: 0,
+            terlambat: 0,
+            lembur: 0
+        };
+        let lastDataId = null;
+
+        // Update connection status
+        function updateConnectionStatus(status) {
+            const statusEl = document.getElementById('connection-status');
+            const dot = statusEl.querySelector('.status-dot');
+            const text = statusEl.querySelector('span');
+
+            dot.className = 'status-dot';
+
+            if (status === 'connected') {
+                dot.classList.add('status-connected');
+                text.textContent = '🟢 Real-time Active';
+                text.style.color = 'var(--success)';
+            } else if (status === 'disconnected') {
+                dot.classList.add('status-disconnected');
+                text.textContent = '🔴 Disconnected';
+                text.style.color = 'var(--error)';
+            } else {
+                dot.classList.add('status-connecting');
+                text.textContent = '🟡 Connecting...';
+                text.style.color = 'var(--warning)';
+            }
+        }
+
+        // Update last update time
+        function updateLastUpdateTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('id-ID', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            document.getElementById('last-update').textContent = timeStr;
+        }
+
+        // Load Riwayat
+        async function loadRiwayat() {
+            try {
+                const response = await fetch('/absensi?limit=100');
+                const result = await response.json();
+
+                if (result.success && result.data) {
+                    allData = result.data;
+                    filteredData = [...allData];
+                    updateStats();
+                    displayData();
+                    updateLastUpdateTime();
+                } else {
+                    showEmptyState();
+                }
+            } catch (error) {
+                console.error('Error loading riwayat:', error);
+                showError();
+            }
+        }
+
+        // Update Stats with change tracking
+        function updateStats() {
+            const currentStats = {
+                total: allData.length,
+                hadir: allData.filter(item => item.keterangan === 'Hadir').length,
+                terlambat: allData.filter(item => item.keterangan === 'Terlambat').length,
+                lembur: allData.filter(item => item.status_lembur === 'Ya').length
+            };
+
+            // Calculate changes
+            const totalChange = currentStats.total - previousStats.total;
+            const hadirChange = currentStats.hadir - previousStats.hadir;
+            const terlambatChange = currentStats.terlambat - previousStats.terlambat;
+            const lemburChange = currentStats.lembur - previousStats.lembur;
+
+            // Update total records
+            const totalEl = document.getElementById('total-records');
+            totalEl.textContent = currentStats.total;
+            if (totalChange > 0) {
+                totalEl.parentElement.classList.add('stat-pulse');
+                setTimeout(() => totalEl.parentElement.classList.remove('stat-pulse'), 500);
+            }
+            document.getElementById('total-change').textContent = totalChange > 0 ? `+${totalChange} baru` : 'Tidak ada perubahan';
+
+            // Update hadir count
+            const hadirEl = document.getElementById('hadir-count');
+            hadirEl.textContent = currentStats.hadir;
+            if (hadirChange > 0) {
+                hadirEl.parentElement.classList.add('stat-pulse');
+                setTimeout(() => hadirEl.parentElement.classList.remove('stat-pulse'), 500);
+            }
+            document.getElementById('hadir-change').textContent = hadirChange > 0 ? `+${hadirChange}` : '0';
+
+            // Update terlambat count
+            const terlambatEl = document.getElementById('terlambat-count');
+            terlambatEl.textContent = currentStats.terlambat;
+            if (terlambatChange > 0) {
+                terlambatEl.parentElement.classList.add('stat-pulse');
+                setTimeout(() => terlambatEl.parentElement.classList.remove('stat-pulse'), 500);
+            }
+            document.getElementById('terlambat-change').textContent = terlambatChange > 0 ? `+${terlambatChange}` : '0';
+
+            // Update lembur count
+            const lemburEl = document.getElementById('lembur-count');
+            lemburEl.textContent = currentStats.lembur;
+            if (lemburChange > 0) {
+                lemburEl.parentElement.classList.add('stat-pulse');
+                setTimeout(() => lemburEl.parentElement.classList.remove('stat-pulse'), 500);
+            }
+            document.getElementById('lembur-change').textContent = lemburChange > 0 ? `+${lemburChange}` : '0';
+
+            // Update latest time and name
+            if (allData.length > 0) {
+                const latest = new Date(allData[0].timestamp);
+                document.getElementById('latest-time').textContent = latest.toLocaleTimeString('id-ID', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                document.getElementById('latest-name').textContent = allData[0].nama_pegawai || '-';
+
+                // Track new data
+                if (allData[0].id_absensi && allData[0].id_absensi !== lastDataId) {
+                    lastDataId = allData[0].id_absensi;
+                }
+            }
+
+            // Update previous stats
+            previousStats = currentStats;
+        }
+
+        // Display Data
+        function displayData() {
+            if (currentView === 'table') {
+                displayTable();
+            } else {
+                displayTimeline();
+            }
+        }
+
+        // Helper: Format durasi (menit ke jam:menit)
+        function formatDurasi(menit) {
+            if (!menit || menit === 0) return '-';
+            const jam = Math.floor(menit / 60);
+            const sisa_menit = menit % 60;
+            return `${String(jam).padStart(2, '0')}:${String(sisa_menit).padStart(2, '0')}`;
+        }
+
+        // Helper: Format waktu (ISO string ke HH:mm)
+        function formatTime(timeString) {
+            if (!timeString || timeString === '-') return '-';
+            try {
+                const date = new Date(timeString);
+                if (isNaN(date.getTime())) {
+                    // Jika bukan ISO format, coba parse sebagai waktu langsung
+                    if (timeString.includes(':')) {
+                        return timeString.substring(0, 5); // Ambil HH:mm saja
+                    }
+                    return timeString;
+                }
+                return date.toLocaleTimeString('id-ID', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                });
+            } catch (e) {
+                return timeString;
+            }
+        }
+
+        // Display Table
+        function displayTable() {
+            const tbody = document.getElementById('tabel-riwayat');
+
+            if (filteredData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: var(--space-8); color: var(--text-secondary);">Tidak ada data</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = '';
+            filteredData.forEach((item, index) => {
+                const row = document.createElement('tr');
+
+                const timestamp = new Date(item.timestamp);
+                const formattedDate = timestamp.toLocaleDateString('id-ID', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric'
+                });
+
+                let badgeClass = 'badge-success';
+                if (item.keterangan === 'Terlambat') badgeClass = 'badge-warning';
+                if (item.keterangan === 'Izin') badgeClass = 'badge-info';
+                if (item.keterangan === 'Sakit') badgeClass = 'badge-error';
+
+                // Status lembur badge
+                let lemburBadge = '';
+                if (item.status_lembur === 'Ya') {
+                    lemburBadge = '<span class="badge badge-warning" style="font-size: 10px;">✅ Lembur</span>';
+                } else {
+                    lemburBadge = '<span style="color: var(--text-tertiary); font-size: 10px;">-</span>';
+                }
+
+                row.innerHTML = `
+                    <td style="text-align: center;">${index + 1}</td>
+                    <td><strong>${item.nama_pegawai || 'Unknown'}</strong></td>
+                    <td><code style="background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 4px; font-size: 11px;">${item.nip || '-'}</code></td>
+                    <td style="text-align: center; font-family: monospace;">${formatTime(item.waktu_absen)}</td>
+                    <td style="text-align: center; font-family: monospace;">${item.waktu_keluar ? formatTime(item.waktu_keluar) : '<span style="color: var(--text-tertiary);">Belum</span>'}</td>
+                    <td style="text-align: center; font-family: monospace; font-weight: 600;">
+                        ${item.durasi_kerja ? '<span style="color: var(--primary-start);">' + formatDurasi(item.durasi_kerja) + '</span>' : '-'}
+                    </td>
+                    <td style="text-align: center; font-family: monospace; font-weight: 600;">
+                        ${item.durasi_lembur && item.durasi_lembur > 0 ? '<span style="color: var(--warning);">' + formatDurasi(item.durasi_lembur) + '</span>' : '-'}
+                    </td>
+                    <td style="text-align: center;">${lemburBadge}</td>
+                    <td style="text-align: center;">
+                        <span class="badge ${badgeClass}">${item.keterangan || 'Hadir'}</span>
+                    </td>
+                    <td style="text-align: center; font-size: var(--text-sm);">${formattedDate}</td>
+                `;
+
+                // Highlight new data
+                if (index === 0 && item.id_absensi && item.id_absensi !== lastDataId) {
+                    row.classList.add('new-data-highlight');
+                }
+
+                // Highlight overtime rows
+                if (item.status_lembur === 'Ya') {
+                    row.style.background = 'rgba(255, 193, 7, 0.05)';
+                }
+
+                row.classList.add('fade-in');
+                tbody.appendChild(row);
+            });
+        }
+
+        // Display Timeline
+        function displayTimeline() {
+            const container = document.getElementById('timeline-container');
+
+            if (filteredData.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: var(--space-8); color: var(--text-secondary);">Tidak ada data</div>';
+                return;
+            }
+
+            container.innerHTML = '';
+
+            // Group by date
+            const groupedByDate = {};
+            filteredData.forEach(item => {
+                const date = new Date(item.timestamp).toLocaleDateString('id-ID', {
+                    day: '2-digit',
+                    month: 'long',
+                    year: 'numeric'
+                });
+
+                if (!groupedByDate[date]) {
+                    groupedByDate[date] = [];
+                }
+                groupedByDate[date].push(item);
+            });
+
+            // Create timeline
+            Object.keys(groupedByDate).forEach((date, dateIndex) => {
+                const dateHeader = document.createElement('h4');
+                dateHeader.textContent = date;
+                dateHeader.style.cssText = 'color: var(--primary-start); margin-bottom: var(--space-4); margin-top: var(--space-6);';
+                if (dateIndex === 0) dateHeader.style.marginTop = '0';
+                container.appendChild(dateHeader);
+
+                groupedByDate[date].forEach((item, itemIndex) => {
+                    const timelineItem = document.createElement('div');
+                    timelineItem.className = 'timeline-item fade-in';
+                    timelineItem.style.animationDelay = `${itemIndex * 0.05}s`;
+
+                    let badgeClass = 'badge-success';
+                    if (item.keterangan === 'Terlambat') badgeClass = 'badge-warning';
+                    if (item.keterangan === 'Izin') badgeClass = 'badge-info';
+                    if (item.keterangan === 'Sakit') badgeClass = 'badge-error';
+
+                    const time = new Date(item.timestamp).toLocaleTimeString('id-ID', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+
+                    timelineItem.innerHTML = `
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: var(--space-2); flex-wrap: wrap; gap: var(--space-2);">
+                                <div>
+                                    <strong style="font-size: var(--text-lg);">${item.nama_pegawai}</strong>
+                                    <div style="font-size: var(--text-sm); color: var(--text-tertiary); margin-top: var(--space-1);">
+                                        NIP: ${item.nip || '-'}
+                                    </div>
+                                </div>
+                                <span class="badge ${badgeClass}">${item.keterangan}</span>
+                            </div>
+                            <div style="display: flex; gap: var(--space-4); font-size: var(--text-sm); color: var(--text-secondary);">
+                                <span>🕐 ${formatTime(item.waktu_absen)}</span>
+                                <span>📅 ${time}</span>
+                            </div>
+                        </div>
+                    `;
+
+                    container.appendChild(timelineItem);
+                });
+            });
+        }
+
+        // Switch View
+        function switchView(view) {
+            currentView = view;
+
+            const tableView = document.getElementById('tableView');
+            const timelineView = document.getElementById('timelineView');
+            const btnTable = document.getElementById('viewTable');
+            const btnTimeline = document.getElementById('viewTimeline');
+
+            if (view === 'table') {
+                tableView.style.display = 'block';
+                timelineView.style.display = 'none';
+                btnTable.classList.add('btn-primary');
+                btnTable.classList.remove('btn-glass');
+                btnTimeline.classList.add('btn-glass');
+                btnTimeline.classList.remove('btn-primary');
+            } else {
+                tableView.style.display = 'none';
+                timelineView.style.display = 'block';
+                btnTimeline.classList.add('btn-primary');
+                btnTimeline.classList.remove('btn-glass');
+                btnTable.classList.add('btn-glass');
+                btnTable.classList.remove('btn-primary');
+            }
+
+            displayData();
+        }
+
+        // Apply Filter
+        function applyFilter() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const keterangan = document.getElementById('filterKeterangan').value;
+            const date = document.getElementById('filterDate').value;
+
+            filteredData = allData.filter(item => {
+                let match = true;
+
+                if (searchTerm && !item.nama_pegawai.toLowerCase().includes(searchTerm)) {
+                    match = false;
+                }
+
+                if (keterangan && item.keterangan !== keterangan) {
+                    match = false;
+                }
+
+                if (date) {
+                    const itemDate = new Date(item.timestamp).toISOString().split('T')[0];
+                    if (itemDate !== date) {
+                        match = false;
+                    }
+                }
+
+                return match;
+            });
+
+            displayData();
+        }
+
+        // Reset Filter
+        function resetFilter() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('filterKeterangan').value = '';
+            document.getElementById('filterDate').value = '';
+            filteredData = [...allData];
+            displayData();
+        }
+
+        // Show Empty State
+        function showEmptyState() {
+            document.getElementById('tabel-riwayat').innerHTML = '<tr><td colspan="6" style="text-align: center; padding: var(--space-8); color: var(--text-secondary);">Tidak ada data absensi</td></tr>';
+        }
+
+        // Show Error
+        function showError() {
+            document.getElementById('tabel-riwayat').innerHTML = '<tr><td colspan="6" style="text-align: center; padding: var(--space-8); color: var(--error);">❌ Error memuat data</td></tr>';
+        }
+
+        // Initialize
+        document.getElementById('viewTable').classList.add('btn-primary');
+        loadRiwayat();
+
+        // Socket.IO connection events
+        socket.on('connect', () => {
+            console.log('✅ Socket.IO connected');
+            updateConnectionStatus('connected');
+        });
+
+        socket.on('disconnect', () => {
+            console.log('❌ Socket.IO disconnected');
+            updateConnectionStatus('disconnected');
+        });
+
+        socket.on('connect_error', (error) => {
+            console.error('🔴 Socket.IO connection error:', error);
+            updateConnectionStatus('disconnected');
+        });
+
+        // Real-time updates
+        socket.on('data_update', (data) => {
+            console.log('📥 Real-time update:', data);
+            loadRiwayat();
+
+            // Determine notification type based on tipe_absen
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+            const tipeAbsen = data.tipe_absen || 'Masuk';
+
+            let icon, title, bgGradient, detailInfo;
+
+            if (tipeAbsen === 'Keluar') {
+                // Absen Keluar notification
+                icon = '🚪';
+                title = 'Absen Keluar';
+                bgGradient = 'linear-gradient(135deg, rgba(239, 68, 68, 0.95), rgba(220, 38, 38, 0.95))';
+
+                // Build detail info with overtime
+                detailInfo = `<div style="font-size: 14px; opacity: 0.9;">${data.nama || 'Karyawan'} • ${data.waktu_keluar || timeStr}</div>`;
+
+                if (data.durasi_kerja) {
+                    const durasi = formatDurasi(data.durasi_kerja);
+                    detailInfo += `<div style="font-size: 12px; opacity: 0.8; margin-top: 2px;">⏱️ Durasi: ${durasi}</div>`;
+                }
+
+                if (data.status_lembur === 'Ya' && data.durasi_lembur) {
+                    const lembur = formatDurasi(data.durasi_lembur);
+                    detailInfo += `<div style="font-size: 12px; opacity: 0.9; margin-top: 2px; background: rgba(255, 193, 7, 0.3); padding: 2px 6px; border-radius: 4px; display: inline-block;">⏰ Lembur: ${lembur}</div>`;
+                }
+            } else {
+                // Absen Masuk notification
+                icon = '✅';
+                title = 'Absen Masuk';
+                bgGradient = 'linear-gradient(135deg, rgba(16, 185, 129, 0.95), rgba(5, 150, 105, 0.95))';
+                detailInfo = `
+                    <div style="font-size: 14px; opacity: 0.9;">${data.nama || 'Karyawan'} • ${data.waktu_absen || timeStr}</div>
+                    <div style="font-size: 12px; opacity: 0.7;">${data.keterangan || 'Hadir'}</div>
+                `;
+            }
+
+            const notification = document.createElement('div');
+            notification.innerHTML = `
+                <div style="position: fixed; top: 90px; right: 20px; background: ${bgGradient}; backdrop-filter: blur(15px); color: white; padding: 16px 24px; border-radius: 12px; box-shadow: var(--shadow-glass-lg); z-index: 9999; animation: slideInRight 0.3s ease-out; border: 1px solid rgba(255, 255, 255, 0.2); min-width: 300px;">
+                    <div style="display: flex; align-items: start; gap: 12px;">
+                        <span style="font-size: 24px;">${icon}</span>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600; margin-bottom: 4px;">${title}</div>
+                            ${detailInfo}
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(notification);
+            setTimeout(() => {
+                notification.style.animation = 'slideOutRight 0.3s ease-out';
+                setTimeout(() => notification.remove(), 300);
+            }, 5000);
+        });
+
+        socket.on('initial_data', (dataArray) => {
+            console.log('📊 Initial data received');
+            loadRiwayat();
+        });
+
+        // Auto-refresh every 30 seconds
+        setInterval(loadRiwayat, 30000);
+
+        // Update last update time every second
+        setInterval(updateLastUpdateTime, 1000);
+
+        // Search on type
+        document.getElementById('searchInput').addEventListener('input', applyFilter);
+
+        // Slide animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideInRight {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOutRight {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(150%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+    <script src="/notification-component.js"></script>
+    <script>
+        // Initialize notification for admin
+        window.notificationComponent = new NotificationComponent({
+            isAdmin: true,
+            containerId: 'notification-bell'
+        });
+    </script>
+</body>
+</html>

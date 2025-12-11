@@ -1,0 +1,37 @@
+Penjadwalan arsip telah diatur.
+🚀 MQTT Broker berjalan pada port 1883
+🚀 Server absensi berjalan pada port 3000
+🔴 Error menghubungkan ke database MySQL: Error: connect ECONNREFUSED 127.0.0.1:3306
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1549:16)
+📡 MQTT Client terhubung: ESP32_Test_Client
+📥 MQTT Message diterima dari ESP32_Test_Client
+   Topic: absensi/data
+   Message: {"pegawai_id":1,"waktu_absen":"12.45.34","keterangan":"Hadir (Test)"}
+📥 Data absensi diterima:
+   ID Pegawai: 1
+   Waktu: 12.45.34
+   Keterangan: Hadir (Test)
+❌ Error menyimpan data: Can't add new command when connection is in closed state
+📡 MQTT Client terputus: ESP32_Test_Client
+Error mengambil statistik: Can't add new command when connection is in closed state
+Error mengambil statistik karyawan: Can't add new command when connection is in closed state
+🔌 Client website terhubung.
+Error mengambil data awal: Can't add new command when connection is in closed state
+🔌 Client website terhubung.
+Error mengambil data awal: Can't add new command when connection is in closed state
+Error mengambil statistik: Can't add new command when connection is in closed state
+Error mengambil statistik karyawan: Can't add new command when connection is in closed state
+🔌 Client website terhubung.
+Error mengambil data awal: Can't add new command when connection is in closed state
+🔌 Client website terhubung.
+Error mengambil data awal: Can't add new command when connection is in closed state
+Error mengambil data pegawai: Can't add new command when connection is in closed state
+Error mengambil daftar tugas: Can't add new command when connection is in closed state
+Error mengambil data pegawai: Can't add new command when connection is in closed state
+Error mengambil statistik: Can't add new command when connection is in closed state
+Error mengambil statistik karyawan: Can't add new command when connection is in closed state
+🔌 Client website terhubung.
+Error mengambil data awal: Can't add new command when connection is in closed state
+Error mengambil data pegawai: Can't add new command when connection is in closed state
+Error mengambil daftar tugas: Can't add new command when connection is in closed state
+Error mengambil data pegawai: Can't add new command when connection is in closed state

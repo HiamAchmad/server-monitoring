@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Login karyawan - Sistem Absensi">
+    <meta name="theme-color" content="#667eea">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Absensi">
+
+    <title>Login Karyawan - Sistem Absensi</title>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+
+    <!-- Icons -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="glass-style.css">
+
+    <style>
+        /* Mobile-first PWA Login Page */
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%);
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Background Effects */
+        .bg-orbs {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.3;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        .orb1 {
+            width: 300px;
+            height: 300px;
+            background: var(--gradient-primary);
+            top: -150px;
+            left: -150px;
+            animation-delay: 0s;
+        }
+
+        .orb2 {
+            width: 400px;
+            height: 400px;
+            background: var(--gradient-secondary);
+            bottom: -200px;
+            right: -200px;
+            animation-delay: 5s;
+        }
+
+        .orb3 {
+            width: 250px;
+            height: 250px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation-delay: 10s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(20px, -30px) scale(1.1); }
+            50% { transform: translate(-30px, 20px) scale(0.9); }
+            75% { transform: translate(30px, 30px) scale(1.05); }
+        }
+
+        /* Main Container */
+        .login-container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 420px;
+            padding: var(--space-6);
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        /* Logo Section */
+        .logo-section {
+            text-align: center;
+            margin-bottom: var(--space-8);
+        }
+
+        .logo-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--gradient-primary);
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            margin-bottom: var(--space-4);
+            box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3); }
+            50% { transform: scale(1.05); box-shadow: 0 12px 40px rgba(102, 126, 234, 0.5); }
+        }
+
+        .app-title {
+            font-size: var(--text-2xl);
+            font-weight: var(--weight-bold);
+            font-family: var(--font-secondary);
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: var(--space-2);
+        }
+
+        .app-subtitle {
+            font-size: var(--text-sm);
+            color: var(--text-tertiary);
+        }
+
+        /* Login Card */
+        .login-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-xl);
+            padding: var(--space-8);
+            box-shadow: var(--shadow-glass-lg);
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: var(--space-6);
+        }
+
+        .login-header h2 {
+            font-size: var(--text-xl);
+            margin-bottom: var(--space-2);
+            color: var(--text-primary);
+        }
+
+        .login-header p {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+        }
+
+        /* Form */
+        .form-group {
+            margin-bottom: var(--space-5);
+        }
+
+        .form-label {
+            display: block;
+            font-size: var(--text-sm);
+            font-weight: var(--weight-medium);
+            color: var(--text-secondary);
+            margin-bottom: var(--space-2);
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: var(--space-4);
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: var(--text-lg);
+            opacity: 0.5;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: var(--space-4);
+            padding-left: var(--space-12);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-lg);
+            color: var(--text-primary);
+            font-size: var(--text-base);
+            transition: all var(--transition-base);
+            box-sizing: border-box;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-start);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-tertiary);
+        }
+
+        /* Remember Me */
+        .remember-section {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--space-6);
+            font-size: var(--text-sm);
+        }
+
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            cursor: pointer;
+        }
+
+        .checkbox-wrapper input[type="checkbox"] {
+            cursor: pointer;
+        }
+
+        /* Submit Button */
+        .btn-login {
+            width: 100%;
+            padding: var(--space-4);
+            background: var(--gradient-primary);
+            border: none;
+            border-radius: var(--radius-lg);
+            color: white;
+            font-size: var(--text-base);
+            font-weight: var(--weight-semibold);
+            cursor: pointer;
+            transition: all var(--transition-base);
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .btn-login:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Install Prompt */
+        .install-prompt {
+            display: none;
+            margin-top: var(--space-6);
+            padding: var(--space-4);
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: var(--radius-lg);
+            text-align: center;
+        }
+
+        .install-prompt.show {
+            display: block;
+            animation: slideUp 0.4s ease-out;
+        }
+
+        .btn-install {
+            margin-top: var(--space-3);
+            padding: var(--space-3) var(--space-6);
+            background: linear-gradient(135deg, #10b981, #059669);
+            border: none;
+            border-radius: var(--radius-md);
+            color: white;
+            font-weight: var(--weight-semibold);
+            cursor: pointer;
+            transition: all var(--transition-base);
+        }
+
+        .btn-install:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        /* Footer */
+        .login-footer {
+            text-align: center;
+            margin-top: var(--space-6);
+            font-size: var(--text-sm);
+            color: var(--text-tertiary);
+        }
+
+        .admin-link {
+            color: var(--primary-start);
+            text-decoration: none;
+            transition: color var(--transition-base);
+        }
+
+        .admin-link:hover {
+            color: var(--primary-end);
+            text-decoration: underline;
+        }
+
+        /* Offline Indicator */
+        .offline-indicator {
+            display: none;
+            position: fixed;
+            bottom: var(--space-4);
+            left: 50%;
+            transform: translateX(-50%);
+            padding: var(--space-3) var(--space-6);
+            background: rgba(239, 68, 68, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: var(--radius-lg);
+            color: white;
+            font-size: var(--text-sm);
+            font-weight: var(--weight-medium);
+            box-shadow: var(--shadow-glass-lg);
+            z-index: 1000;
+        }
+
+        .offline-indicator.show {
+            display: block;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Mobile Optimization */
+        @media (max-width: 480px) {
+            .login-container {
+                padding: var(--space-4);
+            }
+
+            .login-card {
+                padding: var(--space-6);
+            }
+
+            .logo-icon {
+                width: 60px;
+                height: 60px;
+                font-size: 32px;
+            }
+
+            .app-title {
+                font-size: var(--text-xl);
+            }
+        }
+
+        /* Loading State */
+        .btn-login.loading {
+            position: relative;
+            color: transparent;
+        }
+
+        .btn-login.loading::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            top: 50%;
+            left: 50%;
+            margin-left: -10px;
+            margin-top: -10px;
+            border: 2px solid white;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Orbs -->
+    <div class="bg-orbs">
+        <div class="orb orb1"></div>
+        <div class="orb orb2"></div>
+        <div class="orb orb3"></div>
+    </div>
+
+    <!-- Main Login Container -->
+    <div class="login-container">
+        <!-- Logo Section -->
+        <div class="logo-section">
+            <div class="logo-icon">👤</div>
+            <h1 class="app-title">Sistem Absensi</h1>
+            <p class="app-subtitle">Portal Karyawan</p>
+        </div>
+
+        <!-- Login Card -->
+        <div class="login-card">
+            <div class="login-header">
+                <h2>Selamat Datang</h2>
+                <p>Masuk dengan NIP Anda</p>
+            </div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label class="form-label">NIP</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">🔑</span>
+                        <input
+                            type="text"
+                            class="form-input"
+                            id="nip"
+                            placeholder="Masukkan NIP"
+                            autocomplete="username"
+                            required
+                        >
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">🔒</span>
+                        <input
+                            type="password"
+                            class="form-input"
+                            id="password"
+                            placeholder="Masukkan password"
+                            autocomplete="current-password"
+                            required
+                        >
+                    </div>
+                </div>
+
+                <div class="remember-section">
+                    <label class="checkbox-wrapper">
+                        <input type="checkbox" id="rememberMe">
+                        <span style="color: var(--text-secondary);">Ingat saya</span>
+                    </label>
+                </div>
+
+                <button type="submit" class="btn-login" id="btnLogin">
+                    Masuk
+                </button>
+            </form>
+
+            <!-- Install Prompt -->
+            <div class="install-prompt" id="installPrompt">
+                <div style="font-weight: 600; margin-bottom: var(--space-2);">📱 Install Aplikasi</div>
+                <div style="font-size: var(--text-sm); color: var(--text-secondary); margin-bottom: var(--space-3);">
+                    Tambahkan ke layar utama untuk akses lebih cepat
+                </div>
+                <button class="btn-install" id="btnInstall">Install Sekarang</button>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="login-footer">
+            <p>
+                Admin? <a href="/index-glass.html" class="admin-link">Login disini</a>
+            </p>
+            <p style="margin-top: var(--space-2); opacity: 0.6;">
+                © 2025 Sistem Absensi. All rights reserved.
+            </p>
+        </div>
+    </div>
+
+    <!-- Offline Indicator -->
+    <div class="offline-indicator" id="offlineIndicator">
+        ⚠️ Anda sedang offline
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // Check if already logged in
+        if (sessionStorage.getItem('userLoggedIn')) {
+            window.location.href = '/user-dashboard.html';
+        }
+
+        // PWA Install Prompt
+        let deferredPrompt;
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            console.log('PWA: Install prompt available');
+            e.preventDefault();
+            deferredPrompt = e;
+
+            // Show install prompt
+            const installPrompt = document.getElementById('installPrompt');
+            installPrompt.classList.add('show');
+        });
+
+        document.getElementById('btnInstall').addEventListener('click', async () => {
+            if (!deferredPrompt) {
+                return;
+            }
+
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(`PWA: User response: ${outcome}`);
+
+            deferredPrompt = null;
+            document.getElementById('installPrompt').classList.remove('show');
+        });
+
+        window.addEventListener('appinstalled', () => {
+            console.log('PWA: App installed successfully');
+            deferredPrompt = null;
+        });
+
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('Service Worker registered:', registration.scope);
+                    })
+                    .catch((error) => {
+                        console.log('Service Worker registration failed:', error);
+                    });
+            });
+        }
+
+        // Online/Offline Detection
+        const offlineIndicator = document.getElementById('offlineIndicator');
+
+        window.addEventListener('online', () => {
+            offlineIndicator.classList.remove('show');
+            console.log('PWA: Back online');
+        });
+
+        window.addEventListener('offline', () => {
+            offlineIndicator.classList.add('show');
+            console.log('PWA: Offline mode');
+        });
+
+        // Check initial connection status
+        if (!navigator.onLine) {
+            offlineIndicator.classList.add('show');
+        }
+
+        // Login Form Handler
+        const loginForm = document.getElementById('loginForm');
+        const btnLogin = document.getElementById('btnLogin');
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const nip = document.getElementById('nip').value.trim();
+            const password = document.getElementById('password').value;
+            const rememberMe = document.getElementById('rememberMe').checked;
+
+            if (!nip || !password) {
+                alert('Mohon isi semua field!');
+                return;
+            }
+
+            // Show loading state
+            btnLogin.classList.add('loading');
+            btnLogin.disabled = true;
+
+            try {
+                // Simulate API call (replace with actual API later)
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                // Simple validation (replace with actual backend validation)
+                // For demo: NIP as password
+                if (password === nip || password === 'password') {
+                    // Save login state
+                    sessionStorage.setItem('userLoggedIn', 'true');
+                    sessionStorage.setItem('userNIP', nip);
+
+                    if (rememberMe) {
+                        localStorage.setItem('rememberedNIP', nip);
+                    }
+
+                    // Redirect to dashboard
+                    window.location.href = '/user-dashboard.html';
+                } else {
+                    alert('❌ NIP atau password salah!');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                alert('❌ Terjadi kesalahan. Silakan coba lagi.');
+            } finally {
+                btnLogin.classList.remove('loading');
+                btnLogin.disabled = false;
+            }
+        });
+
+        // Auto-fill remembered NIP
+        window.addEventListener('load', () => {
+            const rememberedNIP = localStorage.getItem('rememberedNIP');
+            if (rememberedNIP) {
+                document.getElementById('nip').value = rememberedNIP;
+                document.getElementById('rememberMe').checked = true;
+            }
+        });
+
+        // Request notification permission
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission().then(permission => {
+                console.log('Notification permission:', permission);
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,161 @@
+╔══════════════════════════════════════════════════════════════╗
+║  LIBRARY REQUIREMENTS UNTUK ESP32 ABSENSI SYSTEM            ║
+╚══════════════════════════════════════════════════════════════╝
+
+Tanggal: 6 November 2025
+
+═══════════════════════════════════════════════════════════════
+
+📚 CARA INSTALL LIBRARY DI ARDUINO IDE:
+
+1. Buka Arduino IDE
+2. Menu: Sketch → Include Library → Manage Libraries...
+3. Di search box, ketik nama library
+4. Klik Install
+
+
+═══════════════════════════════════════════════════════════════
+
+✅ LIBRARY YANG HARUS DIINSTALL:
+
+1. PubSubClient
+   ├─ Versi: 2.8 atau lebih baru
+   ├─ Author: Nick O'Leary
+   ├─ Fungsi: MQTT Client untuk komunikasi dengan server
+   └─ Cara Install:
+      • Buka Library Manager
+      • Search: "PubSubClient"
+      • Install "PubSubClient by Nick O'Leary"
+
+2. MFRC522
+   ├─ Versi: 1.4.10 atau lebih baru
+   ├─ Author: GithubCommunity
+   ├─ Fungsi: Driver untuk RFID RC522
+   └─ Cara Install:
+      • Buka Library Manager
+      • Search: "MFRC522"
+      • Install "MFRC522 by GithubCommunity"
+
+
+═══════════════════════════════════════════════════════════════
+
+✅ LIBRARY BUILT-IN (Sudah Include):
+
+3. WiFi
+   ├─ Versi: Built-in dengan ESP32 board
+   ├─ Fungsi: WiFi connection
+   └─ Tidak perlu install
+
+4. SPI
+   ├─ Versi: Built-in dengan ESP32 board
+   ├─ Fungsi: SPI communication untuk RFID
+   └─ Tidak perlu install
+
+5. time.h
+   ├─ Versi: Built-in dengan ESP32 board
+   ├─ Fungsi: NTP time sync
+   └─ Tidak perlu install
+
+
+═══════════════════════════════════════════════════════════════
+
+📦 ESP32 BOARD MANAGER:
+
+Sebelum bisa compile kode, install ESP32 board:
+
+1. File → Preferences
+2. Di "Additional Board Manager URLs", tambahkan:
+   https://dl.espressif.com/dl/package_esp32_index.json
+
+3. Tools → Board → Boards Manager
+4. Search: "esp32"
+5. Install: "esp32 by Espressif Systems" (versi 2.0.0+)
+
+6. Pilih board: Tools → Board → ESP32 Arduino → ESP32 Dev Module
+
+
+═══════════════════════════════════════════════════════════════
+
+✅ OPTIONAL LIBRARY (untuk fitur tambahan):
+
+6. LiquidCrystal_I2C
+   ├─ Fungsi: Display LCD 16x2 dengan I2C
+   ├─ Install jika ingin tambah LCD display
+   └─ Search: "LiquidCrystal I2C"
+
+7. SD
+   ├─ Fungsi: SD Card reader
+   ├─ Install jika ingin simpan log ke SD Card
+   └─ Built-in dengan ESP32
+
+8. Adafruit GFX & Adafruit SSD1306
+   ├─ Fungsi: OLED Display 0.96"
+   ├─ Install jika ingin tambah OLED display
+   └─ Search: "Adafruit SSD1306"
+
+
+═══════════════════════════════════════════════════════════════
+
+🧪 TESTING LIBRARY:
+
+Setelah install semua library, test compile:
+
+1. Buka file: ESP32_ABSENSI_CODE.ino
+2. Klik: Verify/Compile (✓)
+3. Tunggu sampai "Done compiling"
+4. Jika ada error "library not found":
+   → Install library yang diminta
+   → Restart Arduino IDE
+
+Jika compile sukses tanpa error, Anda siap upload ke ESP32!
+
+
+═══════════════════════════════════════════════════════════════
+
+🔍 VERIFIKASI LIBRARY TERINSTALL:
+
+Cara cek library sudah terinstall:
+
+1. Menu: Sketch → Include Library
+2. Scroll ke bawah ke section "Contributed libraries"
+3. Harus ada:
+   ✓ MFRC522
+   ✓ PubSubClient
+
+Jika tidak ada, install ulang.
+
+
+═══════════════════════════════════════════════════════════════
+
+⚠️ COMMON ISSUES:
+
+Problem: "WiFi.h: No such file or directory"
+Solution: ESP32 board belum terinstall di Board Manager
+
+Problem: "PubSubClient.h: No such file or directory"
+Solution: Library PubSubClient belum diinstall
+
+Problem: "MFRC522.h: No such file or directory"
+Solution: Library MFRC522 belum diinstall
+
+Problem: Compile error "MQTT_MAX_PACKET_SIZE"
+Solution: Edit file PubSubClient.h:
+   #define MQTT_MAX_PACKET_SIZE 256  // Ubah jadi 512
+
+
+═══════════════════════════════════════════════════════════════
+
+✅ CHECKLIST INSTALL:
+
+□ ESP32 Board Manager terinstall
+□ Library PubSubClient terinstall
+□ Library MFRC522 terinstall
+□ Kode compile tanpa error
+□ Port ESP32 terdeteksi
+□ Ready untuk upload!
+
+
+═══════════════════════════════════════════════════════════════
+
+Last Updated: 6 November 2025
+Status: Complete

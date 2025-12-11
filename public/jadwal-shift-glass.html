@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jadwal & Shift - Sistem Absensi</title>
+    <link rel="stylesheet" href="glass-style.css">
+    <style>
+        body { background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%); min-height: 100vh; }
+        .main-content-with-sidebar .container { max-width: 1200px; margin: 0 auto; padding: var(--space-6); }
+        .page-header { margin-bottom: var(--space-6); }
+        .page-title { font-size: var(--text-2xl); font-weight: var(--weight-bold); background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .page-subtitle { color: var(--text-secondary); margin-top: var(--space-2); }
+
+        .tabs { display: flex; gap: var(--space-2); margin-bottom: var(--space-6); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: var(--space-2); }
+        .tab { padding: var(--space-2) var(--space-4); background: transparent; border: none; color: var(--text-secondary); cursor: pointer; font-size: var(--text-sm); border-radius: var(--radius-md) var(--radius-md) 0 0; transition: all var(--transition-base); }
+        .tab.active { background: rgba(102, 126, 234, 0.2); color: var(--text-primary); }
+        .tab:hover { color: var(--text-primary); }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .section-card { background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: var(--radius-xl); padding: var(--space-6); margin-bottom: var(--space-6); }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4); }
+        .section-title { font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--text-primary); }
+
+        .btn { padding: var(--space-2) var(--space-4); border: none; border-radius: var(--radius-md); cursor: pointer; font-size: var(--text-sm); font-weight: var(--weight-medium); transition: all var(--transition-base); }
+        .btn-primary { background: var(--gradient-primary); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); }
+        .btn-secondary { background: rgba(255,255,255,0.1); color: var(--text-primary); }
+        .btn-danger { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+        .btn-sm { padding: 4px 8px; font-size: 11px; }
+
+        .shift-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-4); }
+        .shift-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-lg); padding: var(--space-4); }
+        .shift-name { font-size: var(--text-base); font-weight: var(--weight-semibold); color: var(--text-primary); margin-bottom: var(--space-2); }
+        .shift-time { display: flex; gap: var(--space-4); font-size: var(--text-sm); color: var(--text-secondary); margin-bottom: var(--space-2); }
+        .shift-info { font-size: var(--text-xs); color: var(--text-tertiary); }
+        .shift-actions { display: flex; gap: var(--space-2); margin-top: var(--space-3); }
+
+        .holiday-list { display: flex; flex-direction: column; gap: var(--space-2); }
+        .holiday-item { display: flex; justify-content: space-between; align-items: center; padding: var(--space-3); background: rgba(255,255,255,0.03); border-radius: var(--radius-md); }
+        .holiday-date { font-weight: var(--weight-medium); color: var(--text-primary); }
+        .holiday-name { color: var(--text-secondary); font-size: var(--text-sm); }
+        .holiday-badge { font-size: var(--text-xs); padding: 2px 8px; background: rgba(251, 191, 36, 0.2); color: #fde047; border-radius: var(--radius-sm); }
+
+        .form-group { margin-bottom: var(--space-4); }
+        .form-label { display: block; font-size: var(--text-sm); color: var(--text-secondary); margin-bottom: var(--space-2); }
+        .form-input { width: 100%; padding: var(--space-3); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-md); color: var(--text-primary); font-size: var(--text-sm); box-sizing: border-box; }
+        .form-input:focus { outline: none; border-color: var(--primary-start); }
+        select.form-input { background: #1a1a2e; cursor: pointer; }
+        select.form-input option { background: #1a1a2e; color: white; padding: 10px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 1000; padding: var(--space-4); }
+        .modal-overlay.active { display: flex; }
+        .modal { background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: var(--radius-xl); padding: var(--space-6); max-width: 500px; width: 100%; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4); }
+        .modal-title { font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--text-primary); }
+        .modal-close { background: none; border: none; color: var(--text-tertiary); font-size: 24px; cursor: pointer; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: var(--space-3); margin-top: var(--space-4); }
+
+        .notification { position: fixed; top: var(--space-6); right: var(--space-6); background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); padding: var(--space-4); min-width: 280px; z-index: 1100; animation: slideIn 0.3s ease-out; }
+        .notification.success { border-left: 4px solid var(--success); }
+        .notification.error { border-left: 4px solid var(--error); }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(100px); } to { opacity: 1; transform: translateX(0); } }
+
+        .empty-state { text-align: center; padding: var(--space-8); color: var(--text-tertiary); }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7V17L12 22L22 17V7L12 2Z" fill="url(#gradient1)"/><defs><linearGradient id="gradient1" x1="2" y1="2" x2="22" y2="22"><stop offset="0%" style="stop-color:#667eea"/><stop offset="100%" style="stop-color:#764ba2"/></linearGradient></defs></svg>
+            <span>Sistem Absensi</span>
+        </div>
+        <div class="navbar-menu">
+            <div id="notification-bell" style="position: relative; margin: 0 8px;"></div>
+            <a href="#" class="navbar-link" onclick="logout()">Logout</a>
+        </div>
+    </nav>
+
+    <aside class="sidebar">
+        <div class="sidebar-item" onclick="location.href='dashboard-glass.html'"><span class="sidebar-icon">📊</span><span>Dashboard</span></div>
+        <div class="sidebar-item" onclick="location.href='riwayat-glass.html'"><span class="sidebar-icon">📜</span><span>Riwayat</span></div>
+        <div class="sidebar-item" onclick="location.href='manajemen-karyawan-glass.html'"><span class="sidebar-icon">👥</span><span>Karyawan</span></div>
+        <div class="sidebar-item" onclick="location.href='cuti-glass.html'"><span class="sidebar-icon">📋</span><span>Cuti/Izin</span></div>
+        <div class="sidebar-item active"><span class="sidebar-icon">📅</span><span>Jadwal</span></div>
+        <div class="sidebar-item" onclick="location.href='payroll-glass.html'"><span class="sidebar-icon">💰</span><span>Payroll</span></div>
+        <div class="sidebar-item" onclick="location.href='laporan-glass.html'"><span class="sidebar-icon">📈</span><span>Laporan</span></div>
+        <div class="sidebar-item" onclick="location.href='settings-glass.html'"><span class="sidebar-icon">⚙️</span><span>Settings</span></div>
+        <div class="sidebar-item" onclick="logout()"><span class="sidebar-icon">🚪</span><span>Logout</span></div>
+    </aside>
+
+    <div class="main-content-with-sidebar">
+        <div class="container">
+            <div class="page-header">
+                <h1 class="page-title">📅 Pengaturan Jadwal & Shift</h1>
+                <p class="page-subtitle">Atur shift kerja dan hari libur</p>
+            </div>
+
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('shift')">Shift Kerja</button>
+                <button class="tab" onclick="showTab('libur')">Hari Libur</button>
+            </div>
+
+            <!-- Shift Tab -->
+            <div class="tab-content active" id="tab-shift">
+                <div class="section-card">
+                    <div class="section-header">
+                        <h2 class="section-title">Daftar Shift</h2>
+                        <button class="btn btn-primary" onclick="showAddShiftModal()">➕ Tambah Shift</button>
+                    </div>
+                    <div class="shift-grid" id="shiftGrid">
+                        <div class="empty-state">Memuat data...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hari Libur Tab -->
+            <div class="tab-content" id="tab-libur">
+                <div class="section-card">
+                    <div class="section-header">
+                        <h2 class="section-title">Hari Libur Nasional & Cuti Bersama</h2>
+                        <div style="display:flex;gap:var(--space-2);align-items:center;">
+                            <select class="form-input" id="filterTahun" style="width:auto;" onchange="loadHolidays()">
+                                <option value="2024">2024</option>
+                                <option value="2025" selected>2025</option>
+                                <option value="2026">2026</option>
+                            </select>
+                            <button class="btn btn-primary" onclick="showAddHolidayModal()">➕ Tambah</button>
+                        </div>
+                    </div>
+                    <div class="holiday-list" id="holidayList">
+                        <div class="empty-state">Memuat data...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Shift Modal -->
+    <div class="modal-overlay" id="shiftModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="shiftModalTitle">➕ Tambah Shift</h3>
+                <button class="modal-close" onclick="closeModal('shiftModal')">&times;</button>
+            </div>
+            <form id="shiftForm">
+                <input type="hidden" id="shift-id">
+                <div class="form-group">
+                    <label class="form-label">Nama Shift</label>
+                    <input type="text" class="form-input" id="shift-nama" placeholder="contoh: Pagi" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Jam Masuk</label>
+                        <input type="time" class="form-input" id="shift-masuk" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Jam Keluar</label>
+                        <input type="time" class="form-input" id="shift-keluar" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Toleransi Terlambat (menit)</label>
+                        <input type="number" class="form-input" id="shift-toleransi" value="15" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Jam Lembur Mulai</label>
+                        <input type="time" class="form-input" id="shift-lembur">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('shiftModal')">Batal</button>
+                    <button type="submit" class="btn btn-primary">💾 Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Holiday Modal -->
+    <div class="modal-overlay" id="holidayModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">➕ Tambah Hari Libur</h3>
+                <button class="modal-close" onclick="closeModal('holidayModal')">&times;</button>
+            </div>
+            <form id="holidayForm">
+                <div class="form-group">
+                    <label class="form-label">Tanggal</label>
+                    <input type="date" class="form-input" id="holiday-tanggal" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nama Libur</label>
+                    <input type="text" class="form-input" id="holiday-nama" placeholder="contoh: Hari Raya Idul Fitri" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Jenis</label>
+                    <select class="form-input" id="holiday-jenis">
+                        <option value="Nasional">Libur Nasional</option>
+                        <option value="Cuti Bersama">Cuti Bersama</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('holidayModal')">Batal</button>
+                    <button type="submit" class="btn btn-primary">💾 Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function logout() {
+            localStorage.removeItem('isLoggedIn');
+            sessionStorage.removeItem('isLoggedIn');
+            window.location.href = '/index-glass.html';
+        }
+
+        let shifts = [];
+        let holidays = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadShifts();
+            loadHolidays();
+        });
+
+        function showTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(`tab-${tab}`).classList.add('active');
+        }
+
+        async function loadShifts() {
+            try {
+                const res = await fetch('/api/shift');
+                const result = await res.json();
+                shifts = result.data || [];
+                renderShifts();
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        function renderShifts() {
+            const grid = document.getElementById('shiftGrid');
+
+            if (shifts.length === 0) {
+                grid.innerHTML = '<div class="empty-state">Belum ada shift</div>';
+                return;
+            }
+
+            grid.innerHTML = shifts.map(s => `
+                <div class="shift-card">
+                    <div class="shift-name">${s.nama_shift}</div>
+                    <div class="shift-time">
+                        <span>🕐 Masuk: ${s.jam_masuk?.substring(0,5) || '-'}</span>
+                        <span>🕐 Keluar: ${s.jam_keluar?.substring(0,5) || '-'}</span>
+                    </div>
+                    <div class="shift-info">
+                        Toleransi terlambat: ${s.toleransi_terlambat || 15} menit<br>
+                        Lembur mulai: ${s.jam_lembur_mulai?.substring(0,5) || '-'}
+                    </div>
+                    <div class="shift-actions">
+                        <button class="btn btn-sm btn-secondary" onclick="editShift(${s.id_shift})">✏️ Edit</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function showAddShiftModal() {
+            document.getElementById('shiftModalTitle').textContent = '➕ Tambah Shift';
+            document.getElementById('shiftForm').reset();
+            document.getElementById('shift-id').value = '';
+            document.getElementById('shiftModal').classList.add('active');
+        }
+
+        function editShift(id) {
+            const shift = shifts.find(s => s.id_shift === id);
+            if (!shift) return;
+
+            document.getElementById('shiftModalTitle').textContent = '✏️ Edit Shift';
+            document.getElementById('shift-id').value = shift.id_shift;
+            document.getElementById('shift-nama').value = shift.nama_shift;
+            document.getElementById('shift-masuk').value = shift.jam_masuk?.substring(0,5) || '';
+            document.getElementById('shift-keluar').value = shift.jam_keluar?.substring(0,5) || '';
+            document.getElementById('shift-toleransi').value = shift.toleransi_terlambat || 15;
+            document.getElementById('shift-lembur').value = shift.jam_lembur_mulai?.substring(0,5) || '';
+            document.getElementById('shiftModal').classList.add('active');
+        }
+
+        document.getElementById('shiftForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const id = document.getElementById('shift-id').value;
+            const data = {
+                nama_shift: document.getElementById('shift-nama').value,
+                jam_masuk: document.getElementById('shift-masuk').value,
+                jam_keluar: document.getElementById('shift-keluar').value,
+                toleransi_terlambat: document.getElementById('shift-toleransi').value,
+                jam_lembur_mulai: document.getElementById('shift-lembur').value || null
+            };
+
+            try {
+                const url = id ? `/api/shift/${id}` : '/api/shift';
+                const method = id ? 'PUT' : 'POST';
+
+                const res = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await res.json();
+
+                if (result.success) {
+                    showNotification('Shift berhasil disimpan', 'success');
+                    closeModal('shiftModal');
+                    loadShifts();
+                } else {
+                    showNotification(result.message, 'error');
+                }
+            } catch (error) {
+                showNotification('Gagal menyimpan shift', 'error');
+            }
+        });
+
+        async function loadHolidays() {
+            const tahun = document.getElementById('filterTahun').value;
+            try {
+                const res = await fetch(`/api/hari-libur?tahun=${tahun}`);
+                const result = await res.json();
+                holidays = result.data || [];
+                renderHolidays();
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        function renderHolidays() {
+            const list = document.getElementById('holidayList');
+
+            if (holidays.length === 0) {
+                list.innerHTML = '<div class="empty-state">Belum ada hari libur</div>';
+                return;
+            }
+
+            list.innerHTML = holidays.map(h => {
+                const date = new Date(h.tanggal);
+                const formatted = date.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+                return `
+                    <div class="holiday-item">
+                        <div>
+                            <div class="holiday-date">${formatted}</div>
+                            <div class="holiday-name">${h.nama_libur}</div>
+                        </div>
+                        <div style="display:flex;gap:var(--space-2);align-items:center;">
+                            <span class="holiday-badge">${h.jenis}</span>
+                            <button class="btn btn-sm btn-danger" onclick="deleteHoliday(${h.id_libur})">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function showAddHolidayModal() {
+            document.getElementById('holidayForm').reset();
+            document.getElementById('holidayModal').classList.add('active');
+        }
+
+        document.getElementById('holidayForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const data = {
+                tanggal: document.getElementById('holiday-tanggal').value,
+                nama_libur: document.getElementById('holiday-nama').value,
+                jenis: document.getElementById('holiday-jenis').value
+            };
+
+            try {
+                const res = await fetch('/api/hari-libur', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await res.json();
+
+                if (result.success) {
+                    showNotification('Hari libur berhasil ditambahkan', 'success');
+                    closeModal('holidayModal');
+                    loadHolidays();
+                } else {
+                    showNotification(result.message, 'error');
+                }
+            } catch (error) {
+                showNotification('Gagal menambahkan hari libur', 'error');
+            }
+        });
+
+        async function deleteHoliday(id) {
+            if (!confirm('Hapus hari libur ini?')) return;
+
+            try {
+                const res = await fetch(`/api/hari-libur/${id}`, { method: 'DELETE' });
+                const result = await res.json();
+
+                if (result.success) {
+                    showNotification('Hari libur dihapus', 'success');
+                    loadHolidays();
+                }
+            } catch (error) {
+                showNotification('Gagal menghapus', 'error');
+            }
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => {
+                notification.style.animation = 'slideIn 0.3s ease-out reverse';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+    </script>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script src="/notification-component.js"></script>
+    <script>
+        // Initialize notification for admin
+        window.notificationComponent = new NotificationComponent({
+            isAdmin: true,
+            containerId: 'notification-bell'
+        });
+    </script>
+</body>
+</html>

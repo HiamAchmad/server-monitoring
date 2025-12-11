@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payroll - Sistem Absensi</title>
+    <link rel="stylesheet" href="glass-style.css">
+    <style>
+        body { background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%); min-height: 100vh; }
+        .main-content-with-sidebar .container { max-width: 1400px; margin: 0 auto; padding: var(--space-6); }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-6); flex-wrap: wrap; gap: var(--space-4); }
+        .page-title { font-size: var(--text-2xl); font-weight: var(--weight-bold); background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        .filter-row { display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap; }
+        .filter-select { background: #1a1a2e; border: 1px solid rgba(255,255,255,0.2); border-radius: var(--radius-md); padding: var(--space-2) var(--space-3); color: white; font-size: var(--text-sm); cursor: pointer; }
+        .filter-select option { background: #1a1a2e; color: white; padding: 10px; }
+
+        .btn { padding: var(--space-2) var(--space-4); border: none; border-radius: var(--radius-md); cursor: pointer; font-size: var(--text-sm); font-weight: var(--weight-medium); transition: all var(--transition-base); display: inline-flex; align-items: center; gap: var(--space-2); }
+        .btn-primary { background: var(--gradient-primary); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); }
+        .btn-secondary { background: rgba(255,255,255,0.1); color: var(--text-primary); }
+        .btn-success { background: rgba(34, 197, 94, 0.2); color: #86efac; }
+        .btn-sm { padding: 4px 8px; font-size: 11px; }
+
+        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-6); }
+        .stat-card { background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); padding: var(--space-4); text-align: center; }
+        .stat-value { font-size: var(--text-xl); font-weight: var(--weight-bold); color: var(--text-primary); transition: transform 0.3s ease; }
+        .stat-value.currency { background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .stat-value.updated { animation: statPulse 0.5s ease; }
+        @keyframes statPulse { 0% { transform: scale(1); } 50% { transform: scale(1.15); } 100% { transform: scale(1); } }
+        .stat-label { font-size: var(--text-sm); color: var(--text-secondary); margin-top: var(--space-1); }
+
+        .info-box { background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: var(--radius-md); padding: var(--space-3); margin-bottom: var(--space-4); font-size: var(--text-sm); color: #93c5fd; }
+        .info-box strong { color: #60a5fa; }
+        .formula-preview { background: rgba(255,255,255,0.05); border-radius: var(--radius-md); padding: var(--space-3); margin-top: var(--space-2); font-size: var(--text-xs); color: var(--text-tertiary); font-family: monospace; }
+
+        .data-card { background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: var(--radius-xl); padding: var(--space-6); margin-bottom: var(--space-6); }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4); }
+        .section-title { font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--text-primary); }
+
+        .table-container { overflow-x: auto; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+        .data-table th { text-align: left; padding: var(--space-3); background: rgba(255,255,255,0.05); color: var(--text-secondary); font-weight: var(--weight-semibold); border-bottom: 1px solid rgba(255,255,255,0.1); white-space: nowrap; }
+        .data-table td { padding: var(--space-3); border-bottom: 1px solid rgba(255,255,255,0.05); color: var(--text-primary); }
+        .data-table tr:hover td { background: rgba(255,255,255,0.03); }
+        .text-right { text-align: right; }
+        .text-success { color: #86efac; }
+        .text-danger { color: #fca5a5; }
+
+        .badge { display: inline-block; padding: 2px 8px; border-radius: var(--radius-sm); font-size: var(--text-xs); font-weight: var(--weight-medium); }
+        .badge-draft { background: rgba(251, 191, 36, 0.2); color: #fde047; }
+        .badge-success { background: rgba(34, 197, 94, 0.2); color: #86efac; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 1000; padding: var(--space-4); }
+        .modal-overlay.active { display: flex; }
+        .modal { background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: var(--radius-xl); padding: var(--space-6); max-width: 700px; width: 100%; max-height: 90vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4); }
+        .modal-title { font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--text-primary); }
+        .modal-close { background: none; border: none; color: var(--text-tertiary); font-size: 24px; cursor: pointer; }
+
+        .slip-header { text-align: center; padding-bottom: var(--space-4); border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: var(--space-4); }
+        .slip-company { font-size: var(--text-lg); font-weight: var(--weight-bold); color: var(--text-primary); }
+        .slip-title { font-size: var(--text-sm); color: var(--text-secondary); }
+        .slip-employee { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-bottom: var(--space-4); padding-bottom: var(--space-4); border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .slip-label { font-size: var(--text-xs); color: var(--text-tertiary); }
+        .slip-value { font-size: var(--text-sm); color: var(--text-primary); }
+        .slip-table { width: 100%; font-size: var(--text-sm); }
+        .slip-table td { padding: var(--space-2) 0; }
+        .slip-table .label { color: var(--text-secondary); }
+        .slip-table .value { text-align: right; color: var(--text-primary); }
+        .slip-total { font-size: var(--text-lg); font-weight: var(--weight-bold); padding-top: var(--space-3); border-top: 2px solid rgba(255,255,255,0.2); margin-top: var(--space-3); display: flex; justify-content: space-between; }
+
+        .notification { position: fixed; top: var(--space-6); right: var(--space-6); background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); padding: var(--space-4); min-width: 280px; z-index: 1100; animation: slideIn 0.3s ease-out; }
+        .notification.success { border-left: 4px solid var(--success); }
+        .notification.error { border-left: 4px solid var(--error); }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(100px); } to { opacity: 1; transform: translateX(0); } }
+
+        .empty-state { text-align: center; padding: var(--space-8); color: var(--text-tertiary); }
+
+        .form-group { margin-bottom: var(--space-4); }
+        .form-label { display: block; font-size: var(--text-sm); color: var(--text-secondary); margin-bottom: var(--space-2); }
+        .form-input { width: 100%; padding: var(--space-3); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-md); color: var(--text-primary); font-size: var(--text-sm); box-sizing: border-box; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7V17L12 22L22 17V7L12 2Z" fill="url(#gradient1)"/><defs><linearGradient id="gradient1" x1="2" y1="2" x2="22" y2="22"><stop offset="0%" style="stop-color:#667eea"/><stop offset="100%" style="stop-color:#764ba2"/></linearGradient></defs></svg>
+            <span>Sistem Absensi</span>
+        </div>
+        <div class="navbar-menu">
+            <div id="notification-bell" style="position: relative; margin: 0 8px;"></div>
+            <a href="#" class="navbar-link" onclick="logout()">Logout</a>
+        </div>
+    </nav>
+
+    <aside class="sidebar">
+        <div class="sidebar-item" onclick="location.href='dashboard-glass.html'"><span class="sidebar-icon">📊</span><span>Dashboard</span></div>
+        <div class="sidebar-item" onclick="location.href='riwayat-glass.html'"><span class="sidebar-icon">📜</span><span>Riwayat</span></div>
+        <div class="sidebar-item" onclick="location.href='manajemen-karyawan-glass.html'"><span class="sidebar-icon">👥</span><span>Karyawan</span></div>
+        <div class="sidebar-item" onclick="location.href='cuti-glass.html'"><span class="sidebar-icon">📋</span><span>Cuti/Izin</span></div>
+        <div class="sidebar-item" onclick="location.href='jadwal-shift-glass.html'"><span class="sidebar-icon">📅</span><span>Jadwal</span></div>
+        <div class="sidebar-item active"><span class="sidebar-icon">💰</span><span>Payroll</span></div>
+        <div class="sidebar-item" onclick="location.href='laporan-glass.html'"><span class="sidebar-icon">📈</span><span>Laporan</span></div>
+        <div class="sidebar-item" onclick="location.href='settings-glass.html'"><span class="sidebar-icon">⚙️</span><span>Settings</span></div>
+        <div class="sidebar-item" onclick="logout()"><span class="sidebar-icon">🚪</span><span>Logout</span></div>
+    </aside>
+
+    <div class="main-content-with-sidebar">
+        <div class="container">
+            <div class="page-header">
+                <h1 class="page-title">💰 Payroll / Penggajian</h1>
+                <div class="filter-row">
+                    <select class="filter-select" id="filterBulan">
+                        <option value="1">Januari</option>
+                        <option value="2">Februari</option>
+                        <option value="3">Maret</option>
+                        <option value="4">April</option>
+                        <option value="5">Mei</option>
+                        <option value="6">Juni</option>
+                        <option value="7">Juli</option>
+                        <option value="8">Agustus</option>
+                        <option value="9">September</option>
+                        <option value="10">Oktober</option>
+                        <option value="11">November</option>
+                        <option value="12">Desember</option>
+                    </select>
+                    <select class="filter-select" id="filterTahun">
+                        <option value="2024">2024</option>
+                        <option value="2025">2025</option>
+                    </select>
+                    <button class="btn btn-secondary" onclick="loadPayroll()">🔄 Tampilkan</button>
+                    <button class="btn btn-primary" onclick="generatePayroll()">⚡ Generate Payroll</button>
+                    <button class="btn btn-secondary" onclick="showSettingModal()">⚙️ Setting</button>
+                </div>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalKaryawan">0</div>
+                    <div class="stat-label">Total Karyawan</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value currency" id="totalGaji">Rp 0</div>
+                    <div class="stat-label">Total Gaji</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value currency" id="totalLembur">Rp 0</div>
+                    <div class="stat-label">Total Lembur</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value currency" id="totalPotongan">Rp 0</div>
+                    <div class="stat-label">Total Potongan</div>
+                </div>
+            </div>
+
+            <div class="data-card">
+                <div class="section-header">
+                    <h2 class="section-title">Data Payroll</h2>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Karyawan</th>
+                                <th class="text-right">Hadir</th>
+                                <th class="text-right">Terlambat</th>
+                                <th class="text-right">Lembur (Jam)</th>
+                                <th class="text-right">Gaji Pokok</th>
+                                <th class="text-right">Lembur</th>
+                                <th class="text-right">Tunjangan</th>
+                                <th class="text-right">Potongan</th>
+                                <th class="text-right">Total</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="payrollTable">
+                            <tr><td colspan="10"><div class="empty-state">Pilih bulan dan tahun, lalu klik "Generate Payroll"</div></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slip Gaji Modal -->
+    <div class="modal-overlay" id="slipModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">📄 Slip Gaji</h3>
+                <button class="modal-close" onclick="closeModal('slipModal')">&times;</button>
+            </div>
+            <div id="slipContent">
+                <!-- Slip content will be rendered here -->
+            </div>
+            <div style="margin-top: var(--space-4); text-align: center;">
+                <button class="btn btn-primary" onclick="printSlip()">🖨️ Cetak Slip</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Setting Modal -->
+    <div class="modal-overlay" id="settingModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">⚙️ Setting Payroll</h3>
+                <button class="modal-close" onclick="closeModal('settingModal')">&times;</button>
+            </div>
+            <form id="settingForm" onsubmit="saveSettings(event)">
+                <div class="info-box">
+                    <strong>📋 Rumus Perhitungan Gaji:</strong>
+                    <div class="formula-preview">
+                        Gaji = (Hadir × Gaji/Hari) + (Jam Lembur × Tarif Lembur) - Potongan
+                    </div>
+                </div>
+
+                <h4 style="color:var(--text-secondary);margin:var(--space-4) 0 var(--space-2);font-size:var(--text-sm);">💰 Pendapatan</h4>
+
+                <div class="form-group">
+                    <label class="form-label">Gaji Per Hari Hadir (Rp)</label>
+                    <input type="number" class="form-input" id="setting-gaji-harian" min="0" value="150000">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Tarif Lembur Per Jam (Rp)</label>
+                    <input type="number" class="form-input" id="setting-lembur" min="0" value="25000">
+                </div>
+
+                <h4 style="color:var(--text-secondary);margin:var(--space-4) 0 var(--space-2);font-size:var(--text-sm);">💸 Potongan</h4>
+
+                <div class="form-group">
+                    <label class="form-label">Potongan Per Hari Tidak Hadir/Alpha (Rp)</label>
+                    <input type="number" class="form-input" id="setting-potongan-alpha" min="0" value="50000">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Potongan Per Keterlambatan (Rp)</label>
+                    <input type="number" class="form-input" id="setting-potongan-terlambat" min="0" value="10000">
+                </div>
+
+                <div style="margin-top: var(--space-4); display: flex; gap: var(--space-2); justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('settingModal')">Batal</button>
+                    <button type="submit" class="btn btn-primary">💾 Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function logout() {
+            localStorage.removeItem('isLoggedIn');
+            sessionStorage.removeItem('isLoggedIn');
+            window.location.href = '/index-glass.html';
+        }
+
+        let payrollData = [];
+        let settings = {};
+
+        const bulanNames = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const now = new Date();
+            document.getElementById('filterBulan').value = now.getMonth() + 1;
+            document.getElementById('filterTahun').value = now.getFullYear();
+            loadSettings();
+        });
+
+        function formatRupiah(num) {
+            return 'Rp ' + (num || 0).toLocaleString('id-ID');
+        }
+
+        async function loadPayroll() {
+            const bulan = document.getElementById('filterBulan').value;
+            const tahun = document.getElementById('filterTahun').value;
+
+            try {
+                const res = await fetch(`/api/payroll?bulan=${bulan}&tahun=${tahun}`);
+                const result = await res.json();
+                payrollData = result.data || [];
+                renderPayroll();
+                updateStats();
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Gagal memuat data', 'error');
+            }
+        }
+
+        function renderPayroll() {
+            const tbody = document.getElementById('payrollTable');
+
+            if (payrollData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="10"><div class="empty-state">Tidak ada data payroll untuk periode ini</div></td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = payrollData.map(p => `
+                <tr>
+                    <td>
+                        <div style="font-weight:500;">${p.nama_pegawai || '-'}</div>
+                        <div style="font-size:11px;color:var(--text-tertiary);">${p.nip || '-'}</div>
+                    </td>
+                    <td class="text-right">${p.total_hadir || 0}</td>
+                    <td class="text-right">${p.total_terlambat || 0}</td>
+                    <td class="text-right">${parseFloat(p.total_jam_lembur || 0).toFixed(1)}</td>
+                    <td class="text-right">${formatRupiah(p.gaji_pokok)}</td>
+                    <td class="text-right text-success">${formatRupiah(p.uang_lembur)}</td>
+                    <td class="text-right text-success">${formatRupiah(p.tunjangan)}</td>
+                    <td class="text-right text-danger">${formatRupiah(p.potongan_absen)}</td>
+                    <td class="text-right" style="font-weight:600;">${formatRupiah(p.total_gaji)}</td>
+                    <td>
+                        <button class="btn btn-sm btn-secondary" onclick="viewSlip(${p.id_payroll})">📄</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function updateStats(animate = false) {
+            const newValues = {
+                'totalKaryawan': payrollData.length,
+                'totalGaji': formatRupiah(payrollData.reduce((sum, p) => sum + parseFloat(p.total_gaji || 0), 0)),
+                'totalLembur': formatRupiah(payrollData.reduce((sum, p) => sum + parseFloat(p.uang_lembur || 0), 0)),
+                'totalPotongan': formatRupiah(payrollData.reduce((sum, p) => sum + parseFloat(p.potongan_absen || 0), 0))
+            };
+
+            Object.entries(newValues).forEach(([id, value]) => {
+                const el = document.getElementById(id);
+                const oldValue = el.textContent;
+                el.textContent = value;
+
+                // Animate if value changed
+                if (animate && oldValue !== String(value)) {
+                    el.classList.add('updated');
+                    setTimeout(() => el.classList.remove('updated'), 500);
+                }
+            });
+        }
+
+        async function generatePayroll() {
+            const bulan = document.getElementById('filterBulan').value;
+            const tahun = document.getElementById('filterTahun').value;
+
+            if (!confirm(`Generate payroll untuk ${bulanNames[bulan]} ${tahun}?`)) return;
+
+            try {
+                const res = await fetch('/api/payroll/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ bulan, tahun })
+                });
+
+                const result = await res.json();
+
+                if (result.success) {
+                    showNotification(result.message, 'success');
+                    // Reload data setelah generate
+                    await loadPayroll();
+                } else {
+                    showNotification(result.message || 'Gagal generate payroll', 'error');
+                }
+            } catch (error) {
+                console.error('Generate payroll error:', error);
+                showNotification('Gagal generate payroll', 'error');
+            }
+        }
+
+        async function viewSlip(id) {
+            try {
+                const res = await fetch(`/api/payroll/${id}`);
+                const result = await res.json();
+
+                if (!result.success) {
+                    showNotification('Data tidak ditemukan', 'error');
+                    return;
+                }
+
+                const p = result.data;
+                const content = document.getElementById('slipContent');
+
+                content.innerHTML = `
+                    <div class="slip-header">
+                        <div class="slip-company">PT. CONTOH INDONESIA</div>
+                        <div class="slip-title">SLIP GAJI - ${bulanNames[p.bulan]} ${p.tahun}</div>
+                    </div>
+                    <div class="slip-employee">
+                        <div>
+                            <div class="slip-label">Nama</div>
+                            <div class="slip-value">${p.nama_pegawai}</div>
+                        </div>
+                        <div>
+                            <div class="slip-label">NIP</div>
+                            <div class="slip-value">${p.nip}</div>
+                        </div>
+                        <div>
+                            <div class="slip-label">Posisi</div>
+                            <div class="slip-value">${p.posisi || '-'}</div>
+                        </div>
+                        <div>
+                            <div class="slip-label">Divisi</div>
+                            <div class="slip-value">${p.divisi || '-'}</div>
+                        </div>
+                    </div>
+                    <h4 style="margin-bottom:var(--space-2);color:var(--text-secondary);">KEHADIRAN</h4>
+                    <table class="slip-table">
+                        <tr><td class="label">Total Hadir</td><td class="value">${p.total_hadir || 0} hari</td></tr>
+                        <tr><td class="label">Terlambat</td><td class="value">${p.total_terlambat || 0} hari</td></tr>
+                        <tr><td class="label">Izin</td><td class="value">${p.total_izin || 0} hari</td></tr>
+                        <tr><td class="label">Sakit</td><td class="value">${p.total_sakit || 0} hari</td></tr>
+                        <tr><td class="label">Jam Lembur</td><td class="value">${parseFloat(p.total_jam_lembur || 0).toFixed(1)} jam</td></tr>
+                    </table>
+                    <h4 style="margin:var(--space-4) 0 var(--space-2);color:var(--text-secondary);">PENDAPATAN</h4>
+                    <table class="slip-table">
+                        <tr><td class="label">Gaji Pokok</td><td class="value">${formatRupiah(p.gaji_pokok)}</td></tr>
+                        <tr><td class="label">Uang Lembur</td><td class="value text-success">${formatRupiah(p.uang_lembur)}</td></tr>
+                        <tr><td class="label">Tunjangan</td><td class="value text-success">${formatRupiah(p.tunjangan)}</td></tr>
+                    </table>
+                    <h4 style="margin:var(--space-4) 0 var(--space-2);color:var(--text-secondary);">POTONGAN</h4>
+                    <table class="slip-table">
+                        <tr><td class="label">Potongan Absen</td><td class="value text-danger">- ${formatRupiah(p.potongan_absen)}</td></tr>
+                    </table>
+                    <div class="slip-total">
+                        <span>TOTAL DITERIMA</span>
+                        <span style="color:#86efac;">${formatRupiah(p.total_gaji)}</span>
+                    </div>
+                `;
+
+                document.getElementById('slipModal').classList.add('active');
+            } catch (error) {
+                showNotification('Gagal memuat slip', 'error');
+            }
+        }
+
+        function printSlip() {
+            const content = document.getElementById('slipContent').innerHTML;
+            const win = window.open('', '', 'width=600,height=800');
+            win.document.write(`
+                <html><head><title>Slip Gaji</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 20px; }
+                    .slip-header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }
+                    .slip-company { font-size: 18px; font-weight: bold; }
+                    .slip-employee { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+                    .slip-label { font-size: 11px; color: #666; }
+                    .slip-value { font-size: 13px; }
+                    .slip-table { width: 100%; margin-bottom: 10px; }
+                    .slip-table td { padding: 4px 0; }
+                    .slip-table .value { text-align: right; }
+                    .slip-total { font-size: 16px; font-weight: bold; border-top: 2px solid #333; padding-top: 10px; display: flex; justify-content: space-between; }
+                    h4 { margin: 15px 0 5px; color: #666; font-size: 12px; }
+                </style></head>
+                <body>${content}</body></html>
+            `);
+            win.document.close();
+            win.print();
+        }
+
+        async function loadSettings() {
+            try {
+                const res = await fetch('/api/setting-payroll');
+                const result = await res.json();
+
+                (result.data || []).forEach(s => {
+                    settings[s.nama_setting] = parseFloat(s.nilai) || 0;
+                });
+
+                // Set default values if not exist
+                if (!settings.gaji_per_hari) settings.gaji_per_hari = 150000;
+                if (!settings.tarif_lembur) settings.tarif_lembur = 25000;
+                if (!settings.potongan_alpha) settings.potongan_alpha = 50000;
+                if (!settings.potongan_terlambat) settings.potongan_terlambat = 10000;
+            } catch (error) {
+                console.error('Error loading settings:', error);
+            }
+        }
+
+        function showSettingModal() {
+            // Load current settings to form
+            document.getElementById('setting-gaji-harian').value = settings.gaji_per_hari || 150000;
+            document.getElementById('setting-lembur').value = settings.tarif_lembur || 25000;
+            document.getElementById('setting-potongan-alpha').value = settings.potongan_alpha || 50000;
+            document.getElementById('setting-potongan-terlambat').value = settings.potongan_terlambat || 10000;
+            document.getElementById('settingModal').classList.add('active');
+        }
+
+        async function saveSettings(e) {
+            e.preventDefault();
+
+            const newSettings = {
+                gaji_per_hari: document.getElementById('setting-gaji-harian').value,
+                tarif_lembur: document.getElementById('setting-lembur').value,
+                potongan_alpha: document.getElementById('setting-potongan-alpha').value,
+                potongan_terlambat: document.getElementById('setting-potongan-terlambat').value
+            };
+
+            try {
+                const res = await fetch('/api/setting-payroll', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newSettings)
+                });
+
+                const result = await res.json();
+
+                if (result.success) {
+                    // Update local settings
+                    Object.keys(newSettings).forEach(key => {
+                        settings[key] = parseFloat(newSettings[key]);
+                    });
+                    showNotification('Setting berhasil disimpan', 'success');
+                    closeModal('settingModal');
+                } else {
+                    showNotification(result.message || 'Gagal menyimpan setting', 'error');
+                }
+            } catch (error) {
+                console.error('Save settings error:', error);
+                showNotification('Gagal menyimpan setting', 'error');
+            }
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => {
+                notification.style.animation = 'slideIn 0.3s ease-out reverse';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+    </script>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script src="/notification-component.js"></script>
+    <script>
+        // Initialize notification for admin
+        window.notificationComponent = new NotificationComponent({
+            isAdmin: true,
+            containerId: 'notification-bell'
+        });
+    </script>
+</body>
+</html>

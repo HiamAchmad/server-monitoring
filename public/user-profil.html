@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Profil Saya - Sistem Absensi">
+    <meta name="theme-color" content="#667eea">
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <title>Profil Saya - Sistem Absensi</title>
+
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="glass-style.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            padding-top: 60px;
+            padding-bottom: 70px;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .mobile-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 var(--space-4);
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+        }
+
+        .back-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            font-size: 20px;
+        }
+
+        .back-btn:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .header-title h3 {
+            font-size: var(--text-lg);
+            margin: 0;
+            color: var(--text-primary);
+        }
+
+        /* Main Content */
+        .container-mobile {
+            padding: var(--space-4);
+            max-width: 100%;
+        }
+
+        /* Profile Header */
+        .profile-header {
+            background: var(--gradient-primary);
+            border-radius: var(--radius-lg);
+            padding: var(--space-6);
+            text-align: center;
+            margin-bottom: var(--space-6);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            margin: 0 auto var(--space-4);
+        }
+
+        .profile-name {
+            font-size: var(--text-2xl);
+            font-weight: var(--weight-bold);
+            color: white;
+            margin-bottom: var(--space-2);
+        }
+
+        .profile-nip {
+            font-size: var(--text-base);
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: var(--space-1);
+        }
+
+        .profile-position {
+            font-size: var(--text-sm);
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Info Cards */
+        .info-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-5);
+            margin-bottom: var(--space-4);
+        }
+
+        .info-card-title {
+            font-size: var(--text-lg);
+            font-weight: var(--weight-semibold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-4);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-3) 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-size: var(--text-sm);
+            color: var(--text-tertiary);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .info-value {
+            font-size: var(--text-base);
+            font-weight: var(--weight-medium);
+            color: var(--text-primary);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--space-4);
+            margin-bottom: var(--space-6);
+        }
+
+        .stat-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            text-align: center;
+        }
+
+        .stat-icon {
+            font-size: 32px;
+            margin-bottom: var(--space-2);
+        }
+
+        .stat-value {
+            font-size: var(--text-2xl);
+            font-weight: var(--weight-bold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-1);
+        }
+
+        .stat-label {
+            font-size: var(--text-sm);
+            color: var(--text-tertiary);
+        }
+
+        /* Performance Card */
+        .performance-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            margin-bottom: var(--space-6);
+        }
+
+        .performance-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-4);
+        }
+
+        .performance-title {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            font-size: var(--text-lg);
+            font-weight: var(--weight-semibold);
+            color: var(--text-primary);
+        }
+
+        .performance-value {
+            font-size: var(--text-2xl);
+            font-weight: var(--weight-bold);
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 200px;
+            width: 100%;
+        }
+
+        .chart-legend {
+            display: flex;
+            justify-content: center;
+            gap: var(--space-4);
+            margin-top: var(--space-3);
+            padding-top: var(--space-3);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            font-size: var(--text-xs);
+            color: var(--text-tertiary);
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+
+        /* Action Buttons */
+        .action-btn {
+            width: 100%;
+            padding: var(--space-4);
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            color: var(--text-primary);
+            font-size: var(--text-base);
+            font-weight: var(--weight-medium);
+            cursor: pointer;
+            transition: all var(--transition-base);
+            margin-bottom: var(--space-3);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .action-btn:active {
+            transform: scale(0.98);
+        }
+
+        .action-btn.logout {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+        }
+
+        /* Bottom Nav */
+        .bottom-nav-user {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 100;
+            box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-item-user {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-2);
+            cursor: pointer;
+            transition: all var(--transition-base);
+            text-decoration: none;
+        }
+
+        .nav-item-user.active {
+            color: var(--primary-start);
+        }
+
+        .nav-icon {
+            font-size: 24px;
+            margin-bottom: var(--space-1);
+        }
+
+        .nav-label {
+            font-size: var(--text-xs);
+            color: var(--text-tertiary);
+        }
+
+        .nav-item-user.active .nav-label {
+            color: var(--primary-start);
+            font-weight: var(--weight-semibold);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: var(--space-4);
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-xl);
+            padding: var(--space-6);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-4);
+        }
+
+        .modal-title {
+            font-size: var(--text-lg);
+            font-weight: var(--weight-semibold);
+            color: var(--text-primary);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-tertiary);
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .form-group {
+            margin-bottom: var(--space-4);
+        }
+
+        .form-label {
+            display: block;
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            margin-bottom: var(--space-2);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: var(--space-3);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-size: var(--text-base);
+            box-sizing: border-box;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-start);
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: var(--space-3);
+            background: var(--gradient-primary);
+            border: none;
+            border-radius: var(--radius-md);
+            color: white;
+            font-size: var(--text-base);
+            font-weight: var(--weight-medium);
+            cursor: pointer;
+            transition: all var(--transition-base);
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        .notification {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-3) var(--space-4);
+            min-width: 250px;
+            text-align: center;
+            z-index: 1100;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .notification.success {
+            border-left: 4px solid var(--success);
+            color: var(--success);
+        }
+
+        .notification.error {
+            border-left: 4px solid var(--error);
+            color: var(--error);
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        /* Loading */
+        .loading-spinner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: var(--space-8);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(102, 126, 234, 0.3);
+            border-top-color: var(--primary-start);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (min-width: 768px) {
+            .container-mobile {
+                max-width: 768px;
+                margin: 0 auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Header -->
+    <div class="mobile-header">
+        <div class="header-left">
+            <div class="back-btn" onclick="window.location.href='/user-dashboard.html'">←</div>
+            <div class="header-title">
+                <h3>👤 Profil Saya</h3>
+            </div>
+        </div>
+        <div class="header-right" style="display: flex; align-items: center; gap: var(--space-2);">
+            <div id="notification-bell" style="position: relative;"></div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container-mobile">
+        <!-- Profile Header -->
+        <div class="profile-header">
+            <div class="profile-avatar">👤</div>
+            <div class="profile-name" id="profileName">Loading...</div>
+            <div class="profile-nip" id="profileNip">NIP: -</div>
+            <div class="profile-position" id="profilePosition">-</div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">📅</div>
+                <div class="stat-value" id="totalHadir">0</div>
+                <div class="stat-label">Kehadiran</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">⏰</div>
+                <div class="stat-value" id="totalLembur">0</div>
+                <div class="stat-label">Lembur</div>
+            </div>
+        </div>
+
+        <!-- Performance Card with Chart -->
+        <div class="performance-card">
+            <div class="performance-header">
+                <div class="performance-title">
+                    <span>🏆</span>
+                    <span>Performa Bulan Ini</span>
+                </div>
+                <div class="performance-value" id="totalPerformance">0%</div>
+            </div>
+            <div class="chart-container">
+                <canvas id="performanceChart"></canvas>
+            </div>
+            <div class="chart-legend">
+                <div class="legend-item">
+                    <span class="legend-color" style="background: rgba(34, 197, 94, 0.8);"></span>
+                    <span>Hadir</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background: rgba(251, 191, 36, 0.8);"></span>
+                    <span>Terlambat</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background: rgba(239, 68, 68, 0.8);"></span>
+                    <span>Alpha</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Personal Info -->
+        <div class="info-card">
+            <div class="info-card-title">
+                <span>📋</span>
+                <span>Informasi Pribadi</span>
+            </div>
+
+            <div class="info-item">
+                <div class="info-label">
+                    <span>📧</span>
+                    <span>Email</span>
+                </div>
+                <div class="info-value" id="profileEmail">-</div>
+            </div>
+
+            <div class="info-item">
+                <div class="info-label">
+                    <span>💼</span>
+                    <span>Posisi</span>
+                </div>
+                <div class="info-value" id="profilePositionDetail">-</div>
+            </div>
+
+            <div class="info-item">
+                <div class="info-label">
+                    <span>📅</span>
+                    <span>Tanggal Bergabung</span>
+                </div>
+                <div class="info-value" id="profileJoinDate">-</div>
+            </div>
+
+            <div class="info-item">
+                <div class="info-label">
+                    <span>📊</span>
+                    <span>Status</span>
+                </div>
+                <div class="info-value" id="profileStatus">-</div>
+            </div>
+        </div>
+
+        <!-- Account Info -->
+        <div class="info-card">
+            <div class="info-card-title">
+                <span>⚙️</span>
+                <span>Informasi Akun</span>
+            </div>
+
+            <div class="info-item">
+                <div class="info-label">
+                    <span>🆔</span>
+                    <span>User ID</span>
+                </div>
+                <div class="info-value" id="profileUserId">-</div>
+            </div>
+
+            <div class="info-item">
+                <div class="info-label">
+                    <span>📱</span>
+                    <span>Platform</span>
+                </div>
+                <div class="info-value">PWA Mobile</div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <button class="action-btn" onclick="showPasswordModal()">
+            <span>🔐 Ubah Password</span>
+            <span>→</span>
+        </button>
+
+        <button class="action-btn logout" onclick="logout()">
+            <span>🚪 Logout</span>
+            <span>→</span>
+        </button>
+    </div>
+
+    <!-- Password Modal -->
+    <div class="modal-overlay" id="passwordModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">🔐 Ubah Password</h3>
+                <button class="modal-close" onclick="closePasswordModal()">&times;</button>
+            </div>
+            <form onsubmit="changePassword(event)">
+                <div class="form-group">
+                    <label class="form-label">Password Lama</label>
+                    <input type="password" class="form-input" id="oldPassword" required placeholder="Masukkan password lama">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password Baru</label>
+                    <input type="password" class="form-input" id="newPassword" required placeholder="Masukkan password baru" minlength="6">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Konfirmasi Password Baru</label>
+                    <input type="password" class="form-input" id="confirmPassword" required placeholder="Konfirmasi password baru">
+                </div>
+                <button type="submit" class="btn-primary">Simpan Password</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav-user">
+        <a href="/user-dashboard.html" class="nav-item-user">
+            <div class="nav-icon">🏠</div>
+            <div class="nav-label">Beranda</div>
+        </a>
+
+        <a href="/user-riwayat.html" class="nav-item-user">
+            <div class="nav-icon">📜</div>
+            <div class="nav-label">Absensi</div>
+        </a>
+
+        <a href="/user-izin.html" class="nav-item-user">
+            <div class="nav-icon">📋</div>
+            <div class="nav-label">Izin</div>
+        </a>
+
+        <a href="/user-gaji.html" class="nav-item-user">
+            <div class="nav-icon">💰</div>
+            <div class="nav-label">Gaji</div>
+        </a>
+
+        <a href="/user-profil.html" class="nav-item-user active">
+            <div class="nav-icon">👤</div>
+            <div class="nav-label">Profil</div>
+        </a>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // Check login
+        if (!sessionStorage.getItem('userLoggedIn')) {
+            window.location.href = '/user-login.html';
+        }
+
+        // Load profile data
+        async function loadProfile() {
+            const pegawai_id = sessionStorage.getItem('pegawai_id');
+            const nip = sessionStorage.getItem('nip');
+
+            if (!pegawai_id) {
+                console.error('Pegawai ID not found');
+                return;
+            }
+
+            try {
+                // Load pegawai data
+                const pegawaiResponse = await fetch('/pegawai');
+                const pegawaiResult = await pegawaiResponse.json();
+
+                if (pegawaiResult.success && pegawaiResult.data) {
+                    const pegawai = pegawaiResult.data.find(p => p.id_pegawai === parseInt(pegawai_id));
+
+                    if (pegawai) {
+                        document.getElementById('profileName').textContent = pegawai.nama_pegawai;
+                        document.getElementById('profileNip').textContent = `NIP: ${pegawai.nip}`;
+                        document.getElementById('profilePosition').textContent = pegawai.posisi;
+                        document.getElementById('profilePositionDetail').textContent = pegawai.posisi;
+                        document.getElementById('profileEmail').textContent = pegawai.email || '-';
+                        document.getElementById('profileUserId').textContent = pegawai.id_pegawai;
+                        document.getElementById('profileStatus').textContent = pegawai.status || 'Aktif';
+
+                        // Format join date
+                        if (pegawai.tanggal_bergabung) {
+                            const joinDate = new Date(pegawai.tanggal_bergabung);
+                            document.getElementById('profileJoinDate').textContent = joinDate.toLocaleDateString('id-ID', {
+                                day: '2-digit',
+                                month: 'long',
+                                year: 'numeric'
+                            });
+                        }
+                    }
+                }
+
+                // Load absensi stats
+                const absensiResponse = await fetch('/absensi?limit=1000');
+                const absensiResult = await absensiResponse.json();
+
+                if (absensiResult.success && absensiResult.data) {
+                    const myAbsensi = absensiResult.data.filter(item => item.pegawai_id === parseInt(pegawai_id));
+
+                    // Count unique dates (kehadiran)
+                    const uniqueDates = new Set(myAbsensi.map(item => {
+                        const date = new Date(item.timestamp);
+                        return date.toDateString();
+                    }));
+                    document.getElementById('totalHadir').textContent = uniqueDates.size;
+
+                    // Count overtime
+                    const totalLembur = myAbsensi.filter(item => item.status_lembur === 'Ya').length;
+                    document.getElementById('totalLembur').textContent = totalLembur;
+
+                    // Calculate performance (attendance rate this month)
+                    const now = new Date();
+                    const thisMonthAbsensi = myAbsensi.filter(item => {
+                        const date = new Date(item.timestamp);
+                        return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+                    });
+
+                    // Get unique attendance dates this month
+                    const attendedDates = new Set();
+                    thisMonthAbsensi.forEach(item => {
+                        const date = new Date(item.timestamp);
+                        attendedDates.add(date.getDate());
+                    });
+
+                    const workdays = getWorkdaysInMonth(now.getFullYear(), now.getMonth());
+                    const attendanceRate = workdays > 0 ? Math.round((attendedDates.size / workdays) * 100) : 0;
+                    document.getElementById('totalPerformance').textContent = attendanceRate + '%';
+
+                    // Create daily chart
+                    createPerformanceChart(now, attendedDates, thisMonthAbsensi);
+                }
+
+            } catch (error) {
+                console.error('Error loading profile:', error);
+            }
+        }
+
+        // Get workdays in month (excluding weekends)
+        function getWorkdaysInMonth(year, month) {
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            let workdays = 0;
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month, day);
+                const dayOfWeek = date.getDay();
+                if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+                    workdays++;
+                }
+            }
+
+            return workdays;
+        }
+
+        // Create performance chart
+        let performanceChart = null;
+        function createPerformanceChart(now, attendedDates, thisMonthAbsensi) {
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+
+            // Get days in current month up to today
+            const today = now.getDate();
+            const labels = [];
+            const data = [];
+            const colors = [];
+
+            for (let day = 1; day <= today; day++) {
+                const date = new Date(now.getFullYear(), now.getMonth(), day);
+                const dayOfWeek = date.getDay();
+
+                // Skip weekends
+                if (dayOfWeek === 0 || dayOfWeek === 6) {
+                    continue;
+                }
+
+                labels.push(day);
+
+                // Check if attended this day
+                if (attendedDates.has(day)) {
+                    // Check if late
+                    const dayAbsensi = thisMonthAbsensi.find(item => {
+                        const d = new Date(item.timestamp);
+                        return d.getDate() === day;
+                    });
+
+                    if (dayAbsensi && dayAbsensi.status_keterlambatan === 'Terlambat') {
+                        data.push(0.5); // Terlambat
+                        colors.push('rgba(251, 191, 36, 0.8)'); // Yellow
+                    } else {
+                        data.push(1); // Hadir tepat waktu
+                        colors.push('rgba(34, 197, 94, 0.8)'); // Green
+                    }
+                } else {
+                    data.push(0); // Alpha
+                    colors.push('rgba(239, 68, 68, 0.8)'); // Red
+                }
+            }
+
+            // Destroy existing chart if exists
+            if (performanceChart) {
+                performanceChart.destroy();
+            }
+
+            performanceChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Kehadiran',
+                        data: data,
+                        backgroundColor: colors,
+                        borderRadius: 4,
+                        barThickness: 'flex',
+                        maxBarThickness: 20
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.raw;
+                                    if (value === 1) return 'Hadir';
+                                    if (value === 0.5) return 'Terlambat';
+                                    return 'Alpha';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.6)',
+                                font: { size: 10 }
+                            },
+                            title: {
+                                display: true,
+                                text: 'Tanggal',
+                                color: 'rgba(255, 255, 255, 0.6)',
+                                font: { size: 11 }
+                            }
+                        },
+                        y: {
+                            display: false,
+                            min: 0,
+                            max: 1.2
+                        }
+                    }
+                }
+            });
+        }
+
+        // Logout
+        function logout() {
+            if (confirm('Yakin ingin logout?')) {
+                sessionStorage.clear();
+                window.location.href = '/user-login.html';
+            }
+        }
+
+        // Show password modal
+        function showPasswordModal() {
+            document.getElementById('passwordModal').classList.add('active');
+            document.getElementById('oldPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+        }
+
+        // Close password modal
+        function closePasswordModal() {
+            document.getElementById('passwordModal').classList.remove('active');
+        }
+
+        // Change password
+        async function changePassword(event) {
+            event.preventDefault();
+
+            const pegawai_id = sessionStorage.getItem('pegawai_id');
+            const oldPassword = document.getElementById('oldPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (newPassword !== confirmPassword) {
+                showNotification('Password baru dan konfirmasi tidak cocok', 'error');
+                return;
+            }
+
+            if (newPassword.length < 6) {
+                showNotification('Password minimal 6 karakter', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/user/change-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        pegawai_id: pegawai_id,
+                        oldPassword: oldPassword,
+                        newPassword: newPassword
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showNotification('Password berhasil diubah', 'success');
+                    closePasswordModal();
+                } else {
+                    showNotification(result.message || 'Gagal mengubah password', 'error');
+                }
+            } catch (error) {
+                console.error('Error changing password:', error);
+                showNotification('Terjadi kesalahan saat mengubah password', 'error');
+            }
+        }
+
+        // Show notification
+        function showNotification(message, type) {
+            // Remove existing notification
+            const existingNotif = document.querySelector('.notification');
+            if (existingNotif) {
+                existingNotif.remove();
+            }
+
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('passwordModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePasswordModal();
+            }
+        });
+
+        // Initialize
+        loadProfile();
+
+        // Initialize notification
+        function initUserNotification() {
+            const userData = JSON.parse(sessionStorage.getItem('userData') || '{}');
+            if (userData.id_pegawai) {
+                window.notificationComponent = new NotificationComponent({
+                    isAdmin: false,
+                    pegawaiId: userData.id_pegawai,
+                    containerId: 'notification-bell'
+                });
+            }
+        }
+        setTimeout(initUserNotification, 500);
+    </script>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script src="/notification-component.js"></script>
+</body>
+</html>

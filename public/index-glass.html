@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Login Admin - Sistem Absensi">
+    <meta name="theme-color" content="#667eea">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Absensi Admin">
+
+    <title>Login Admin - Sistem Absensi</title>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+
+    <!-- Icons -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+
+    <link rel="stylesheet" href="glass-style.css">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: var(--space-4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Animated Background Orbs */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.6;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        .orb-1 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(102, 126, 234, 0.8), transparent);
+            top: -200px;
+            left: -200px;
+            animation-delay: 0s;
+        }
+
+        .orb-2 {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(118, 75, 162, 0.8), transparent);
+            bottom: -250px;
+            right: -250px;
+            animation-delay: 5s;
+        }
+
+        .orb-3 {
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(142, 84, 233, 0.6), transparent);
+            top: 50%;
+            left: 50%;
+            animation-delay: 10s;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translate(0, 0) scale(1);
+            }
+            33% {
+                transform: translate(50px, -50px) scale(1.1);
+            }
+            66% {
+                transform: translate(-30px, 30px) scale(0.9);
+            }
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 450px;
+            position: relative;
+            z-index: 10;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .login-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-2xl);
+            box-shadow:
+                0 20px 40px rgba(0, 0, 0, 0.3),
+                inset 0 1px 2px rgba(255, 255, 255, 0.1);
+            padding: var(--space-10);
+        }
+
+        .logo-container {
+            text-align: center;
+            margin-bottom: var(--space-8);
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto var(--space-4);
+            background: var(--gradient-primary);
+            border-radius: var(--radius-xl);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            box-shadow: var(--glow-primary);
+            animation: pulse-glow 3s infinite;
+        }
+
+        .app-title {
+            font-family: var(--font-secondary);
+            font-size: var(--text-2xl);
+            font-weight: var(--weight-bold);
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: var(--space-2);
+        }
+
+        .app-subtitle {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+        }
+
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            margin: var(--space-6) 0;
+        }
+
+        .input-icon {
+            position: relative;
+        }
+
+        .input-icon-symbol {
+            position: absolute;
+            left: var(--space-4);
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: var(--text-lg);
+            color: var(--text-tertiary);
+        }
+
+        .input-with-icon {
+            padding-left: calc(var(--space-4) * 2 + 24px);
+        }
+
+        .remember-forgot {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: var(--text-sm);
+            margin: var(--space-4) 0;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .checkbox-label input {
+            cursor: pointer;
+        }
+
+        .forgot-link {
+            color: var(--primary-start);
+            text-decoration: none;
+            transition: all var(--transition-base);
+        }
+
+        .forgot-link:hover {
+            color: var(--primary-end);
+            text-shadow: var(--glow-primary);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: var(--space-4);
+            font-size: var(--text-lg);
+            font-weight: var(--weight-semibold);
+            margin-top: var(--space-6);
+        }
+
+        .footer-text {
+            text-align: center;
+            margin-top: var(--space-8);
+            font-size: var(--text-sm);
+            color: var(--text-tertiary);
+        }
+
+        @media (max-width: 480px) {
+            .login-card {
+                padding: var(--space-6);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated Background Orbs -->
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+    <!-- Login Container -->
+    <div class="login-container">
+        <div class="login-card">
+            <!-- Logo & Title -->
+            <div class="logo-container">
+                <div class="logo">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L2 7V17L12 22L22 17V7L12 2Z" fill="white"/>
+                    </svg>
+                </div>
+                <h1 class="app-title">Sistem Absensi</h1>
+                <p class="app-subtitle">Monitoring Absensi Karyawan Real-time</p>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Login Form -->
+            <form id="loginForm">
+                <div class="input-group">
+                    <label class="input-label">Username</label>
+                    <div class="input-icon">
+                        <span class="input-icon-symbol">👤</span>
+                        <input
+                            type="text"
+                            class="glass-input input-with-icon focusable"
+                            id="username"
+                            placeholder="Masukkan username"
+                            required
+                            autocomplete="username"
+                        >
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">Password</label>
+                    <div class="input-icon">
+                        <span class="input-icon-symbol">🔒</span>
+                        <input
+                            type="password"
+                            class="glass-input input-with-icon focusable"
+                            id="password"
+                            placeholder="Masukkan password"
+                            required
+                            autocomplete="current-password"
+                        >
+                    </div>
+                </div>
+
+                <div class="remember-forgot">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="remember">
+                        <span>Ingat saya</span>
+                    </label>
+                    <a href="#" class="forgot-link">Lupa password?</a>
+                </div>
+
+                <button type="submit" class="btn-primary login-btn">
+                    <span>🚀</span>
+                    <span>Login ke Dashboard</span>
+                </button>
+            </form>
+
+            <!-- Footer -->
+            <div class="footer-text">
+                <p>© 2025 Sistem Absensi. All rights reserved.</p>
+                <p style="margin-top: var(--space-2);">Powered by Glassmorphism Design</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Default credentials info
+        const defaultCredentials = {
+            username: 'admin',
+            password: 'admin123'
+        };
+
+        // Login Form Handler
+        document.getElementById('loginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const remember = document.getElementById('remember').checked;
+
+            // Simple validation (replace with real authentication)
+            if (username === defaultCredentials.username && password === defaultCredentials.password) {
+                // Save to localStorage if remember me
+                if (remember) {
+                    localStorage.setItem('rememberedUser', username);
+                } else {
+                    localStorage.removeItem('rememberedUser');
+                }
+
+                // Save session
+                sessionStorage.setItem('isLoggedIn', 'true');
+                sessionStorage.setItem('username', username);
+
+                // Show success notification
+                showNotification('✅ Login berhasil! Mengalihkan...', 'success');
+
+                // Redirect to dashboard
+                setTimeout(() => {
+                    window.location.href = 'dashboard-glass.html';
+                }, 1000);
+            } else {
+                showNotification('❌ Username atau password salah!', 'error');
+
+                // Shake animation
+                const form = document.getElementById('loginForm');
+                form.style.animation = 'shake 0.5s';
+                setTimeout(() => {
+                    form.style.animation = '';
+                }, 500);
+            }
+        });
+
+        // Show Notification
+        function showNotification(message, type) {
+            const bgColor = type === 'success' ? 'rgba(74, 222, 128, 0.9)' : 'rgba(248, 113, 113, 0.9)';
+
+            const notification = document.createElement('div');
+            notification.innerHTML = `
+                <div style="position: fixed; top: 20px; right: 20px; background: ${bgColor}; backdrop-filter: blur(10px); color: white; padding: 16px 24px; border-radius: 12px; box-shadow: var(--shadow-glass-lg); z-index: 9999; animation: slideInRight 0.3s ease-out;">
+                    ${message}
+                </div>
+            `;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }
+
+        // Check if user is remembered
+        window.addEventListener('DOMContentLoaded', () => {
+            const rememberedUser = localStorage.getItem('rememberedUser');
+            if (rememberedUser) {
+                document.getElementById('username').value = rememberedUser;
+                document.getElementById('remember').checked = true;
+                document.getElementById('password').focus();
+            } else {
+                document.getElementById('username').focus();
+            }
+
+            // Show credentials hint
+            setTimeout(() => {
+                const hint = document.createElement('div');
+                hint.innerHTML = `
+                    <div style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(102, 126, 234, 0.9); backdrop-filter: blur(10px); color: white; padding: 12px 20px; border-radius: 8px; box-shadow: var(--shadow-glass-lg); z-index: 9999; animation: fadeIn 0.5s; font-size: var(--text-sm); text-align: center;">
+                        💡 <strong>Demo:</strong> username: admin | password: admin123
+                    </div>
+                `;
+                document.body.appendChild(hint);
+                setTimeout(() => hint.remove(), 5000);
+            }, 1000);
+        });
+
+        // Animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-10px); }
+                75% { transform: translateX(10px); }
+            }
+
+            @keyframes slideInRight {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // ===== PWA Features =====
+
+        // PWA Install Prompt
+        let deferredPrompt;
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            console.log('PWA: Install prompt available');
+            e.preventDefault();
+            deferredPrompt = e;
+
+            // Show install banner
+            showNotification('📱 Install aplikasi untuk akses lebih cepat! Klik tombol Install di browser.', 'info', 8000);
+        });
+
+        window.addEventListener('appinstalled', () => {
+            console.log('PWA: App installed successfully');
+            deferredPrompt = null;
+            showNotification('✅ Aplikasi berhasil di-install!', 'success');
+        });
+
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('Service Worker registered:', registration.scope);
+                    })
+                    .catch((error) => {
+                        console.log('Service Worker registration failed:', error);
+                    });
+            });
+        }
+
+        // Online/Offline Detection
+        window.addEventListener('online', () => {
+            showNotification('🌐 Koneksi internet tersambung kembali', 'success', 3000);
+            console.log('PWA: Back online');
+        });
+
+        window.addEventListener('offline', () => {
+            showNotification('⚠️ Tidak ada koneksi internet. Beberapa fitur mungkin terbatas.', 'warning', 5000);
+            console.log('PWA: Offline mode');
+        });
+
+        // Request notification permission (optional)
+        if ('Notification' in window && Notification.permission === 'default') {
+            setTimeout(() => {
+                Notification.requestPermission().then(permission => {
+                    console.log('Notification permission:', permission);
+                });
+            }, 5000); // Ask after 5 seconds
+        }
+    </script>
+</body>
+</html>

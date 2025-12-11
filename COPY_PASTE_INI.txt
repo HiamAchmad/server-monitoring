@@ -1,0 +1,18 @@
+================================================================================
+📋 COPY-PASTE COMMAND INI KE TERMINAL
+================================================================================
+
+Buka terminal, copy-paste command ini (SEMUA dalam 1 baris):
+
+
+cd /home/hasan/Documents/Perancangan-20251031T151707Z-1-001/Perancangan/server-monitoring && sudo -u postgres psql -c "CREATE USER absensi_user WITH PASSWORD 'absensi_password';" && sudo -u postgres psql -c "CREATE DATABASE db_absensi OWNER absensi_user;" && sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE db_absensi TO absensi_user;" && sudo -u postgres psql -d db_absensi -c "GRANT ALL ON SCHEMA public TO absensi_user;" && sudo -u postgres psql -d db_absensi -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO absensi_user;" && sudo -u postgres psql -d db_absensi -f database_postgresql.sql && node server.js
+
+
+Tunggu sampai muncul: "✅ Terhubung ke database PostgreSQL"
+
+Lalu buka browser: http://localhost:3000/dashboard.html
+
+
+================================================================================
+SELESAI! 🎉
+================================================================================

@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laporan - Sistem Absensi</title>
+    <link rel="stylesheet" href="glass-style.css">
+    <style>
+        body { background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%); min-height: 100vh; }
+        .main-content-with-sidebar .container { max-width: 1400px; margin: 0 auto; padding: var(--space-6); }
+        .page-header { margin-bottom: var(--space-6); }
+        .page-title { font-size: var(--text-2xl); font-weight: var(--weight-bold); background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        .tabs { display: flex; gap: var(--space-2); margin-bottom: var(--space-6); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: var(--space-2); flex-wrap: wrap; }
+        .tab { padding: var(--space-2) var(--space-4); background: transparent; border: none; color: var(--text-secondary); cursor: pointer; font-size: var(--text-sm); border-radius: var(--radius-md) var(--radius-md) 0 0; transition: all var(--transition-base); }
+        .tab.active { background: rgba(102, 126, 234, 0.2); color: var(--text-primary); }
+        .tab:hover { color: var(--text-primary); }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .filter-row { display: flex; gap: var(--space-3); margin-bottom: var(--space-4); flex-wrap: wrap; align-items: center; }
+        .filter-select { background: #1a1a2e; border: 1px solid rgba(255,255,255,0.2); border-radius: var(--radius-md); padding: var(--space-2) var(--space-3); color: white; font-size: var(--text-sm); cursor: pointer; }
+        .filter-select option { background: #1a1a2e; color: white; padding: 10px; }
+
+        .btn { padding: var(--space-2) var(--space-4); border: none; border-radius: var(--radius-md); cursor: pointer; font-size: var(--text-sm); font-weight: var(--weight-medium); transition: all var(--transition-base); display: inline-flex; align-items: center; gap: var(--space-2); }
+        .btn-primary { background: var(--gradient-primary); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); }
+        .btn-secondary { background: rgba(255,255,255,0.1); color: var(--text-primary); }
+        .btn-success { background: rgba(34, 197, 94, 0.2); color: #86efac; }
+
+        .data-card { background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: var(--radius-xl); padding: var(--space-6); margin-bottom: var(--space-6); }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4); flex-wrap: wrap; gap: var(--space-3); }
+        .section-title { font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--text-primary); }
+
+        .table-container { overflow-x: auto; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+        .data-table th { text-align: left; padding: var(--space-3); background: rgba(255,255,255,0.05); color: var(--text-secondary); font-weight: var(--weight-semibold); border-bottom: 1px solid rgba(255,255,255,0.1); white-space: nowrap; }
+        .data-table td { padding: var(--space-3); border-bottom: 1px solid rgba(255,255,255,0.05); color: var(--text-primary); }
+        .data-table tr:hover td { background: rgba(255,255,255,0.03); }
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+
+        .badge { display: inline-block; padding: 2px 8px; border-radius: var(--radius-sm); font-size: var(--text-xs); font-weight: var(--weight-medium); }
+        .badge-success { background: rgba(34, 197, 94, 0.2); color: #86efac; }
+        .badge-warning { background: rgba(251, 191, 36, 0.2); color: #fde047; }
+        .badge-danger { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+        .badge-info { background: rgba(59, 130, 246, 0.2); color: #93c5fd; }
+
+        .empty-state { text-align: center; padding: var(--space-8); color: var(--text-tertiary); }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-6); }
+        .stat-item { background: rgba(255,255,255,0.03); border-radius: var(--radius-lg); padding: var(--space-4); text-align: center; }
+        .stat-value { font-size: var(--text-xl); font-weight: var(--weight-bold); background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .stat-label { font-size: var(--text-xs); color: var(--text-tertiary); margin-top: var(--space-1); }
+
+        .chart-placeholder { height: 300px; background: rgba(255,255,255,0.03); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; color: var(--text-tertiary); margin-bottom: var(--space-4); }
+
+        .notification { position: fixed; top: var(--space-6); right: var(--space-6); background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); padding: var(--space-4); min-width: 280px; z-index: 1100; animation: slideIn 0.3s ease-out; }
+        .notification.success { border-left: 4px solid var(--success); }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(100px); } to { opacity: 1; transform: translateX(0); } }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7V17L12 22L22 17V7L12 2Z" fill="url(#gradient1)"/><defs><linearGradient id="gradient1" x1="2" y1="2" x2="22" y2="22"><stop offset="0%" style="stop-color:#667eea"/><stop offset="100%" style="stop-color:#764ba2"/></linearGradient></defs></svg>
+            <span>Sistem Absensi</span>
+        </div>
+        <div class="navbar-menu">
+            <div id="notification-bell" style="position: relative; margin: 0 8px;"></div>
+            <a href="#" class="navbar-link" onclick="logout()">Logout</a>
+        </div>
+    </nav>
+
+    <aside class="sidebar">
+        <div class="sidebar-item" onclick="location.href='dashboard-glass.html'"><span class="sidebar-icon">📊</span><span>Dashboard</span></div>
+        <div class="sidebar-item" onclick="location.href='riwayat-glass.html'"><span class="sidebar-icon">📜</span><span>Riwayat</span></div>
+        <div class="sidebar-item" onclick="location.href='manajemen-karyawan-glass.html'"><span class="sidebar-icon">👥</span><span>Karyawan</span></div>
+        <div class="sidebar-item" onclick="location.href='cuti-glass.html'"><span class="sidebar-icon">📋</span><span>Cuti/Izin</span></div>
+        <div class="sidebar-item" onclick="location.href='jadwal-shift-glass.html'"><span class="sidebar-icon">📅</span><span>Jadwal</span></div>
+        <div class="sidebar-item" onclick="location.href='payroll-glass.html'"><span class="sidebar-icon">💰</span><span>Payroll</span></div>
+        <div class="sidebar-item active"><span class="sidebar-icon">📈</span><span>Laporan</span></div>
+        <div class="sidebar-item" onclick="location.href='settings-glass.html'"><span class="sidebar-icon">⚙️</span><span>Settings</span></div>
+        <div class="sidebar-item" onclick="logout()"><span class="sidebar-icon">🚪</span><span>Logout</span></div>
+    </aside>
+
+    <div class="main-content-with-sidebar">
+        <div class="container">
+            <div class="page-header">
+                <h1 class="page-title">📈 Laporan & Rekap</h1>
+            </div>
+
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('absensi')">Rekap Absensi</button>
+                <button class="tab" onclick="showTab('terlambat')">Keterlambatan</button>
+                <button class="tab" onclick="showTab('cuti')">Cuti/Izin</button>
+                <button class="tab" onclick="showTab('lembur')">Lembur</button>
+            </div>
+
+            <!-- Filter -->
+            <div class="filter-row">
+                <select class="filter-select" id="filterBulan">
+                    <option value="1">Januari</option>
+                    <option value="2">Februari</option>
+                    <option value="3">Maret</option>
+                    <option value="4">April</option>
+                    <option value="5">Mei</option>
+                    <option value="6">Juni</option>
+                    <option value="7">Juli</option>
+                    <option value="8">Agustus</option>
+                    <option value="9">September</option>
+                    <option value="10">Oktober</option>
+                    <option value="11">November</option>
+                    <option value="12">Desember</option>
+                </select>
+                <select class="filter-select" id="filterTahun">
+                    <option value="2024">2024</option>
+                    <option value="2025">2025</option>
+                </select>
+                <button class="btn btn-primary" onclick="loadCurrentReport()">🔄 Tampilkan</button>
+                <button class="btn btn-success" onclick="exportReport()">📥 Export CSV</button>
+            </div>
+
+            <!-- Tab: Rekap Absensi -->
+            <div class="tab-content active" id="tab-absensi">
+                <div class="data-card">
+                    <div class="section-header">
+                        <h2 class="section-title">Rekap Absensi Bulanan</h2>
+                    </div>
+                    <div class="stats-grid" id="absensiStats">
+                        <div class="stat-item"><div class="stat-value" id="stat-total">0</div><div class="stat-label">Total Karyawan</div></div>
+                        <div class="stat-item"><div class="stat-value" id="stat-hadir">0</div><div class="stat-label">Total Hadir</div></div>
+                        <div class="stat-item"><div class="stat-value" id="stat-terlambat">0</div><div class="stat-label">Total Terlambat</div></div>
+                        <div class="stat-item"><div class="stat-value" id="stat-izin">0</div><div class="stat-label">Total Izin</div></div>
+                        <div class="stat-item"><div class="stat-value" id="stat-sakit">0</div><div class="stat-label">Total Sakit</div></div>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>NIP</th>
+                                    <th>Nama</th>
+                                    <th>Posisi</th>
+                                    <th>Divisi</th>
+                                    <th class="text-center">Hadir</th>
+                                    <th class="text-center">Terlambat</th>
+                                    <th class="text-center">Izin</th>
+                                    <th class="text-center">Sakit</th>
+                                    <th class="text-center">Lembur</th>
+                                </tr>
+                            </thead>
+                            <tbody id="absensiTable">
+                                <tr><td colspan="9"><div class="empty-state">Pilih periode dan klik Tampilkan</div></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Keterlambatan -->
+            <div class="tab-content" id="tab-terlambat">
+                <div class="data-card">
+                    <div class="section-header">
+                        <h2 class="section-title">Rekap Keterlambatan</h2>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>NIP</th>
+                                    <th>Nama</th>
+                                    <th>Posisi</th>
+                                    <th class="text-center">Total Terlambat</th>
+                                    <th>Tanggal-tanggal Terlambat</th>
+                                </tr>
+                            </thead>
+                            <tbody id="terlambatTable">
+                                <tr><td colspan="5"><div class="empty-state">Pilih periode dan klik Tampilkan</div></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Cuti/Izin -->
+            <div class="tab-content" id="tab-cuti">
+                <div class="data-card">
+                    <div class="section-header">
+                        <h2 class="section-title">Rekap Cuti & Izin</h2>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>NIP</th>
+                                    <th>Nama</th>
+                                    <th>Posisi</th>
+                                    <th>Jenis</th>
+                                    <th class="text-center">Jumlah</th>
+                                    <th class="text-center">Total Hari</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cutiTable">
+                                <tr><td colspan="6"><div class="empty-state">Pilih periode dan klik Tampilkan</div></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Lembur -->
+            <div class="tab-content" id="tab-lembur">
+                <div class="data-card">
+                    <div class="section-header">
+                        <h2 class="section-title">Rekap Lembur</h2>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>NIP</th>
+                                    <th>Nama</th>
+                                    <th>Posisi</th>
+                                    <th class="text-center">Hari Lembur</th>
+                                    <th class="text-center">Total Jam</th>
+                                </tr>
+                            </thead>
+                            <tbody id="lemburTable">
+                                <tr><td colspan="5"><div class="empty-state">Pilih periode dan klik Tampilkan</div></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function logout() {
+            localStorage.removeItem('isLoggedIn');
+            sessionStorage.removeItem('isLoggedIn');
+            window.location.href = '/index-glass.html';
+        }
+
+        let currentTab = 'absensi';
+        const bulanNames = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const now = new Date();
+            document.getElementById('filterBulan').value = now.getMonth() + 1;
+            document.getElementById('filterTahun').value = now.getFullYear();
+        });
+
+        function showTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(`tab-${tab}`).classList.add('active');
+        }
+
+        function loadCurrentReport() {
+            switch(currentTab) {
+                case 'absensi': loadAbsensi(); break;
+                case 'terlambat': loadTerlambat(); break;
+                case 'cuti': loadCuti(); break;
+                case 'lembur': loadLembur(); break;
+            }
+        }
+
+        async function loadAbsensi() {
+            const bulan = document.getElementById('filterBulan').value;
+            const tahun = document.getElementById('filterTahun').value;
+
+            try {
+                const res = await fetch(`/api/laporan/absensi-bulanan?bulan=${bulan}&tahun=${tahun}`);
+                const result = await res.json();
+                const data = result.data || [];
+
+                // Update stats
+                document.getElementById('stat-total').textContent = data.length;
+                document.getElementById('stat-hadir').textContent = data.reduce((sum, d) => sum + parseInt(d.total_hadir || 0), 0);
+                document.getElementById('stat-terlambat').textContent = data.reduce((sum, d) => sum + parseInt(d.terlambat || 0), 0);
+                document.getElementById('stat-izin').textContent = data.reduce((sum, d) => sum + parseInt(d.izin || 0), 0);
+                document.getElementById('stat-sakit').textContent = data.reduce((sum, d) => sum + parseInt(d.sakit || 0), 0);
+
+                // Render table
+                const tbody = document.getElementById('absensiTable');
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state">Tidak ada data</div></td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = data.map(d => `
+                    <tr>
+                        <td><code style="font-size:11px;">${d.nip}</code></td>
+                        <td>${d.nama_pegawai}</td>
+                        <td><span class="badge badge-info">${d.posisi || '-'}</span></td>
+                        <td>${d.divisi || '-'}</td>
+                        <td class="text-center"><span class="badge badge-success">${d.total_hadir || 0}</span></td>
+                        <td class="text-center">${d.terlambat > 0 ? `<span class="badge badge-warning">${d.terlambat}</span>` : '0'}</td>
+                        <td class="text-center">${d.izin || 0}</td>
+                        <td class="text-center">${d.sakit || 0}</td>
+                        <td class="text-center">${d.lembur || 0}</td>
+                    </tr>
+                `).join('');
+
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Gagal memuat data', 'error');
+            }
+        }
+
+        async function loadTerlambat() {
+            const bulan = document.getElementById('filterBulan').value;
+            const tahun = document.getElementById('filterTahun').value;
+
+            try {
+                const res = await fetch(`/api/laporan/terlambat?bulan=${bulan}&tahun=${tahun}`);
+                const result = await res.json();
+                const data = result.data || [];
+
+                const tbody = document.getElementById('terlambatTable');
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">Tidak ada data keterlambatan</div></td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = data.map(d => `
+                    <tr>
+                        <td><code style="font-size:11px;">${d.nip}</code></td>
+                        <td>${d.nama_pegawai}</td>
+                        <td><span class="badge badge-info">${d.posisi || '-'}</span></td>
+                        <td class="text-center"><span class="badge badge-warning">${d.total_terlambat}</span></td>
+                        <td style="font-size:11px;color:var(--text-tertiary);">
+                            ${(d.tanggal_terlambat || []).map(t => new Date(t).toLocaleDateString('id-ID')).join(', ')}
+                        </td>
+                    </tr>
+                `).join('');
+
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        async function loadCuti() {
+            const bulan = document.getElementById('filterBulan').value;
+            const tahun = document.getElementById('filterTahun').value;
+
+            try {
+                const res = await fetch(`/api/laporan/cuti?bulan=${bulan}&tahun=${tahun}`);
+                const result = await res.json();
+                const data = result.data || [];
+
+                const tbody = document.getElementById('cutiTable');
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state">Tidak ada data cuti/izin</div></td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = data.map(d => `
+                    <tr>
+                        <td><code style="font-size:11px;">${d.nip}</code></td>
+                        <td>${d.nama_pegawai}</td>
+                        <td><span class="badge badge-info">${d.posisi || '-'}</span></td>
+                        <td><span class="badge badge-warning">${d.jenis}</span></td>
+                        <td class="text-center">${d.jumlah}</td>
+                        <td class="text-center">${d.total_hari} hari</td>
+                    </tr>
+                `).join('');
+
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        async function loadLembur() {
+            const bulan = document.getElementById('filterBulan').value;
+            const tahun = document.getElementById('filterTahun').value;
+
+            try {
+                const res = await fetch(`/api/laporan/lembur?bulan=${bulan}&tahun=${tahun}`);
+                const result = await res.json();
+                const data = result.data || [];
+
+                const tbody = document.getElementById('lemburTable');
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state">Tidak ada data lembur</div></td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = data.map(d => `
+                    <tr>
+                        <td><code style="font-size:11px;">${d.nip}</code></td>
+                        <td>${d.nama_pegawai}</td>
+                        <td><span class="badge badge-info">${d.posisi || '-'}</span></td>
+                        <td class="text-center"><span class="badge badge-success">${d.jumlah_hari_lembur}</span></td>
+                        <td class="text-center">${(d.total_jam_lembur || 0).toFixed(1)} jam</td>
+                    </tr>
+                `).join('');
+
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        function exportReport() {
+            const bulan = document.getElementById('filterBulan').value;
+            const tahun = document.getElementById('filterTahun').value;
+            let jenis = 'absensi';
+
+            if (currentTab === 'lembur') jenis = 'lembur';
+
+            window.location.href = `/api/laporan/export?jenis=${jenis}&bulan=${bulan}&tahun=${tahun}`;
+            showNotification('Mengunduh laporan...', 'success');
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => {
+                notification.style.animation = 'slideIn 0.3s ease-out reverse';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+    </script>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script src="/notification-component.js"></script>
+    <script>
+        // Initialize notification for admin
+        window.notificationComponent = new NotificationComponent({
+            isAdmin: true,
+            containerId: 'notification-bell'
+        });
+    </script>
+</body>
+</html>

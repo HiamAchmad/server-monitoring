@@ -1,0 +1,67 @@
+╔══════════════════════════════════════════════════════════════╗
+║  🔧 FIX PERMISSION ERROR UNTUK UPLOAD TUGAS                 ║
+╚══════════════════════════════════════════════════════════════╝
+
+ERROR YANG TERJADI:
+❌ "permission denied for sequence tugas_id_tugas_seq"
+
+PENYEBAB:
+User database 'absensi_user' tidak punya akses ke sequence untuk auto-increment ID.
+
+SOLUSI:
+Jalankan command ini di terminal Anda (copy-paste saja):
+
+╔══════════════════════════════════════════════════════════════╗
+║  COPY COMMAND INI:                                           ║
+╚══════════════════════════════════════════════════════════════╝
+
+cd /home/hasan/Documents/Perancangan-20251031T151707Z-1-001/Perancangan/server-monitoring && sudo -u postgres psql -d db_absensi -c "GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO absensi_user; GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO absensi_user;" && node server.js
+
+
+╔══════════════════════════════════════════════════════════════╗
+║  ATAU CARA MANUAL (STEP BY STEP):                           ║
+╚══════════════════════════════════════════════════════════════╝
+
+1. Masuk ke PostgreSQL sebagai postgres user:
+   sudo -u postgres psql -d db_absensi
+
+2. Jalankan SQL commands ini (copy-paste):
+
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO absensi_user;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO absensi_user;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO absensi_user;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO absensi_user;
+
+3. Keluar dari psql:
+   \q
+
+4. Jalankan server:
+   node server.js
+
+
+╔══════════════════════════════════════════════════════════════╗
+║  PENJELASAN:                                                 ║
+╚══════════════════════════════════════════════════════════════╝
+
+Command ini memberikan permission kepada user 'absensi_user' untuk:
+✅ Mengakses semua SEQUENCES (untuk auto-increment ID)
+✅ Mengakses semua TABLES (untuk insert/update/delete)
+✅ Default privileges untuk tabel/sequence baru di masa depan
+
+SETELAH INI:
+Upload tugas akan berfungsi 100% tanpa error!
+
+
+╔══════════════════════════════════════════════════════════════╗
+║  QUICK FIX (PALING CEPAT):                                   ║
+╚══════════════════════════════════════════════════════════════╝
+
+Buka terminal baru, copy-paste command ini:
+
+sudo -u postgres psql -d db_absensi -c "GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO absensi_user; GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO absensi_user;"
+
+Lalu jalankan server lagi dengan:
+
+node server.js
+
+DONE! 🎉

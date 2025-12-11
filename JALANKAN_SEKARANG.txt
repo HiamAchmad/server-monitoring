@@ -1,0 +1,85 @@
+================================================================================
+🚀 COPY-PASTE COMMANDS INI KE TERMINAL ANDA
+================================================================================
+
+Buka terminal, lalu copy-paste SEMUA baris ini sekaligus:
+
+
+cd /home/hasan/Documents/Perancangan-20251031T151707Z-1-001/Perancangan/server-monitoring
+
+sudo -u postgres psql << 'EOF'
+DROP DATABASE IF EXISTS db_absensi;
+DROP USER IF EXISTS absensi_user;
+CREATE USER absensi_user WITH PASSWORD 'absensi_password';
+CREATE DATABASE db_absensi OWNER absensi_user;
+GRANT ALL PRIVILEGES ON DATABASE db_absensi TO absensi_user;
+\c db_absensi
+GRANT ALL ON SCHEMA public TO absensi_user;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO absensi_user;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO absensi_user;
+\q
+EOF
+
+sudo -u postgres psql -d db_absensi -f database_postgresql.sql
+
+node server.js
+
+
+================================================================================
+PENJELASAN
+================================================================================
+
+Command di atas akan:
+1. Drop database lama (jika ada)
+2. Create user & database baru
+3. Import schema & data
+4. Start server
+
+Setelah running, Anda akan melihat:
+   🚀 MQTT Broker berjalan pada port 1883
+   🚀 Server absensi berjalan pada port 3000
+   ✅ Terhubung ke database PostgreSQL.
+
+Lalu buka browser: http://localhost:3000/dashboard.html
+
+
+================================================================================
+ATAU CARA TERPISAH (Jika prefer step-by-step)
+================================================================================
+
+STEP 1 - Setup Database:
+-------------------------
+cd /home/hasan/Documents/Perancangan-20251031T151707Z-1-001/Perancangan/server-monitoring
+
+sudo -u postgres psql << 'EOF'
+CREATE USER absensi_user WITH PASSWORD 'absensi_password';
+CREATE DATABASE db_absensi OWNER absensi_user;
+GRANT ALL PRIVILEGES ON DATABASE db_absensi TO absensi_user;
+\c db_absensi
+GRANT ALL ON SCHEMA public TO absensi_user;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO absensi_user;
+\q
+EOF
+
+
+STEP 2 - Import Schema:
+------------------------
+sudo -u postgres psql -d db_absensi -f database_postgresql.sql
+
+
+STEP 3 - Start Server:
+-----------------------
+node server.js
+
+
+================================================================================
+VERIFICATION
+================================================================================
+
+Cek apakah database sudah siap:
+   PGPASSWORD=absensi_password psql -h localhost -U absensi_user -d db_absensi -c "SELECT * FROM pegawai;"
+
+Jika berhasil, akan muncul daftar pegawai.
+
+
+================================================================================

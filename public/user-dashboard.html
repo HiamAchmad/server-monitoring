@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Dashboard Karyawan - Sistem Absensi">
+    <meta name="theme-color" content="#667eea">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <title>Dashboard - Sistem Absensi</title>
+
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="glass-style.css">
+
+    <!-- Socket.IO -->
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
+    <style>
+        /* Mobile-First Dashboard */
+        body {
+            margin: 0;
+            padding: 0;
+            padding-top: 60px;
+            padding-bottom: 70px;
+            min-height: 100vh;
+        }
+
+        /* Top Header */
+        .mobile-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 var(--space-4);
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+        }
+
+        .header-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--gradient-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .header-info h3 {
+            font-size: var(--text-base);
+            margin: 0;
+            color: var(--text-primary);
+        }
+
+        .header-info p {
+            font-size: var(--text-xs);
+            margin: 0;
+            color: var(--text-tertiary);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .icon-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all var(--transition-base);
+        }
+
+        .icon-btn:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Main Content */
+        .container-mobile {
+            padding: var(--space-4);
+            max-width: 100%;
+        }
+
+        /* Stats Cards */
+        .stats-grid-mobile {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-3);
+            margin-bottom: var(--space-6);
+        }
+
+        .stat-card-mobile {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            text-align: center;
+        }
+
+        .stat-icon-mobile {
+            font-size: 32px;
+            margin-bottom: var(--space-2);
+        }
+
+        .stat-value-mobile {
+            font-size: var(--text-2xl);
+            font-weight: var(--weight-bold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-1);
+        }
+
+        .stat-label-mobile {
+            font-size: var(--text-xs);
+            color: var(--text-tertiary);
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            margin-bottom: var(--space-6);
+        }
+
+        .quick-actions h3 {
+            font-size: var(--text-base);
+            margin-bottom: var(--space-4);
+            color: var(--text-primary);
+        }
+
+        .action-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-3);
+        }
+
+        .action-btn {
+            padding: var(--space-4);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-md);
+            text-align: center;
+            cursor: pointer;
+            transition: all var(--transition-base);
+        }
+
+        .action-btn:active {
+            transform: scale(0.97);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .action-icon {
+            font-size: 28px;
+            margin-bottom: var(--space-2);
+        }
+
+        .action-label {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav-user {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 100;
+            box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-item-user {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-2);
+            cursor: pointer;
+            transition: all var(--transition-base);
+            text-decoration: none;
+        }
+
+        .nav-item-user.active {
+            color: var(--primary-start);
+        }
+
+        .nav-icon {
+            font-size: 24px;
+            margin-bottom: var(--space-1);
+        }
+
+        .nav-label {
+            font-size: var(--text-xs);
+            color: var(--text-tertiary);
+        }
+
+        .nav-item-user.active .nav-label {
+            color: var(--primary-start);
+            font-weight: var(--weight-semibold);
+        }
+
+        /* Responsive */
+        @media (min-width: 768px) {
+            .container-mobile {
+                max-width: 768px;
+                margin: 0 auto;
+            }
+
+            .stats-grid-mobile {
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            .action-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Header -->
+    <div class="mobile-header">
+        <div class="header-left">
+            <div class="header-avatar">👤</div>
+            <div class="header-info">
+                <h3 id="userName">Loading...</h3>
+                <p id="userNIP">NIP: ...</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <div id="notification-bell" style="position: relative;"></div>
+            <div class="icon-btn" onclick="refreshData()">🔄</div>
+            <div class="icon-btn" onclick="logout()">🚪</div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container-mobile">
+        <!-- Stats Grid -->
+        <div class="stats-grid-mobile">
+            <div class="stat-card-mobile">
+                <div class="stat-icon-mobile">📅</div>
+                <div class="stat-value-mobile" id="totalHadir">0</div>
+                <div class="stat-label-mobile">Hadir</div>
+            </div>
+
+            <div class="stat-card-mobile">
+                <div class="stat-icon-mobile">⏰</div>
+                <div class="stat-value-mobile" id="totalTerlambat">0</div>
+                <div class="stat-label-mobile">Terlambat</div>
+            </div>
+
+            <div class="stat-card-mobile">
+                <div class="stat-icon-mobile">⏱️</div>
+                <div class="stat-value-mobile" id="totalLembur">0</div>
+                <div class="stat-label-mobile">Lembur</div>
+            </div>
+
+            <div class="stat-card-mobile">
+                <div class="stat-icon-mobile">📊</div>
+                <div class="stat-value-mobile" id="totalAbsensi">0</div>
+                <div class="stat-label-mobile">Total</div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <h3>Akses Cepat</h3>
+            <div class="action-grid">
+                <div class="action-btn" onclick="window.location.href='/user-riwayat.html'">
+                    <div class="action-icon">📜</div>
+                    <div class="action-label">Riwayat Absen</div>
+                </div>
+
+                <div class="action-btn" onclick="window.location.href='/user-izin.html'">
+                    <div class="action-icon">📋</div>
+                    <div class="action-label">Pengajuan Izin</div>
+                </div>
+
+                <div class="action-btn" onclick="window.location.href='/user-gaji.html'">
+                    <div class="action-icon">💰</div>
+                    <div class="action-label">Slip Gaji</div>
+                </div>
+
+                <div class="action-btn" onclick="window.location.href='/user-profil.html'">
+                    <div class="action-icon">👤</div>
+                    <div class="action-label">Profil</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav-user">
+        <a href="/user-dashboard.html" class="nav-item-user active">
+            <div class="nav-icon">🏠</div>
+            <div class="nav-label">Beranda</div>
+        </a>
+
+        <a href="/user-riwayat.html" class="nav-item-user">
+            <div class="nav-icon">📜</div>
+            <div class="nav-label">Absensi</div>
+        </a>
+
+        <a href="/user-izin.html" class="nav-item-user">
+            <div class="nav-icon">📋</div>
+            <div class="nav-label">Izin</div>
+        </a>
+
+        <a href="/user-gaji.html" class="nav-item-user">
+            <div class="nav-icon">💰</div>
+            <div class="nav-label">Gaji</div>
+        </a>
+
+        <a href="/user-profil.html" class="nav-item-user">
+            <div class="nav-icon">👤</div>
+            <div class="nav-label">Profil</div>
+        </a>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // Check if logged in
+        if (!sessionStorage.getItem('userLoggedIn')) {
+            window.location.href = '/user-login.html';
+        }
+
+        const socket = io();
+        const userNIP = sessionStorage.getItem('userNIP');
+
+        // Load user data
+        async function loadUserData() {
+            try {
+                // Fetch employee data by NIP
+                const response = await fetch('/pegawai');
+                const result = await response.json();
+
+                if (result.success) {
+                    const userData = result.data.find(p => p.nip === userNIP);
+                    if (userData) {
+                        document.getElementById('userName').textContent = userData.nama_pegawai;
+                        document.getElementById('userNIP').textContent = 'NIP: ' + userData.nip;
+
+                        // Store pegawai_id for later use
+                        sessionStorage.setItem('pegawai_id', userData.id_pegawai);
+
+                        // Load absensi data
+                        loadAbsensiData(userData.id_pegawai);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading user data:', error);
+            }
+        }
+
+        // Load absensi data
+        async function loadAbsensiData(pegawai_id) {
+            try {
+                const response = await fetch('/absensi?limit=100');
+                const result = await response.json();
+
+                if (result.success) {
+                    // Filter data for current user
+                    const myData = result.data.filter(item => item.pegawai_id === pegawai_id);
+
+                    // Calculate stats
+                    const totalAbsensi = myData.length;
+                    const totalHadir = myData.filter(item => item.keterangan === 'Hadir').length;
+                    const totalTerlambat = myData.filter(item => item.keterangan === 'Terlambat').length;
+                    const totalLembur = myData.filter(item => item.status_lembur === 'Ya').length;
+
+                    // Update stats
+                    document.getElementById('totalAbsensi').textContent = totalAbsensi;
+                    document.getElementById('totalHadir').textContent = totalHadir;
+                    document.getElementById('totalTerlambat').textContent = totalTerlambat;
+                    document.getElementById('totalLembur').textContent = totalLembur;
+                }
+            } catch (error) {
+                console.error('Error loading absensi:', error);
+            }
+        }
+
+        // Refresh data
+        function refreshData() {
+            location.reload();
+        }
+
+        // Logout
+        function logout() {
+            if (confirm('Apakah Anda yakin ingin keluar?')) {
+                sessionStorage.clear();
+                window.location.href = '/user-login.html';
+            }
+        }
+
+        // Real-time updates
+        socket.on('data_update', (data) => {
+            console.log('Real-time update:', data);
+            const pegawai_id = parseInt(sessionStorage.getItem('pegawai_id'));
+
+            // Reload if update is for current user
+            if (data.pegawai_id && data.pegawai_id === pegawai_id) {
+                loadAbsensiData(pegawai_id);
+
+                // Show notification
+                if ('Notification' in window && Notification.permission === 'granted') {
+                    new Notification('Absensi Tercatat', {
+                        body: `${data.tipe_absen || 'Masuk'} - ${data.waktu_absen || data.waktu_keluar}`,
+                        icon: '/icons/icon-192x192.png'
+                    });
+                }
+            }
+        });
+
+        // Real-time fingerprint attendance notification
+        socket.on('attendance_success', (data) => {
+            console.log('👆 Fingerprint attendance detected:', data);
+            const pegawai_id = parseInt(sessionStorage.getItem('pegawai_id'));
+
+            // Reload if attendance is for current user
+            if (data.pegawai_id && data.pegawai_id === pegawai_id) {
+                loadAbsensiData(pegawai_id);
+
+                // Show BIG center popup notification with overlay
+                const notification = document.createElement('div');
+                notification.innerHTML = `
+                    <!-- Overlay Background -->
+                    <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px); z-index: 9998; animation: fadeIn 0.3s ease-out;"></div>
+
+                    <!-- Main Notification Card -->
+                    <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 48px 40px; border-radius: 24px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1); z-index: 9999; animation: popIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); min-width: 320px; max-width: 90vw; text-align: center;">
+
+                        <!-- Success Icon -->
+                        <div style="width: 120px; height: 120px; background: rgba(255, 255, 255, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; animation: scaleIn 0.6s ease-out 0.2s both;">
+                            <div style="font-size: 64px; animation: bounce 0.6s ease-out 0.4s;">✅</div>
+                        </div>
+
+                        <!-- Title -->
+                        <h2 style="font-size: 32px; font-weight: 700; margin: 0 0 16px 0; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);">
+                            Absensi Berhasil!
+                        </h2>
+
+                        <!-- Details -->
+                        <div style="font-size: 18px; opacity: 0.95; margin-bottom: 8px; font-weight: 500;">
+                            ${data.nama || 'Karyawan'}
+                        </div>
+                        <div style="font-size: 16px; opacity: 0.85; margin-bottom: 4px;">
+                            📇 NIP: ${data.nip || '-'}
+                        </div>
+                        <div style="font-size: 16px; opacity: 0.85; margin-bottom: 4px;">
+                            👆 Fingerprint ID: #${data.fingerprint_id}
+                        </div>
+                        <div style="font-size: 18px; opacity: 0.9; font-weight: 600; margin-top: 16px;">
+                            🕐 ${new Date(data.waktu).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                        </div>
+
+                        <!-- Checkmark Animation -->
+                        <div style="margin-top: 24px; font-size: 14px; opacity: 0.8;">
+                            Data tersimpan ke sistem ✓
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(notification);
+
+                // Auto remove after 4 seconds
+                setTimeout(() => {
+                    notification.style.animation = 'fadeOut 0.3s ease-out';
+                    setTimeout(() => notification.remove(), 300);
+                }, 4000);
+
+                // Browser notification
+                if ('Notification' in window && Notification.permission === 'granted') {
+                    new Notification('✅ Absensi Berhasil!', {
+                        body: `Fingerprint tercatat pada ${new Date(data.waktu).toLocaleTimeString('id-ID')}`,
+                        icon: '/icons/icon-192x192.png'
+                    });
+                }
+            }
+        });
+
+        // Add animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                }
+                to {
+                    opacity: 1;
+                }
+            }
+            @keyframes fadeOut {
+                from {
+                    opacity: 1;
+                }
+                to {
+                    opacity: 0;
+                }
+            }
+            @keyframes popIn {
+                0% {
+                    opacity: 0;
+                    transform: translate(-50%, -50%) scale(0.5);
+                }
+                100% {
+                    opacity: 1;
+                    transform: translate(-50%, -50%) scale(1);
+                }
+            }
+            @keyframes scaleIn {
+                from {
+                    transform: scale(0);
+                    opacity: 0;
+                }
+                to {
+                    transform: scale(1);
+                    opacity: 1;
+                }
+            }
+            @keyframes bounce {
+                0%, 100% {
+                    transform: scale(1);
+                }
+                50% {
+                    transform: scale(1.2);
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Initialize
+        loadUserData();
+    </script>
+
+    <!-- Notification Component -->
+    <script src="/notification-component.js"></script>
+    <script>
+        // Initialize notification component for user after data loaded
+        function initUserNotification() {
+            const userData = JSON.parse(sessionStorage.getItem('userData') || '{}');
+            if (userData.id_pegawai) {
+                notificationComponent = new NotificationComponent({
+                    isAdmin: false,
+                    pegawaiId: userData.id_pegawai,
+                    containerId: 'notification-bell'
+                });
+            }
+        }
+        // Wait for user data then init notification
+        setTimeout(initUserNotification, 1000);
+    </script>
+</body>
+</html>

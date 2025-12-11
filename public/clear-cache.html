@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clear Cache - Sistem Absensi</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .status.info {
+            background: #e3f2fd;
+            color: #1976d2;
+            border: 1px solid #90caf9;
+        }
+
+        .status.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #81c784;
+        }
+
+        .status.error {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ef5350;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            margin: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .info-box {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: left;
+            font-size: 13px;
+            color: #555;
+        }
+
+        .info-box ul {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+
+        .info-box li {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 Clear Cache</h1>
+        <p class="subtitle">Sistem Absensi IoT</p>
+
+        <div id="status" class="status info">
+            Klik tombol di bawah untuk menghapus cache dan memuat ulang halaman dengan versi terbaru.
+        </div>
+
+        <button id="clearBtn" onclick="clearAllCache()">
+            🗑️ Hapus Cache & Reload
+        </button>
+
+        <button onclick="window.location.href='/'">
+            🏠 Kembali ke Beranda
+        </button>
+
+        <div class="info-box">
+            <strong>Kapan perlu clear cache?</strong>
+            <ul>
+                <li>Tampilan tidak berubah setelah update</li>
+                <li>Muncul error "cached version"</li>
+                <li>Fitur baru tidak muncul</li>
+                <li>Service Worker bermasalah</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const statusDiv = document.getElementById('status');
+        const clearBtn = document.getElementById('clearBtn');
+
+        async function clearAllCache() {
+            clearBtn.disabled = true;
+            clearBtn.innerHTML = '⏳ Memproses... <span class="loading"></span>';
+
+            try {
+                statusDiv.className = 'status info';
+                statusDiv.textContent = '🔄 Menghapus Service Worker...';
+
+                // 1. Unregister all service workers
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                for (let registration of registrations) {
+                    await registration.unregister();
+                    console.log('Service Worker unregistered:', registration);
+                }
+
+                statusDiv.textContent = '🗑️ Menghapus semua cache...';
+
+                // 2. Delete all caches
+                const cacheKeys = await caches.keys();
+                for (let key of cacheKeys) {
+                    await caches.delete(key);
+                    console.log('Cache deleted:', key);
+                }
+
+                statusDiv.textContent = '🧹 Membersihkan localStorage...';
+
+                // 3. Clear localStorage (optional - be careful!)
+                // localStorage.clear();
+
+                statusDiv.textContent = '🧹 Membersihkan sessionStorage...';
+
+                // 4. Clear sessionStorage
+                sessionStorage.clear();
+
+                statusDiv.className = 'status success';
+                statusDiv.innerHTML = '✅ Cache berhasil dihapus!<br>Halaman akan dimuat ulang dalam 2 detik...';
+
+                // 5. Reload page after 2 seconds
+                setTimeout(() => {
+                    window.location.href = '/?v=' + Date.now();
+                }, 2000);
+
+            } catch (error) {
+                console.error('Error clearing cache:', error);
+                statusDiv.className = 'status error';
+                statusDiv.innerHTML = '❌ Error: ' + error.message + '<br>Coba refresh halaman manual (Ctrl+Shift+R)';
+                clearBtn.disabled = false;
+                clearBtn.innerHTML = '🔄 Coba Lagi';
+            }
+        }
+
+        // Check current cache status
+        window.addEventListener('load', async () => {
+            const cacheKeys = await caches.keys();
+            const swRegistrations = await navigator.serviceWorker.getRegistrations();
+
+            console.log('Current caches:', cacheKeys);
+            console.log('Service Worker registrations:', swRegistrations);
+
+            if (cacheKeys.length === 0 && swRegistrations.length === 0) {
+                statusDiv.className = 'status success';
+                statusDiv.textContent = '✅ Cache sudah bersih! Tidak ada cache aktif.';
+            }
+        });
+    </script>
+</body>
+</html>

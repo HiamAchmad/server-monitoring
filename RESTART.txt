@@ -1,0 +1,143 @@
+================================================================================
+🔄 CARA RESTART & BUILD ULANG (CLEAN STATE)
+================================================================================
+
+Untuk restart dan build dari awal (menghindari bug), ikuti 2 langkah ini:
+
+
+LANGKAH 1: Reset & Build Database
+----------------------------------
+Buka terminal dan jalankan:
+
+   cd /home/hasan/Documents/Perancangan-20251031T151707Z-1-001/Perancangan/server-monitoring
+   bash RESET_AND_BUILD.sh
+
+Script ini akan:
+   ✅ Stop semua proses lama
+   ✅ Drop database lama
+   ✅ Create database baru (clean state)
+   ✅ Import schema & data sample
+   ✅ Verify database ready
+
+
+LANGKAH 2: Start Server
+------------------------
+Setelah reset selesai, start server:
+
+   bash START_SERVER.sh
+
+Server akan berjalan di:
+   📱 http://localhost:3000/dashboard.html
+
+
+ATAU 1 Command Saja:
+--------------------
+Jalankan semuanya sekaligus:
+
+   cd /home/hasan/Documents/Perancangan-20251031T151707Z-1-001/Perancangan/server-monitoring && bash RESET_AND_BUILD.sh && bash START_SERVER.sh
+
+
+================================================================================
+APA YANG TERJADI SAAT RESET?
+================================================================================
+
+1. ✅ Stop semua Node.js processes
+2. ✅ Drop database 'db_absensi' (jika ada)
+3. ✅ Drop user 'absensi_user' (jika ada)
+4. ✅ Create fresh user 'absensi_user'
+5. ✅ Create fresh database 'db_absensi'
+6. ✅ Grant all privileges
+7. ✅ Import schema PostgreSQL (tables, views, functions)
+8. ✅ Import sample data (4 pegawai, 5 absensi, 2 tugas, 2 users)
+9. ✅ Verify database contents
+
+HASIL: Database fresh tanpa bug!
+
+
+================================================================================
+VERIFICATION
+================================================================================
+
+Setelah start server, Anda harus melihat output seperti ini:
+
+   Penjadwalan arsip telah diatur.
+   🚀 MQTT Broker berjalan pada port 1883
+   🚀 Server absensi berjalan pada port 3000
+   ✅ Terhubung ke database PostgreSQL.
+      Server time: 2025-11-04 ...
+
+Jika melihat output ini, server berhasil running!
+
+Buka browser:
+   http://localhost:3000/dashboard.html
+
+
+================================================================================
+TROUBLESHOOTING
+================================================================================
+
+Jika error "permission denied":
+   → Pastikan Anda punya akses sudo
+   → Script butuh sudo untuk manage PostgreSQL
+
+Jika error "port 3000 already in use":
+   → Jalankan: pkill -f "node.*server.js"
+   → Lalu start lagi: bash START_SERVER.sh
+
+Jika error "cannot connect to database":
+   → PostgreSQL mungkin tidak running
+   → Jalankan: sudo systemctl start postgresql
+   → Lalu reset lagi: bash RESET_AND_BUILD.sh
+
+
+================================================================================
+QUICK REFERENCE
+================================================================================
+
+Reset Everything (Clean State):
+   bash RESET_AND_BUILD.sh
+
+Start Server:
+   bash START_SERVER.sh
+
+Stop Server:
+   Tekan Ctrl+C di terminal
+
+Check Server Running:
+   ps aux | grep "node.*server.js"
+
+Check Database:
+   PGPASSWORD=absensi_password psql -h localhost -U absensi_user -d db_absensi
+
+View Logs:
+   tail -f server.log
+
+
+================================================================================
+FITUR YANG TERSEDIA SETELAH RESTART
+================================================================================
+
+✅ Dashboard Real-time (Socket.IO)
+✅ MQTT Broker (port 1883)
+✅ PostgreSQL Database (auto-start)
+✅ OwnCloud Auto-backup (port 8080)
+✅ Employee Statistics
+✅ Task Management
+✅ Attendance History
+✅ Monthly Auto-archive
+
+
+================================================================================
+TL;DR - CARA TERCEPAT
+================================================================================
+
+Copy-paste ini ke terminal:
+
+cd /home/hasan/Documents/Perancangan-20251031T151707Z-1-001/Perancangan/server-monitoring && bash RESET_AND_BUILD.sh && bash START_SERVER.sh
+
+Tunggu sampai "Server berjalan pada port 3000"
+Lalu buka: http://localhost:3000/dashboard.html
+
+SELESAI! 🎉
+
+================================================================================

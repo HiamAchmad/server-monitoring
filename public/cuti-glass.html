@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manajemen Cuti/Izin - Sistem Absensi</title>
+    <link rel="stylesheet" href="glass-style.css">
+    <style>
+        body { background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%); min-height: 100vh; }
+        .main-content-with-sidebar .container { max-width: 1400px; margin: 0 auto; padding: var(--space-6); }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-6); flex-wrap: wrap; gap: var(--space-4); }
+        .page-title { font-size: var(--text-2xl); font-weight: var(--weight-bold); background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-6); }
+        .stat-card { background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); padding: var(--space-4); text-align: center; }
+        .stat-value { font-size: var(--text-2xl); font-weight: var(--weight-bold); }
+        .stat-value.pending { color: #fbbf24; }
+        .stat-value.approved { color: #4ade80; }
+        .stat-value.rejected { color: #f87171; }
+        .stat-label { font-size: var(--text-sm); color: var(--text-secondary); margin-top: var(--space-1); }
+
+        .filter-bar { display: flex; gap: var(--space-3); margin-bottom: var(--space-4); flex-wrap: wrap; align-items: center; }
+        .filter-select { background: #1a1a2e; border: 1px solid rgba(255,255,255,0.2); border-radius: var(--radius-md); padding: var(--space-2) var(--space-3); color: white; font-size: var(--text-sm); cursor: pointer; }
+        .filter-select option { background: #1a1a2e; color: white; padding: 10px; }
+        .filter-select option { background: #1a1a3e; }
+
+        .data-card { background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: var(--radius-xl); padding: var(--space-6); box-shadow: var(--shadow-glass-lg); }
+
+        .request-list { display: flex; flex-direction: column; gap: var(--space-4); }
+
+        .request-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-lg); padding: var(--space-4); transition: all 0.2s; }
+        .request-card:hover { background: rgba(255,255,255,0.05); }
+        .request-card.pending { border-left: 4px solid #fbbf24; }
+        .request-card.approved { border-left: 4px solid #4ade80; }
+        .request-card.rejected { border-left: 4px solid #f87171; }
+
+        .request-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-3); flex-wrap: wrap; gap: var(--space-2); }
+        .request-employee { display: flex; align-items: center; gap: var(--space-3); }
+        .employee-avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--gradient-primary); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .employee-info h4 { margin: 0; color: var(--text-primary); font-size: var(--text-base); }
+        .employee-info p { margin: 4px 0 0 0; color: var(--text-tertiary); font-size: var(--text-sm); }
+
+        .request-status { padding: 4px 12px; border-radius: var(--radius-full); font-size: var(--text-xs); font-weight: var(--weight-medium); }
+        .status-menunggu { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
+        .status-disetujui { background: rgba(74, 222, 128, 0.2); color: #4ade80; }
+        .status-ditolak { background: rgba(248, 113, 113, 0.2); color: #f87171; }
+
+        .request-details { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--space-3); margin-bottom: var(--space-3); padding: var(--space-3); background: rgba(255,255,255,0.02); border-radius: var(--radius-md); }
+        .detail-item label { display: block; font-size: var(--text-xs); color: var(--text-tertiary); margin-bottom: 2px; }
+        .detail-item span { font-size: var(--text-sm); color: var(--text-primary); font-weight: var(--weight-medium); }
+
+        .request-reason { padding: var(--space-3); background: rgba(255,255,255,0.02); border-radius: var(--radius-md); margin-bottom: var(--space-3); }
+        .request-reason label { display: block; font-size: var(--text-xs); color: var(--text-tertiary); margin-bottom: 4px; }
+        .request-reason p { margin: 0; font-size: var(--text-sm); color: var(--text-secondary); }
+
+        .request-actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+        .btn { padding: var(--space-2) var(--space-4); border: none; border-radius: var(--radius-md); cursor: pointer; font-size: var(--text-sm); font-weight: var(--weight-medium); transition: all 0.2s; display: inline-flex; align-items: center; gap: var(--space-2); }
+        .btn-approve { background: rgba(74, 222, 128, 0.2); color: #4ade80; }
+        .btn-approve:hover { background: rgba(74, 222, 128, 0.4); }
+        .btn-reject { background: rgba(248, 113, 113, 0.2); color: #f87171; }
+        .btn-reject:hover { background: rgba(248, 113, 113, 0.4); }
+
+        .empty-state { text-align: center; padding: var(--space-8); color: var(--text-tertiary); }
+        .empty-state-icon { font-size: 64px; margin-bottom: var(--space-4); opacity: 0.5; }
+
+        /* Modal */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 1000; padding: var(--space-4); }
+        .modal-overlay.active { display: flex; }
+        .modal { background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: var(--radius-xl); padding: var(--space-6); max-width: 500px; width: 100%; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4); }
+        .modal-title { font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--text-primary); }
+        .modal-close { background: none; border: none; color: var(--text-tertiary); font-size: 24px; cursor: pointer; }
+        .form-group { margin-bottom: var(--space-4); }
+        .form-label { display: block; font-size: var(--text-sm); color: var(--text-secondary); margin-bottom: var(--space-2); }
+        .form-input { width: 100%; padding: var(--space-3); background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: var(--radius-md); color: var(--text-primary); font-size: var(--text-sm); box-sizing: border-box; }
+        .form-input:focus { outline: none; border-color: var(--primary-start); }
+        select.form-input { background: #1a1a2e; cursor: pointer; }
+        select.form-input option { background: #1a1a2e; color: white; padding: 10px; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: var(--space-3); margin-top: var(--space-4); }
+
+        .notification { position: fixed; top: var(--space-6); right: var(--space-6); background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); padding: var(--space-4); min-width: 300px; z-index: 1100; animation: slideIn 0.3s ease-out; }
+        .notification.success { border-left: 4px solid var(--success); }
+        .notification.error { border-left: 4px solid var(--error); }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(100px); } to { opacity: 1; transform: translateX(0); } }
+
+        .loading { display: flex; justify-content: center; padding: var(--space-8); }
+        .spinner { width: 40px; height: 40px; border: 3px solid rgba(102, 126, 234, 0.3); border-top-color: var(--primary-start); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7V17L12 22L22 17V7L12 2Z" fill="url(#gradient1)"/><defs><linearGradient id="gradient1" x1="2" y1="2" x2="22" y2="22"><stop offset="0%" style="stop-color:#667eea"/><stop offset="100%" style="stop-color:#764ba2"/></linearGradient></defs></svg>
+            <span>Sistem Absensi</span>
+        </div>
+        <div class="navbar-menu">
+            <div id="notification-bell" style="position: relative; margin: 0 8px;"></div>
+            <a href="#" class="navbar-link" onclick="logout()">Logout</a>
+        </div>
+    </nav>
+
+    <aside class="sidebar">
+        <div class="sidebar-item" onclick="location.href='dashboard-glass.html'"><span class="sidebar-icon">📊</span><span>Dashboard</span></div>
+        <div class="sidebar-item" onclick="location.href='riwayat-glass.html'"><span class="sidebar-icon">📜</span><span>Riwayat</span></div>
+        <div class="sidebar-item" onclick="location.href='manajemen-karyawan-glass.html'"><span class="sidebar-icon">👥</span><span>Karyawan</span></div>
+        <div class="sidebar-item active" onclick="location.href='cuti-glass.html'"><span class="sidebar-icon">📋</span><span>Cuti/Izin</span></div>
+        <div class="sidebar-item" onclick="location.href='jadwal-shift-glass.html'"><span class="sidebar-icon">📅</span><span>Jadwal</span></div>
+        <div class="sidebar-item" onclick="location.href='payroll-glass.html'"><span class="sidebar-icon">💰</span><span>Payroll</span></div>
+        <div class="sidebar-item" onclick="location.href='laporan-glass.html'"><span class="sidebar-icon">📈</span><span>Laporan</span></div>
+        <div class="sidebar-item" onclick="location.href='settings-glass.html'"><span class="sidebar-icon">⚙️</span><span>Settings</span></div>
+        <div class="sidebar-item" onclick="logout()"><span class="sidebar-icon">🚪</span><span>Logout</span></div>
+    </aside>
+
+    <main class="main-content-with-sidebar">
+        <div class="container">
+            <div class="page-header">
+                <h1 class="page-title">Manajemen Cuti/Izin</h1>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-value pending" id="statPending">0</div>
+                    <div class="stat-label">Menunggu Approval</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value approved" id="statApproved">0</div>
+                    <div class="stat-label">Disetujui</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value rejected" id="statRejected">0</div>
+                    <div class="stat-label">Ditolak</div>
+                </div>
+            </div>
+
+            <!-- Filter -->
+            <div class="filter-bar">
+                <select class="filter-select" id="filterStatus" onchange="loadRequests()">
+                    <option value="all">Semua Status</option>
+                    <option value="Menunggu">Menunggu</option>
+                    <option value="Disetujui">Disetujui</option>
+                    <option value="Ditolak">Ditolak</option>
+                </select>
+                <select class="filter-select" id="filterJenis" onchange="loadRequests()">
+                    <option value="all">Semua Jenis</option>
+                    <option value="Cuti Tahunan">Cuti Tahunan</option>
+                    <option value="Cuti Sakit">Cuti Sakit</option>
+                    <option value="Izin Khusus">Izin Khusus</option>
+                    <option value="Cuti Melahirkan">Cuti Melahirkan</option>
+                </select>
+            </div>
+
+            <!-- Request List -->
+            <div class="data-card">
+                <div class="request-list" id="requestList">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Approval -->
+    <div class="modal-overlay" id="approvalModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Konfirmasi</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Komentar (Opsional)</label>
+                <textarea class="form-input" id="komentar" rows="3" placeholder="Tambahkan komentar..."></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" style="background: rgba(255,255,255,0.1); color: var(--text-primary);" onclick="closeModal()">Batal</button>
+                <button class="btn" id="confirmBtn" onclick="confirmAction()">Konfirmasi</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script>
+        const socket = io();
+        let allRequests = [];
+        let currentAction = null;
+        let currentId = null;
+
+        // Load requests
+        async function loadRequests() {
+            const container = document.getElementById('requestList');
+            container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+
+            try {
+                const response = await fetch('/api/cuti');
+                const result = await response.json();
+
+                if (result.success) {
+                    allRequests = result.data;
+                    updateStats();
+                    displayRequests();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">Error</div><p>Gagal memuat data</p></div>';
+            }
+        }
+
+        // Update stats
+        function updateStats() {
+            const pending = allRequests.filter(r => r.status === 'Menunggu').length;
+            const approved = allRequests.filter(r => r.status === 'Disetujui').length;
+            const rejected = allRequests.filter(r => r.status === 'Ditolak').length;
+
+            document.getElementById('statPending').textContent = pending;
+            document.getElementById('statApproved').textContent = approved;
+            document.getElementById('statRejected').textContent = rejected;
+        }
+
+        // Display requests
+        function displayRequests() {
+            const container = document.getElementById('requestList');
+            const filterStatus = document.getElementById('filterStatus').value;
+            const filterJenis = document.getElementById('filterJenis').value;
+
+            let filtered = allRequests;
+
+            if (filterStatus !== 'all') {
+                filtered = filtered.filter(r => r.status === filterStatus);
+            }
+            if (filterJenis !== 'all') {
+                filtered = filtered.filter(r => r.jenis === filterJenis);
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <p>Tidak ada pengajuan</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = '';
+
+            filtered.forEach(request => {
+                const card = document.createElement('div');
+                let statusClass = 'pending';
+                if (request.status === 'Disetujui') statusClass = 'approved';
+                if (request.status === 'Ditolak') statusClass = 'rejected';
+
+                card.className = `request-card ${statusClass}`;
+
+                const tanggalMulai = new Date(request.tanggal_mulai).toLocaleDateString('id-ID', {
+                    day: '2-digit', month: 'short', year: 'numeric'
+                });
+                const tanggalSelesai = new Date(request.tanggal_selesai).toLocaleDateString('id-ID', {
+                    day: '2-digit', month: 'short', year: 'numeric'
+                });
+                const createdAt = new Date(request.created_at).toLocaleDateString('id-ID', {
+                    day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                });
+
+                let statusBadgeClass = 'status-menunggu';
+                if (request.status === 'Disetujui') statusBadgeClass = 'status-disetujui';
+                if (request.status === 'Ditolak') statusBadgeClass = 'status-ditolak';
+
+                card.innerHTML = `
+                    <div class="request-header">
+                        <div class="request-employee">
+                            <div class="employee-avatar">👤</div>
+                            <div class="employee-info">
+                                <h4>${request.nama_pegawai || 'Karyawan'}</h4>
+                                <p>NIP: ${request.nip || '-'}</p>
+                            </div>
+                        </div>
+                        <span class="request-status ${statusBadgeClass}">${request.status}</span>
+                    </div>
+
+                    <div class="request-details">
+                        <div class="detail-item">
+                            <label>Jenis</label>
+                            <span>${request.jenis}</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Tanggal Mulai</label>
+                            <span>${tanggalMulai}</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Tanggal Selesai</label>
+                            <span>${tanggalSelesai}</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Jumlah Hari</label>
+                            <span>${request.jumlah_hari || 1} hari</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Diajukan</label>
+                            <span>${createdAt}</span>
+                        </div>
+                    </div>
+
+                    <div class="request-reason">
+                        <label>Alasan</label>
+                        <p>${request.alasan || '-'}</p>
+                    </div>
+
+                    ${request.komentar_approval ? `
+                        <div class="request-reason" style="border-left: 2px solid var(--primary-start);">
+                            <label>Komentar Approval</label>
+                            <p>${request.komentar_approval}</p>
+                        </div>
+                    ` : ''}
+
+                    ${request.status === 'Menunggu' ? `
+                        <div class="request-actions">
+                            <button class="btn btn-approve" onclick="openApprovalModal(${request.id_pengajuan}, 'Disetujui')">
+                                Setujui
+                            </button>
+                            <button class="btn btn-reject" onclick="openApprovalModal(${request.id_pengajuan}, 'Ditolak')">
+                                Tolak
+                            </button>
+                        </div>
+                    ` : ''}
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        // Open approval modal
+        function openApprovalModal(id, action) {
+            currentId = id;
+            currentAction = action;
+
+            const modal = document.getElementById('approvalModal');
+            const title = document.getElementById('modalTitle');
+            const confirmBtn = document.getElementById('confirmBtn');
+
+            if (action === 'Disetujui') {
+                title.textContent = 'Setujui Pengajuan';
+                confirmBtn.className = 'btn btn-approve';
+                confirmBtn.textContent = 'Setujui';
+            } else {
+                title.textContent = 'Tolak Pengajuan';
+                confirmBtn.className = 'btn btn-reject';
+                confirmBtn.textContent = 'Tolak';
+            }
+
+            document.getElementById('komentar').value = '';
+            modal.classList.add('active');
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('approvalModal').classList.remove('active');
+            currentId = null;
+            currentAction = null;
+        }
+
+        // Confirm action
+        async function confirmAction() {
+            if (!currentId || !currentAction) return;
+
+            const komentar = document.getElementById('komentar').value;
+
+            try {
+                const response = await fetch(`/api/cuti/${currentId}/status`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        status: currentAction,
+                        komentar: komentar,
+                        disetujui_oleh: 1 // Admin ID
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showNotification(`Pengajuan berhasil ${currentAction.toLowerCase()}`, 'success');
+                    closeModal();
+                    loadRequests();
+                } else {
+                    showNotification(result.message || 'Gagal memproses', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Terjadi kesalahan', 'error');
+            }
+        }
+
+        // Show notification
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <div style="display: flex; align-items: center; gap: var(--space-3);">
+                    <span style="font-size: 20px;">${type === 'success' ? '✅' : '❌'}</span>
+                    <span>${message}</span>
+                </div>
+            `;
+            document.body.appendChild(notification);
+
+            setTimeout(() => notification.remove(), 3000);
+        }
+
+        // Real-time updates
+        socket.on('new_cuti_request', (data) => {
+            console.log('New cuti request:', data);
+            showNotification('Ada pengajuan cuti/izin baru!', 'success');
+            loadRequests();
+        });
+
+        socket.on('cuti_updated', (data) => {
+            console.log('Cuti updated:', data);
+            loadRequests();
+        });
+
+        // Initialize
+        loadRequests();
+    </script>
+    <script src="/notification-component.js"></script>
+    <script>
+        // Initialize notification for admin
+        window.notificationComponent = new NotificationComponent({
+            isAdmin: true,
+            containerId: 'notification-bell'
+        });
+    </script>
+</body>
+</html>

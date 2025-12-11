@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Dashboard Admin - Sistem Absensi">
+    <meta name="theme-color" content="#667eea">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <title>Dashboard Admin - Glassmorphism</title>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+
+    <link rel="stylesheet" href="glass-style.css">
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        /* Page-specific styles */
+        .page-header {
+            margin-bottom: var(--space-8);
+        }
+
+        .page-title {
+            font-size: var(--text-3xl);
+            font-family: var(--font-secondary);
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: var(--space-2);
+        }
+
+        .page-subtitle {
+            color: var(--text-secondary);
+            font-size: var(--text-base);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin: var(--space-6) 0;
+        }
+
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 250px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2L2 7V17L12 22L22 17V7L12 2Z" fill="url(#gradient1)"/>
+                <defs>
+                    <linearGradient id="gradient1" x1="2" y1="2" x2="22" y2="22">
+                        <stop offset="0%" style="stop-color:#667eea"/>
+                        <stop offset="100%" style="stop-color:#764ba2"/>
+                    </linearGradient>
+                </defs>
+            </svg>
+            <span>Sistem Absensi</span>
+        </div>
+        <div class="navbar-menu">
+            <div id="notification-bell" style="position: relative; margin: 0 8px;"></div>
+            <a href="#" class="navbar-link" onclick="logout()">Logout</a>
+        </div>
+    </nav>
+
+    <!-- Sidebar (Desktop) -->
+    <aside class="sidebar">
+        <div class="sidebar-item active"><span class="sidebar-icon">📊</span><span>Dashboard</span></div>
+        <div class="sidebar-item" onclick="location.href='riwayat-glass.html'"><span class="sidebar-icon">📜</span><span>Riwayat</span></div>
+        <div class="sidebar-item" onclick="location.href='manajemen-karyawan-glass.html'"><span class="sidebar-icon">👥</span><span>Karyawan</span></div>
+        <div class="sidebar-item" onclick="location.href='cuti-glass.html'"><span class="sidebar-icon">📋</span><span>Cuti/Izin</span></div>
+        <div class="sidebar-item" onclick="location.href='jadwal-shift-glass.html'"><span class="sidebar-icon">📅</span><span>Jadwal</span></div>
+        <div class="sidebar-item" onclick="location.href='payroll-glass.html'"><span class="sidebar-icon">💰</span>
+            <span>Payroll</span>
+        </div>
+        <div class="sidebar-item" onclick="window.location.href='laporan-glass.html'">
+            <span class="sidebar-icon">📈</span>
+            <span>Laporan</span>
+        </div>
+        <div class="sidebar-item" onclick="window.location.href='settings-glass.html'">
+            <span class="sidebar-icon">⚙️</span>
+            <span>Settings</span>
+        </div>
+        <div class="sidebar-item" onclick="logout()">
+            <span class="sidebar-icon">🚪</span>
+            <span>Logout</span>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-content-with-sidebar">
+        <div class="container">
+            <!-- Page Header -->
+            <div class="page-header fade-in-up">
+                <h1 class="page-title">Dashboard Admin</h1>
+                <p class="page-subtitle">Monitoring Absensi Karyawan Real-time</p>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="stats-grid fade-in-up" style="animation-delay: 0.1s;">
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-value" id="absensi-data">-/-</div>
+                    <div class="stat-label">Absensi Hari Ini</div>
+                    <div class="stat-trend up" id="trend-absensi">
+                        <span>↗</span>
+                        <span>+12% dari kemarin</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">☁️</div>
+                    <div class="stat-value" id="status-cloud">Checking...</div>
+                    <div class="stat-label">Status Cloud</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">📡</div>
+                    <div class="stat-value" id="status-iot">Checking...</div>
+                    <div class="stat-label">Status IoT Device</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">📈</div>
+                    <div class="stat-value" id="total-karyawan">0</div>
+                    <div class="stat-label">Total Karyawan</div>
+                </div>
+            </div>
+
+            <!-- Chart Section -->
+            <div class="glass-card-no-hover fade-in-up" style="animation-delay: 0.2s; margin-bottom: var(--space-8);">
+                <h3 style="margin-bottom: var(--space-6);">📊 Grafik Kehadiran Mingguan</h3>
+                <div class="chart-container">
+                    <canvas id="attendanceChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Pengajuan Cuti/Izin Terbaru -->
+            <div class="glass-card-no-hover fade-in-up" style="animation-delay: 0.22s; margin-bottom: var(--space-8);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4); flex-wrap: wrap; gap: var(--space-3);">
+                    <h3 style="margin: 0;">📋 Pengajuan Cuti/Izin Menunggu Approval</h3>
+                    <a href="manajemen-karyawan-glass.html" class="btn-glass" style="font-size: var(--text-sm);">Lihat Semua →</a>
+                </div>
+                <div id="cutiNotifications" style="display: flex; flex-direction: column; gap: var(--space-3);">
+                    <div style="text-align: center; padding: var(--space-4); color: var(--text-tertiary);">Memuat data...</div>
+                </div>
+            </div>
+
+            <!-- Manual Attendance Section -->
+            <div class="glass-card-no-hover fade-in-up" style="animation-delay: 0.25s; margin-bottom: var(--space-8);">
+                <h3 style="margin-bottom: var(--space-6);">✋ Absensi Manual</h3>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-6);">
+                    <!-- Absen Masuk Form -->
+                    <div style="background: rgba(102, 126, 234, 0.05); border: 1px solid rgba(102, 126, 234, 0.2); border-radius: var(--radius-lg); padding: var(--space-6);">
+                        <h4 style="margin-bottom: var(--space-4); color: var(--primary-start); display: flex; align-items: center; gap: var(--space-2);">
+                            <span>🟢</span>
+                            <span>Absen Masuk</span>
+                        </h4>
+
+                        <form id="formAbsenMasuk" onsubmit="handleAbsenMasuk(event)">
+                            <div class="input-group">
+                                <label class="input-label">Pilih Karyawan</label>
+                                <select class="glass-select focusable" id="pegawai_masuk" required>
+                                    <option value="">-- Pilih Karyawan --</option>
+                                </select>
+                            </div>
+
+                            <div class="input-group">
+                                <label class="input-label">Waktu Masuk</label>
+                                <input type="time" class="glass-input focusable" id="waktu_masuk" required>
+                            </div>
+
+                            <div class="input-group">
+                                <label class="input-label">Keterangan</label>
+                                <select class="glass-select focusable" id="keterangan_masuk" required>
+                                    <option value="Hadir">Hadir</option>
+                                    <option value="Terlambat">Terlambat</option>
+                                </select>
+                            </div>
+
+                            <button type="submit" class="btn-primary" style="width: 100%; background: linear-gradient(135deg, #10b981, #059669);">
+                                <span>✅</span>
+                                <span>Catat Absen Masuk</span>
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Absen Keluar Form -->
+                    <div style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: var(--radius-lg); padding: var(--space-6);">
+                        <h4 style="margin-bottom: var(--space-4); color: #ef4444; display: flex; align-items: center; gap: var(--space-2);">
+                            <span>🔴</span>
+                            <span>Absen Keluar</span>
+                        </h4>
+
+                        <form id="formAbsenKeluar" onsubmit="handleAbsenKeluar(event)">
+                            <div class="input-group">
+                                <label class="input-label">Pilih Karyawan</label>
+                                <select class="glass-select focusable" id="pegawai_keluar" required>
+                                    <option value="">-- Pilih Karyawan --</option>
+                                </select>
+                            </div>
+
+                            <div class="input-group">
+                                <label class="input-label">Waktu Keluar</label>
+                                <input type="time" class="glass-input focusable" id="waktu_keluar" required>
+                            </div>
+
+                            <div class="input-group" style="margin-bottom: 0;">
+                                <div style="background: rgba(255, 193, 7, 0.1); border-left: 3px solid #ffc107; padding: var(--space-3); border-radius: var(--radius-md); font-size: var(--text-sm);">
+                                    <strong>📋 Info:</strong> Durasi kerja dan lembur akan dihitung otomatis
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn-primary" style="width: 100%; margin-top: var(--space-4); background: linear-gradient(135deg, #ef4444, #dc2626);">
+                                <span>🚪</span>
+                                <span>Catat Absen Keluar</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Responsive: Stack vertically on mobile -->
+                <style>
+                    @media (max-width: 768px) {
+                        .glass-card-no-hover > div[style*="grid-template-columns"] {
+                            grid-template-columns: 1fr !important;
+                        }
+                    }
+                </style>
+            </div>
+
+            <!-- Employee Stats Table -->
+            <div class="glass-card-no-hover fade-in-up" style="animation-delay: 0.3s;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-6); flex-wrap: wrap; gap: var(--space-4);">
+                    <h3 style="margin: 0;">👤 Total Absensi Per Karyawan</h3>
+                    <button class="btn-glass" onclick="loadEmployeeStats()">
+                        🔄 Refresh
+                    </button>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Nama Karyawan</th>
+                                <th>NIP</th>
+                                <th>Posisi</th>
+                                <th>Fingerprint</th>
+                                <th>Total Absensi</th>
+                                <th>Terakhir Absen</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabel-statistik-karyawan">
+                            <tr>
+                                <td colspan="8" style="text-align: center; padding: var(--space-8);">
+                                    <div style="display: inline-block; width: 40px; height: 40px; border: 3px solid rgba(102, 126, 234, 0.3); border-top: 3px solid var(--primary-start); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                                    <p style="margin-top: var(--space-3); color: var(--text-secondary);">Memuat data...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation (Mobile) -->
+    <div class="bottom-nav">
+        <div class="nav-item active">
+            <span class="nav-item-icon">📊</span>
+            <span>Dashboard</span>
+        </div>
+        <div class="nav-item" onclick="window.location.href='riwayat-glass.html'">
+            <span class="nav-item-icon">📜</span>
+            <span>Riwayat</span>
+        </div>
+        <div class="nav-item" onclick="window.location.href='manajemen-karyawan-glass.html'">
+            <span class="nav-item-icon">👥</span>
+            <span>Karyawan</span>
+        </div>
+        <div class="nav-item" onclick="logout()">
+            <span class="nav-item-icon">🚪</span>
+            <span>Logout</span>
+        </div>
+    </div>
+
+    <!-- Loading Spinner Animation -->
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+    </style>
+
+    <!-- JavaScript -->
+    <script>
+        // Check if user is logged in
+        if (!sessionStorage.getItem('isLoggedIn')) {
+            window.location.href = 'index-glass.html';
+        }
+
+        // PWA Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+                .then(reg => console.log('SW registered:', reg.scope))
+                .catch(err => console.log('SW registration failed:', err));
+        }
+
+        // Logout function
+        function logout() {
+            sessionStorage.removeItem('isLoggedIn');
+            sessionStorage.removeItem('username');
+            window.location.href = 'index-glass.html';
+        }
+
+        // Handle Absen Masuk
+        async function handleAbsenMasuk(event) {
+            event.preventDefault();
+
+            const pegawaiId = document.getElementById('pegawai_masuk').value;
+            const waktuMasuk = document.getElementById('waktu_masuk').value;
+            const keterangan = document.getElementById('keterangan_masuk').value;
+
+            if (!pegawaiId || !waktuMasuk) {
+                alert('❌ Mohon lengkapi semua field!');
+                return;
+            }
+
+            const button = event.target.querySelector('button[type="submit"]');
+            const originalText = button.innerHTML;
+            button.innerHTML = '<span>⏳</span><span>Menyimpan...</span>';
+            button.disabled = true;
+
+            try {
+                const response = await fetch('/absensi/manual', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        pegawai_id: parseInt(pegawaiId),
+                        waktu_absen: waktuMasuk + ':00',
+                        keterangan: keterangan,
+                        tipe_absen: 'Masuk'
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Show success notification
+                    showNotification('✅ Absen Masuk berhasil dicatat!', 'success');
+
+                    // Reset form
+                    document.getElementById('formAbsenMasuk').reset();
+
+                    // Set current time again
+                    const now = new Date();
+                    const hours = String(now.getHours()).padStart(2, '0');
+                    const minutes = String(now.getMinutes()).padStart(2, '0');
+                    document.getElementById('waktu_masuk').value = `${hours}:${minutes}`;
+                } else {
+                    showNotification('❌ Gagal menyimpan absen: ' + (result.message || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('❌ Error koneksi ke server!', 'error');
+            } finally {
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }
+        }
+
+        // Handle Absen Keluar
+        async function handleAbsenKeluar(event) {
+            event.preventDefault();
+
+            const pegawaiId = document.getElementById('pegawai_keluar').value;
+            const waktuKeluar = document.getElementById('waktu_keluar').value;
+
+            if (!pegawaiId || !waktuKeluar) {
+                alert('❌ Mohon lengkapi semua field!');
+                return;
+            }
+
+            const button = event.target.querySelector('button[type="submit"]');
+            const originalText = button.innerHTML;
+            button.innerHTML = '<span>⏳</span><span>Menyimpan...</span>';
+            button.disabled = true;
+
+            try {
+                const response = await fetch('/absensi/manual', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        pegawai_id: parseInt(pegawaiId),
+                        waktu_absen: waktuKeluar + ':00',
+                        tipe_absen: 'Keluar'
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Show success notification with overtime info
+                    let message = '✅ Absen Keluar berhasil dicatat!';
+                    if (result.overtime) {
+                        message += `\n⏱️ Lembur: ${result.overtime}`;
+                    }
+                    showNotification(message, 'success');
+
+                    // Reset form
+                    document.getElementById('formAbsenKeluar').reset();
+
+                    // Set current time again
+                    const now = new Date();
+                    const hours = String(now.getHours()).padStart(2, '0');
+                    const minutes = String(now.getMinutes()).padStart(2, '0');
+                    document.getElementById('waktu_keluar').value = `${hours}:${minutes}`;
+                } else {
+                    showNotification('❌ Gagal menyimpan absen keluar: ' + (result.message || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('❌ Error koneksi ke server!', 'error');
+            } finally {
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }
+        }
+
+        // Show notification helper
+        function showNotification(message, type = 'success') {
+            const bgColor = type === 'success'
+                ? 'rgba(16, 185, 129, 0.9)'
+                : 'rgba(239, 68, 68, 0.9)';
+
+            const notification = document.createElement('div');
+            notification.innerHTML = `
+                <div style="position: fixed; top: 90px; right: 20px; background: ${bgColor}; backdrop-filter: blur(10px); color: white; padding: 16px 24px; border-radius: 12px; box-shadow: var(--shadow-glass-lg); z-index: 9999; animation: slideInRight 0.3s ease-out; white-space: pre-line; max-width: 400px;">
+                    ${message}
+                </div>
+            `;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 4000);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const socket = io();
+
+            // Elements
+            const absensiDataEl = document.getElementById('absensi-data');
+            const statusCloudEl = document.getElementById('status-cloud');
+            const statusIotEl = document.getElementById('status-iot');
+            const totalKaryawanEl = document.getElementById('total-karyawan');
+            const tabelKaryawan = document.getElementById('tabel-statistik-karyawan');
+
+            // Chart Configuration
+            let attendanceChart;
+
+            function initChart() {
+                const ctx = document.getElementById('attendanceChart').getContext('2d');
+
+                const gradient1 = ctx.createLinearGradient(0, 0, 0, 300);
+                gradient1.addColorStop(0, 'rgba(102, 126, 234, 0.6)');
+                gradient1.addColorStop(1, 'rgba(102, 126, 234, 0.0)');
+
+                const gradient2 = ctx.createLinearGradient(0, 0, 0, 300);
+                gradient2.addColorStop(0, 'rgba(118, 75, 162, 0.6)');
+                gradient2.addColorStop(1, 'rgba(118, 75, 162, 0.0)');
+
+                attendanceChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'],
+                        datasets: [{
+                            label: 'Hadir',
+                            data: [18, 20, 19, 22, 21, 15, 10],
+                            borderColor: '#667eea',
+                            backgroundColor: gradient1,
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 5,
+                            pointBackgroundColor: '#667eea',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointHoverRadius: 7
+                        }, {
+                            label: 'Target',
+                            data: [23, 23, 23, 23, 23, 23, 23],
+                            borderColor: '#764ba2',
+                            backgroundColor: gradient2,
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top',
+                                labels: {
+                                    color: 'rgba(255, 255, 255, 0.7)',
+                                    font: {
+                                        family: 'Inter',
+                                        size: 12
+                                    },
+                                    padding: 15,
+                                    usePointStyle: true
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(15, 15, 35, 0.9)',
+                                backdropBlur: '10px',
+                                titleColor: '#fff',
+                                bodyColor: 'rgba(255, 255, 255, 0.8)',
+                                borderColor: 'rgba(255, 255, 255, 0.1)',
+                                borderWidth: 1,
+                                padding: 12,
+                                displayColors: true,
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.dataset.label + ': ' + context.parsed.y + ' orang';
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.05)',
+                                    drawBorder: false
+                                },
+                                ticks: {
+                                    color: 'rgba(255, 255, 255, 0.5)',
+                                    font: {
+                                        family: 'Inter'
+                                    },
+                                    padding: 10
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                },
+                                ticks: {
+                                    color: 'rgba(255, 255, 255, 0.7)',
+                                    font: {
+                                        family: 'Inter'
+                                    },
+                                    padding: 10
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Enrollment Modal State
+            let enrollmentModal = null;
+
+            // Show Enrollment Modal
+            function showEnrollmentModal(nama, nip) {
+                enrollmentModal = document.createElement('div');
+                enrollmentModal.id = 'enrollment-modal';
+                enrollmentModal.innerHTML = `
+                    <!-- Overlay Background -->
+                    <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(10px); z-index: 9998;"></div>
+
+                    <!-- Modal Card -->
+                    <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(135deg, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.98)); color: white; padding: 40px; border-radius: 24px; box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1); z-index: 9999; min-width: 380px; max-width: 90vw; text-align: center;">
+
+                        <!-- Header -->
+                        <h2 style="font-size: 24px; font-weight: 700; margin: 0 0 8px 0; background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                            🔐 Pendaftaran Sidik Jari
+                        </h2>
+                        <div style="font-size: 16px; opacity: 0.8; margin-bottom: 24px;">
+                            ${nama} <span style="opacity: 0.5;">(${nip})</span>
+                        </div>
+
+                        <!-- Fingerprint Icon -->
+                        <div id="enroll-icon" style="width: 120px; height: 120px; background: rgba(102, 126, 234, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; border: 3px solid rgba(102, 126, 234, 0.5); transition: all 0.3s ease;">
+                            <span style="font-size: 56px;" id="enroll-emoji">👆</span>
+                        </div>
+
+                        <!-- Progress Step -->
+                        <div id="enroll-step" style="font-size: 14px; color: #667eea; font-weight: 600; margin-bottom: 8px;">
+                            Langkah 1/4
+                        </div>
+
+                        <!-- Status Message -->
+                        <div id="enroll-message" style="font-size: 20px; font-weight: 600; margin-bottom: 16px; min-height: 30px;">
+                            Memulai proses...
+                        </div>
+
+                        <!-- Progress Bar -->
+                        <div style="background: rgba(255, 255, 255, 0.1); border-radius: 10px; height: 8px; overflow: hidden; margin-bottom: 24px;">
+                            <div id="enroll-progress-bar" style="background: linear-gradient(90deg, #667eea, #764ba2); height: 100%; width: 0%; transition: width 0.5s ease; border-radius: 10px;"></div>
+                        </div>
+
+                        <!-- Instruction -->
+                        <div id="enroll-instruction" style="font-size: 14px; opacity: 0.7; padding: 12px; background: rgba(255, 255, 255, 0.05); border-radius: 12px;">
+                            Menunggu koneksi dengan sensor...
+                        </div>
+
+                        <!-- Cancel Button -->
+                        <button id="enroll-cancel-btn" style="margin-top: 24px; padding: 12px 32px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); color: white; border-radius: 12px; cursor: pointer; font-size: 14px; transition: all 0.2s ease;">
+                            Batalkan
+                        </button>
+                    </div>
+                `;
+                document.body.appendChild(enrollmentModal);
+
+                // Attach event listener to cancel button
+                const cancelBtn = document.getElementById('enroll-cancel-btn');
+                if (cancelBtn) {
+                    cancelBtn.addEventListener('click', function() {
+                        console.log('🚫 Cancel button clicked');
+                        window.closeEnrollmentModal();
+                    });
+                    cancelBtn.addEventListener('mouseenter', function() {
+                        this.style.background = 'rgba(255,255,255,0.2)';
+                    });
+                    cancelBtn.addEventListener('mouseleave', function() {
+                        this.style.background = 'rgba(255,255,255,0.1)';
+                    });
+                }
+            }
+
+            // Update Enrollment Progress
+            function updateEnrollmentProgress(step, status, message) {
+                if (!enrollmentModal) return;
+
+                const stepEl = document.getElementById('enroll-step');
+                const messageEl = document.getElementById('enroll-message');
+                const progressBar = document.getElementById('enroll-progress-bar');
+                const iconEl = document.getElementById('enroll-icon');
+                const emojiEl = document.getElementById('enroll-emoji');
+                const instructionEl = document.getElementById('enroll-instruction');
+
+                // Update step indicator
+                const totalSteps = 8;
+                stepEl.textContent = `Langkah ${step}/${totalSteps}`;
+
+                // Update progress bar
+                const progress = (step / totalSteps) * 100;
+                progressBar.style.width = progress + '%';
+
+                // Update message
+                messageEl.textContent = message;
+
+                // Update icon and colors based on status
+                switch(status) {
+                    case 'waiting':
+                        iconEl.style.borderColor = 'rgba(234, 179, 8, 0.7)';
+                        iconEl.style.background = 'rgba(234, 179, 8, 0.2)';
+                        emojiEl.textContent = '👆';
+                        emojiEl.style.animation = 'pulse 1s ease-in-out infinite';
+                        instructionEl.textContent = 'Letakkan jari Anda pada sensor fingerprint';
+                        break;
+                    case 'captured':
+                        iconEl.style.borderColor = 'rgba(34, 197, 94, 0.7)';
+                        iconEl.style.background = 'rgba(34, 197, 94, 0.2)';
+                        emojiEl.textContent = '✓';
+                        emojiEl.style.animation = 'none';
+                        instructionEl.textContent = 'Sidik jari berhasil dibaca!';
+                        break;
+                    case 'remove':
+                        iconEl.style.borderColor = 'rgba(59, 130, 246, 0.7)';
+                        iconEl.style.background = 'rgba(59, 130, 246, 0.2)';
+                        emojiEl.textContent = '☝️';
+                        emojiEl.style.animation = 'bounce 0.5s ease-in-out infinite';
+                        instructionEl.textContent = 'Angkat jari Anda dari sensor';
+                        break;
+                    case 'processing':
+                        iconEl.style.borderColor = 'rgba(139, 92, 246, 0.7)';
+                        iconEl.style.background = 'rgba(139, 92, 246, 0.2)';
+                        emojiEl.textContent = '⏳';
+                        emojiEl.style.animation = 'spin 1s linear infinite';
+                        instructionEl.textContent = 'Memproses data sidik jari...';
+                        break;
+                    case 'saving':
+                        iconEl.style.borderColor = 'rgba(139, 92, 246, 0.7)';
+                        iconEl.style.background = 'rgba(139, 92, 246, 0.2)';
+                        emojiEl.textContent = '💾';
+                        emojiEl.style.animation = 'pulse 0.5s ease-in-out infinite';
+                        instructionEl.textContent = 'Menyimpan ke database...';
+                        break;
+                    case 'success':
+                        iconEl.style.borderColor = 'rgba(34, 197, 94, 0.9)';
+                        iconEl.style.background = 'rgba(34, 197, 94, 0.3)';
+                        emojiEl.textContent = '✅';
+                        emojiEl.style.animation = 'none';
+                        progressBar.style.background = 'linear-gradient(90deg, #22c55e, #16a34a)';
+                        instructionEl.innerHTML = '<span style="color: #22c55e; font-weight: 600;">Pendaftaran sidik jari berhasil!</span>';
+                        // Auto close after 2 seconds
+                        setTimeout(() => {
+                            closeEnrollmentModal();
+                            loadEmployeeStats();
+                        }, 2500);
+                        break;
+                    case 'error':
+                        iconEl.style.borderColor = 'rgba(239, 68, 68, 0.9)';
+                        iconEl.style.background = 'rgba(239, 68, 68, 0.3)';
+                        emojiEl.textContent = '❌';
+                        emojiEl.style.animation = 'none';
+                        progressBar.style.background = 'linear-gradient(90deg, #ef4444, #dc2626)';
+                        instructionEl.innerHTML = '<span style="color: #ef4444; font-weight: 600;">Pendaftaran gagal. Silakan coba lagi.</span>';
+                        break;
+                }
+            }
+
+            // Close Enrollment Modal (make it global)
+            window.closeEnrollmentModal = function() {
+                console.log('🚫 Closing enrollment modal...');
+                if (enrollmentModal) {
+                    enrollmentModal.remove();
+                    enrollmentModal = null;
+                }
+            }
+
+            // Enroll Fingerprint Function (Global)
+            window.enrollFingerprint = async function(pegawaiId, nama, nip) {
+                console.log('🔐 Enroll button clicked:', pegawaiId, nama, nip);
+
+                // Show modal immediately
+                showEnrollmentModal(nama, nip);
+
+                try {
+                    console.log('Sending enrollment request to server...');
+
+                    // Request enrollment dari server
+                    const response = await fetch('/api/enroll-fingerprint', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            pegawai_id: pegawaiId,
+                            nama: nama,
+                            nip: nip
+                        })
+                    });
+
+                    const result = await response.json();
+                    console.log('Enrollment response:', result);
+
+                    if (!result.success) {
+                        updateEnrollmentProgress(0, 'error', result.message || 'Gagal memulai enrollment');
+                    }
+                } catch (error) {
+                    console.error('Error starting enrollment:', error);
+                    updateEnrollmentProgress(0, 'error', 'Koneksi ke server gagal');
+                }
+            }
+
+            // Update Statistics
+            async function updateStats() {
+                try {
+                    const response = await fetch('/stats/today');
+                    const result = await response.json();
+
+                    if (result.success) {
+                        const { hadir, total } = result.data;
+                        absensiDataEl.textContent = `${hadir}/${total}`;
+                        totalKaryawanEl.textContent = total;
+                    }
+                } catch (error) {
+                    console.error('Error mengambil statistik:', error);
+                    absensiDataEl.textContent = 'Error';
+                }
+            }
+
+            // Check Cloud Status
+            async function checkCloudStatus() {
+                try {
+                    const response = await fetch('http://localhost:8080', { mode: 'no-cors' });
+                    statusCloudEl.textContent = 'Online';
+                    statusCloudEl.style.color = 'var(--success)';
+                } catch (error) {
+                    statusCloudEl.textContent = 'Offline';
+                    statusCloudEl.style.color = 'var(--error)';
+                }
+            }
+
+            // Check IoT Status
+            function checkIoTStatus() {
+                statusIotEl.textContent = 'Online';
+                statusIotEl.style.color = 'var(--success)';
+            }
+
+            // Load Employee Statistics
+            async function loadEmployeeStats() {
+                try {
+                    const response = await fetch('/stats/employees');
+                    const result = await response.json();
+
+                    if (result.success && result.data.length > 0) {
+                        tabelKaryawan.innerHTML = '';
+                        result.data.forEach((karyawan, index) => {
+                            const row = document.createElement('tr');
+
+                            let absensiTerakhir = 'Belum ada';
+                            if (karyawan.absensi_terakhir) {
+                                const date = new Date(karyawan.absensi_terakhir);
+                                absensiTerakhir = date.toLocaleString('id-ID', {
+                                    day: '2-digit',
+                                    month: 'short',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                });
+                            }
+
+                            let badgeClass = 'badge-success';
+                            if (karyawan.total_absensi === 0) {
+                                badgeClass = 'badge-error';
+                            } else if (karyawan.total_absensi < 5) {
+                                badgeClass = 'badge-warning';
+                            }
+
+                            const fingerprintStatus = karyawan.fingerprint_id
+                                ? `<span class="badge badge-success" title="Fingerprint ID: ${karyawan.fingerprint_id}">✓ #${karyawan.fingerprint_id}</span>`
+                                : `<span class="badge badge-error">✗ Belum</span>`;
+
+                            row.innerHTML = `
+                                <td style="text-align: center;">${index + 1}</td>
+                                <td><strong>${karyawan.nama_pegawai || 'Unknown'}</strong></td>
+                                <td><code style="background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 4px;">${karyawan.nip || '-'}</code></td>
+                                <td>${karyawan.posisi || '-'}</td>
+                                <td style="text-align: center;">${fingerprintStatus}</td>
+                                <td style="text-align: center;">
+                                    <span class="badge ${badgeClass}">${karyawan.total_absensi || 0}</span>
+                                </td>
+                                <td style="text-align: center; font-size: var(--text-sm);">${absensiTerakhir}</td>
+                                <td style="text-align: center;">
+                                    <button class="btn btn-sm btn-enroll"
+                                            data-pegawai-id="${karyawan.id_pegawai}"
+                                            data-pegawai-nama="${karyawan.nama_pegawai}"
+                                            data-pegawai-nip="${karyawan.nip}"
+                                            style="background: var(--gradient-primary); padding: 6px 12px; font-size: 12px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; cursor: pointer;">
+                                        <span>👆</span>
+                                        <span>${karyawan.fingerprint_id ? 'Update' : 'Enroll'}</span>
+                                    </button>
+                                </td>
+                            `;
+                            row.classList.add('fade-in');
+                            tabelKaryawan.appendChild(row);
+                        });
+
+                        // Add event listeners to enroll buttons
+                        document.querySelectorAll('.btn-enroll').forEach(btn => {
+                            btn.addEventListener('click', function() {
+                                const pegawaiId = this.getAttribute('data-pegawai-id');
+                                const nama = this.getAttribute('data-pegawai-nama');
+                                const nip = this.getAttribute('data-pegawai-nip');
+                                window.enrollFingerprint(pegawaiId, nama, nip);
+                            });
+                        });
+                    } else {
+                        tabelKaryawan.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: var(--space-8); color: var(--text-secondary);">Tidak ada data karyawan</td></tr>';
+                    }
+                } catch (error) {
+                    console.error('Error memuat statistik karyawan:', error);
+                    tabelKaryawan.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: var(--space-8); color: var(--error);">❌ Error memuat data</td></tr>';
+                }
+            }
+
+            // Load employees for manual attendance dropdown
+            async function loadEmployeesDropdown() {
+                try {
+                    const response = await fetch('/stats/employees');
+                    const result = await response.json();
+
+                    if (result.success && result.data.length > 0) {
+                        const selectMasuk = document.getElementById('pegawai_masuk');
+                        const selectKeluar = document.getElementById('pegawai_keluar');
+
+                        result.data.forEach(karyawan => {
+                            const optionMasuk = document.createElement('option');
+                            optionMasuk.value = karyawan.id_pegawai;
+                            optionMasuk.textContent = `${karyawan.nama_pegawai} (${karyawan.nip})`;
+                            selectMasuk.appendChild(optionMasuk);
+
+                            const optionKeluar = document.createElement('option');
+                            optionKeluar.value = karyawan.id_pegawai;
+                            optionKeluar.textContent = `${karyawan.nama_pegawai} (${karyawan.nip})`;
+                            selectKeluar.appendChild(optionKeluar);
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error memuat daftar karyawan:', error);
+                }
+            }
+
+            // Set current time for time inputs
+            function setCurrentTime() {
+                const now = new Date();
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                const currentTime = `${hours}:${minutes}`;
+
+                document.getElementById('waktu_masuk').value = currentTime;
+                document.getElementById('waktu_keluar').value = currentTime;
+            }
+
+            // Load Recent Cuti/Izin Requests
+            async function loadCutiNotifications() {
+                const container = document.getElementById('cutiNotifications');
+                try {
+                    const res = await fetch('/api/cuti/recent');
+                    const result = await res.json();
+                    const data = result.data || [];
+
+                    if (data.length === 0) {
+                        container.innerHTML = `<div style="text-align: center; padding: var(--space-4); color: var(--text-tertiary);">Tidak ada pengajuan yang menunggu</div>`;
+                        return;
+                    }
+
+                    container.innerHTML = data.map(c => {
+                        const tglMulai = new Date(c.tanggal_mulai).toLocaleDateString('id-ID');
+                        const tglSelesai = new Date(c.tanggal_selesai).toLocaleDateString('id-ID');
+                        return `
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: var(--space-3) var(--space-4); background: rgba(255,255,255,0.03); border-radius: var(--radius-md); border-left: 3px solid #fbbf24;">
+                                <div>
+                                    <div style="font-weight: 500; color: var(--text-primary);">${c.nama_pegawai}</div>
+                                    <div style="font-size: 12px; color: var(--text-tertiary);">${c.jenis} - ${tglMulai} s/d ${tglSelesai}</div>
+                                </div>
+                                <span style="background: rgba(251, 191, 36, 0.2); color: #fde047; padding: 4px 10px; border-radius: 99px; font-size: 11px; font-weight: 500;">Menunggu</span>
+                            </div>
+                        `;
+                    }).join('');
+                } catch (error) {
+                    container.innerHTML = `<div style="text-align: center; padding: var(--space-4); color: var(--text-tertiary);">-</div>`;
+                }
+            }
+
+            // Initialize
+            initChart();
+            updateStats();
+            checkCloudStatus();
+            checkIoTStatus();
+            loadEmployeeStats();
+            loadEmployeesDropdown();
+            setCurrentTime();
+            loadCutiNotifications();
+
+            // Auto-refresh
+            setInterval(updateStats, 30000);
+            setInterval(checkCloudStatus, 60000);
+            setInterval(loadEmployeeStats, 60000);
+
+            // Helper function to format duration (menit to HH:MM)
+            function formatDurasi(menit) {
+                if (!menit || menit === 0) return '-';
+                const jam = Math.floor(menit / 60);
+                const sisa_menit = menit % 60;
+                return `${String(jam).padStart(2, '0')}:${String(sisa_menit).padStart(2, '0')}`;
+            }
+
+            // Socket.IO Real-time Updates
+            socket.on('data_update', (data) => {
+                console.log('📥 Data baru diterima:', data);
+                updateStats();
+                loadEmployeeStats();
+                statusIotEl.textContent = 'Online';
+                statusIotEl.style.color = 'var(--success)';
+
+                // Determine notification type based on tipe_absen
+                const tipeAbsen = data.tipe_absen || 'Masuk';
+                let icon, title, bgGradient, detailInfo;
+
+                if (tipeAbsen === 'Keluar') {
+                    // Absen Keluar notification
+                    icon = '🚪';
+                    title = 'Absen Keluar';
+                    bgGradient = 'linear-gradient(135deg, rgba(239, 68, 68, 0.95), rgba(220, 38, 38, 0.95))';
+
+                    // Build detail info with overtime
+                    detailInfo = `<div style="font-size: 14px; opacity: 0.9; margin-bottom: 4px;">${data.nama || 'Karyawan'}</div>`;
+                    detailInfo += `<div style="font-size: 12px; opacity: 0.8;">🕐 Keluar: ${data.waktu_keluar || '-'}</div>`;
+
+                    if (data.durasi_kerja) {
+                        const durasi = formatDurasi(data.durasi_kerja);
+                        detailInfo += `<div style="font-size: 12px; opacity: 0.8;">⏱️ Durasi: ${durasi}</div>`;
+                    }
+
+                    if (data.status_lembur === 'Ya' && data.durasi_lembur) {
+                        const lembur = formatDurasi(data.durasi_lembur);
+                        detailInfo += `<div style="font-size: 12px; font-weight: 600; margin-top: 4px; background: rgba(255, 193, 7, 0.3); padding: 4px 8px; border-radius: 6px; display: inline-block;">⏰ Lembur: ${lembur}</div>`;
+                    }
+                } else {
+                    // Absen Masuk notification
+                    icon = '✅';
+                    title = 'Absen Masuk';
+                    bgGradient = 'linear-gradient(135deg, rgba(16, 185, 129, 0.95), rgba(5, 150, 105, 0.95))';
+                    detailInfo = `
+                        <div style="font-size: 14px; opacity: 0.9; margin-bottom: 4px;">${data.nama || 'Karyawan'}</div>
+                        <div style="font-size: 12px; opacity: 0.8;">🕐 Masuk: ${data.waktu_absen || '-'}</div>
+                        <div style="font-size: 12px; opacity: 0.7;">${data.keterangan || 'Hadir'}</div>
+                    `;
+                }
+
+                // Visual notification
+                const notification = document.createElement('div');
+                notification.innerHTML = `
+                    <div style="position: fixed; top: 90px; right: 20px; background: ${bgGradient}; backdrop-filter: blur(15px); color: white; padding: 16px 24px; border-radius: 12px; box-shadow: var(--shadow-glass-lg); z-index: 9999; animation: slideInRight 0.3s ease-out; border: 1px solid rgba(255, 255, 255, 0.2); min-width: 300px;">
+                        <div style="display: flex; align-items: start; gap: 12px;">
+                            <span style="font-size: 28px;">${icon}</span>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600; margin-bottom: 6px; font-size: 16px;">${title}</div>
+                                ${detailInfo}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(notification);
+                setTimeout(() => {
+                    notification.style.animation = 'slideOutRight 0.3s ease-out';
+                    setTimeout(() => notification.remove(), 300);
+                }, 5000);
+            });
+
+            socket.on('initial_data', (dataArray) => {
+                console.log('📊 Data awal diterima');
+                updateStats();
+                loadEmployeeStats();
+            });
+
+            // Listen for enrollment progress from ESP32
+            socket.on('enrollment_progress', (data) => {
+                console.log('📊 Enrollment progress:', data);
+                updateEnrollmentProgress(data.step, data.status, data.message);
+            });
+
+            // Listen for enrollment success
+            socket.on('enrollment_success', (data) => {
+                console.log('✅ Enrollment success:', data);
+                updateEnrollmentProgress(8, 'success', 'Sidik jari berhasil disimpan!');
+            });
+
+            // Listen for enrollment error
+            socket.on('enrollment_error', (data) => {
+                console.log('❌ Enrollment error:', data);
+                updateEnrollmentProgress(0, 'error', data.message || 'Pendaftaran gagal');
+            });
+
+            // Listen for attendance success from fingerprint scan
+            socket.on('attendance_success', (data) => {
+                console.log('👆 Fingerprint attendance detected:', data);
+
+                // Update stats and employee table
+                updateStats();
+                loadEmployeeStats();
+
+                // Show BIG center popup notification
+                const notification = document.createElement('div');
+                notification.innerHTML = `
+                    <!-- Overlay Background -->
+                    <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px); z-index: 9998; animation: fadeIn 0.3s ease-out;"></div>
+
+                    <!-- Main Notification Card -->
+                    <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 48px 40px; border-radius: 24px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1); z-index: 9999; animation: popIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); min-width: 320px; max-width: 90vw; text-align: center;">
+
+                        <!-- Success Icon -->
+                        <div style="width: 120px; height: 120px; background: rgba(255, 255, 255, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; animation: scaleIn 0.6s ease-out 0.2s both;">
+                            <div style="font-size: 64px; animation: bounce 0.6s ease-out 0.4s;">✅</div>
+                        </div>
+
+                        <!-- Title -->
+                        <h2 style="font-size: 32px; font-weight: 700; margin: 0 0 16px 0; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);">
+                            Absensi Berhasil!
+                        </h2>
+
+                        <!-- Details -->
+                        <div style="font-size: 18px; opacity: 0.95; margin-bottom: 8px; font-weight: 500;">
+                            ${data.nama || 'Karyawan'}
+                        </div>
+                        <div style="font-size: 16px; opacity: 0.85; margin-bottom: 4px;">
+                            📇 NIP: ${data.nip || '-'}
+                        </div>
+                        <div style="font-size: 16px; opacity: 0.85; margin-bottom: 4px;">
+                            👆 Fingerprint ID: #${data.fingerprint_id}
+                        </div>
+                        <div style="font-size: 18px; opacity: 0.9; font-weight: 600; margin-top: 16px;">
+                            🕐 ${new Date(data.waktu).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                        </div>
+
+                        <!-- Checkmark Animation -->
+                        <div style="margin-top: 24px; font-size: 14px; opacity: 0.8;">
+                            Data tersimpan ke sistem ✓
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(notification);
+                setTimeout(() => {
+                    notification.style.animation = 'fadeOut 0.3s ease-out';
+                    setTimeout(() => notification.remove(), 300);
+                }, 4000);
+
+                // Play success sound (optional)
+                try {
+                    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBi2JGAAABABAAA==');
+                    audio.play().catch(e => console.log('Audio play failed:', e));
+                } catch(e) {}
+            });
+
+            // Listen for attendance errors
+            socket.on('attendance_error', (data) => {
+                console.error('❌ Attendance error:', data);
+
+                // Show error notification
+                const notification = document.createElement('div');
+                notification.innerHTML = `
+                    <div style="position: fixed; top: 90px; right: 20px; background: linear-gradient(135deg, rgba(239, 68, 68, 0.95), rgba(220, 38, 38, 0.95)); backdrop-filter: blur(15px); color: white; padding: 16px 24px; border-radius: 12px; box-shadow: var(--shadow-glass-lg); z-index: 9999; animation: slideInRight 0.3s ease-out; border: 1px solid rgba(255, 255, 255, 0.2); min-width: 300px;">
+                        <div style="display: flex; align-items: start; gap: 12px;">
+                            <span style="font-size: 28px;">❌</span>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600; margin-bottom: 6px; font-size: 16px;">Error Absensi</div>
+                                <div style="font-size: 14px; opacity: 0.9;">${data.message || 'Fingerprint tidak terdaftar'}</div>
+                                ${data.fingerprint_id ? `<div style="font-size: 11px; opacity: 0.6; margin-top: 4px;">Fingerprint ID: #${data.fingerprint_id}</div>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(notification);
+                setTimeout(() => {
+                    notification.style.animation = 'slideOutRight 0.3s ease-out';
+                    setTimeout(() => notification.remove(), 300);
+                }, 5000);
+            });
+
+            // Make function global
+            window.loadEmployeeStats = loadEmployeeStats;
+        });
+
+        // Animations for notifications
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                }
+                to {
+                    opacity: 1;
+                }
+            }
+            @keyframes fadeOut {
+                from {
+                    opacity: 1;
+                }
+                to {
+                    opacity: 0;
+                }
+            }
+            @keyframes popIn {
+                0% {
+                    opacity: 0;
+                    transform: translate(-50%, -50%) scale(0.5);
+                }
+                100% {
+                    opacity: 1;
+                    transform: translate(-50%, -50%) scale(1);
+                }
+            }
+            @keyframes scaleIn {
+                from {
+                    transform: scale(0);
+                    opacity: 0;
+                }
+                to {
+                    transform: scale(1);
+                    opacity: 1;
+                }
+            }
+            @keyframes bounce {
+                0%, 100% {
+                    transform: scale(1);
+                }
+                50% {
+                    transform: scale(1.2);
+                }
+            }
+            @keyframes slideInRight {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+
+    <!-- Notification Component -->
+    <script src="/notification-component.js"></script>
+    <script>
+        // Initialize notification component for admin
+        notificationComponent = new NotificationComponent({
+            isAdmin: true,
+            containerId: 'notification-bell'
+        });
+    </script>
+</body>
+</html>

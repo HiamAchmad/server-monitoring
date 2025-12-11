@@ -1,0 +1,169 @@
+luthi dan mas yoh punya porsi masing-masing 
+penjelasan step by step dan timeline, karena mas yoh hanya 3 hari
+
+=================================================================
+Report october 23, 2025
+
+Pada hari ini TIM melakukan pertemuan dengan Client, dengan sambutan hangat dari kedua pihak.
+acara berjalan mulus 
+mengenai planing kedepannya
+mengenai implementasi, Data karyawan 
+
+HOTLINE jangan lupa 
+
+Absen gapernah masuk
+
+editing list cuti
+jangan pengajuan ulang
+
+sistem akan respon dengan jadwal bewarna apabila dia tidak masuk ataupun sebaliknya.
+
+daily monitoring 04/11/2025 hasil dari feedback pengguna:
+ada beberapa yang tidak bisa masuk
+absensi keluar pada tanggal 3 bisa
+foto nya masih tidak ada
+ada beberapa yang error pada absensi 
+
+
+====================================================
+pada selesai absensi: illegal input
+
+Pengajuan Izin dan Cuti: foto tidak bisa ditambahkan
+pembatalan pengajuan sudah bisa namun masih ada pemberitahuan 
+
+Kalendar kerja sudah bisa, tinggal tambahin daftar hari kerja dan hari libur
+
+jadwal pertemuan sudah bbisa, tambahin saja pembatalan pengajuan
+
+pada pengajuan lembur, foto tidak bisa diupload dan tidak bisa dibatalkan
+
+pada pengajuan reimbes upload file tidak dapat mencari foto/tidak bisa menambah foto
+
+kotak masuk sudah bisa diklik, didalam layanan kotak masuk semua fitur tidak berfungsi
+
+data karyawan sudah berfungsi begitu juga dengan Tim
+
+mencari data karyawn / tim sudah bisa
+
+pengajuan reimbers upload file masih tidak bisa
+
+============================================================
+5 november 2025 daily monitoring
+- hasilnya tetap sama dengan hal yang kemarin yaitu kamera salah satu pengguna
+- absen pulang sudah ada yang bisa namun kadang error masih muncul seccara tiba-tiba
+- absensi masih error bertuliskan "write error"
+- tidak bisa login kembali
+
+perbedaan komunikasi diawal
+========================================================
+nx001
+pengajuan sudah bisa, preview image tidak tampak saat buka detail  penggajuan izin dan belum bisa di edit
+pengajuan sudah bisa, preview image tidak tampak saat buka detail  penggajuan cuti dan belum bisa di edit
+-untuk unduh slip gaji belum bisa
+
+pengajuan lembur sudah bisa namun, preview image masih belum nampak
+
+=====================================
+7 november
+Absensi Saya
+tidak tercatat waktu keluarnya hanya masuk saja
+
+Tim Kamu
+Masih seluruh karyawan bukan Tim doang
+
+izin/cuti
+edit sudah bisa, namun preview ngebug: yang dimana ketika ganti foto saat edit, tetap foto yang pertama yang tampil
+tidak perlu ada jenis cuti didalam coloum izin
+pengajuan batal sudah bisa namun pop up-nya masih dibawah tidak sesuai desain figma
+Tanggal detail pengajuan tidak tampak
+
+edit sudah bisa, dan preview image ikut berubah
+pembatalan pengajuan izin sudah bisa
+
+pengajuan lembur
+data tidak real-time saat menambahkan pengajuan: harus back dulu dan masuk kembali kehalaman pengajuan lembur
+batalkan pengajuan ada informasi error "failed", namun saat back dan kembali kehalaman detail status sudah cancelled dan diriwayat pengajuan lembur belum berubah dibatalkannya
+
+reimbursement
+pada coloum jumlah "." hanya bisa satu, apabila nominal lebih dari puluhan akan bingung
+data tidak real-time ke daftar riwayat, harus back dulu  dari halaman pengajuan reimbursement dan kembali lagi kehalaman tersebut
+untuk edit reimbursement sudah bisa namun, ada keanehan yang dimana
+pada editing reimburs foto yang sebelumnya sudah ada seharusnya tidak hilang, dikarenakan tidak dihapus hanya ditambahkan saat editing (namun ini malah terganti yang baru)
+pada batalkan pengajuan reiumbersement ada tulisan failed dan tidak bisa membatalkan pengajuan reiumbersement
+
+Kotak masuk
+pengajuan belum terbaca di fitur halaman kotak masuk | persetujuan dan notifikasi
+
+kalender kerja
+tolong nanti disesuaikan dengan jadwal kerja pengguna / karyawan, karena disini masih belum terbaca
+
+Jadwal pertemuan 
+belum bisa dikarenakan belum bisa melihat rinciannya dan tidak bisa memberi kepastian hadir atau tidaknya
+
+Akun
+ketika mencoba unduh slip gaji, tiba-tiba keluar dari aplikasi
+foto profile belum bisa ditambahkan
+
+Dokumen saya
+belum bisa menambahkan file
+
+===================================================================================================================================
+
+cuti
+penamaan masih sama izin, seharusnya cuti
+edit pengajuan cuti sudah berhasi dan preview image ikut berubah
+pembatalan pengajuan cuti juga sudah bisa
+
+Lembur
+untuk melakukan pembatalan pengajuan lembur masih failed, namun ketika back dan kembali untuk melihat detail pengajuan lembur sudah ada cancelled
+edit sudah bisa namun preview image ngebug: yang dimana ketika ganti foto saat edit, tetap foto yang pertama yang tampil
+
+jadwal pertemuan
+sudah bisa namun tidak bisa memilih iya atau tidak
+
+DATA BANDWICHT
+
+
+setelah absensi, desain nya masih tumpuk-tumpukan
+
+
+================================================================================================
+7 November 2025
+implementasi IOS
+- Pembagian akun dan pengarahan penggunaan PWA dan IOS
+-
+=================================================================================================
+-Android ketika sudah absensi, mapsnya tidak terlihat
+
+-tampilan pengambilan foto secara kamera, tidak pemilihan file yang tersedia.
+-pada tampilan akun, banyak fitur yang tidak bisa digunakan.
+ seperti slip gaji dan lain-lain.
+ 
+ ==============================================================================================
+ 
+ evaluasi
+ 
+pihak krisna ingin menambahkan checkbox pada bagian pengajuan dibagian web admin, agar bisa menyetujui pengajuan lebih dari satu secara bersamaan.
+pihak krisna meminta role admin menjadi 2 yaitu: superadmin sebagai admin corporate dan admin untuk admin outlet.
+Approv corporate secara keseluruhan.
+Approv outlet secara branch.
+summary dibutuhkan minimal 3 bulan sekali untuk laporan mereka.
+setiap action pada admin web memiliki notifikasi penyetujuan.
+pada tabel employement management ditambahkan coloum join date, end date, resign date dan alamat.
+pengecekan time off => jenis cuti.
+karyawan yang pindah line bisnis, mereka juga memindahkan semua datanya termasuk cuti branch baru.
+pihak krisna meminta Tampilan Android disesuaikan dengan tampilan PWA IOS.
+Pada aplikasi android dan pwa memiliki beberapa role seperti atasan, darisana dia bisa meng-acc pengajuan karyawannya.
+
+==============================================================================================
+daily monitoring
+absensi
+maps nya tidak sesuai titik lokasi.
+diingatkan pada login masuk agar tidak ribet lagi
+pengajuan cuti
+tanggal halaman dashboard masih tidak sesuai
+pada absensi detail tidak tampil jam masuk dan keluar dibutuhkan secepatnya
+
+
+=========================================962475
+

@@ -1,0 +1,25 @@
+report harian pada 3 november 2025
+
+pada halaman dashboard, namanya masih "adrian" pada keseluruhan akun
+dan pada bagian absen tertulis = user authen
+absensi tidak bisa
+menggunakan kamera setelah difoto menjadi hitam (kasus hanya 1 dari beberapa orang)
+dan ada usulan bahwa foto lampiran pada ijin, cuti,absensi dan reumbers itu harus bisa lebih dari satu
+approval = ini tinjauan kembali dari report kemarin
+pada coloum izin dan cuti masih sama, catatan bahwa = cuti (cuti izin) << salah satu hal yang salah
+illegal input pada bagian penggajuan izin
+untuk foto jangan di optional
+tidak bisa logout
+
+Pengajuan lembur
+lampiran foto tidak ada dan ketika diajukan daftar riwayatnya kosong
+
+Pengajuan reimbusement
+saran adalah preview image harus ditambahkan agar bisa melihat langsung tanpa membuka fotonya satu persatu
+tidak ada history di list (ada yang bisa dan tidak bisa)
+
+Pertanyaan
+lampiran foto
+pengajuan bisa dibatal agar tidak membuat pengajuan ulang ataupun pengajuan bisa diganti (agar tidak menumpuk)
+absensi masuk ke kalender, dan pada tampilan kalender terdapat warna yang menunjukan history masuk karyawan
+

@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Management Pegawai - Sistem Absensi</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn-action {
+            padding: 8px 16px;
+            margin-right: 5px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .btn-edit {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-enroll {
+            background: #28a745;
+            color: white;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            color: #999;
+            cursor: pointer;
+            border: none;
+            background: none;
+        }
+
+        .close-modal:hover {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>👥 Management Pegawai</h1>
+        <p class="subtitle">Kelola Data Pegawai & Fingerprint</p>
+
+        <div class="actions">
+            <button class="btn btn-primary" onclick="openAddModal()">
+                ➕ Tambah Pegawai Baru
+            </button>
+            <button class="btn btn-secondary" onclick="refreshData()">
+                🔄 Refresh Data
+            </button>
+            <a href="dashboard-glass.html" class="btn btn-secondary">
+                🏠 Dashboard
+            </a>
+        </div>
+
+        <div id="tableContainer">
+            <div class="loading">Loading data...</div>
+        </div>
+    </div>
+
+    <!-- Modal Add/Edit -->
+    <div id="pegawaiModal" class="modal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeModal()">&times;</button>
+            <h2 id="modalTitle">Tambah Pegawai Baru</h2>
+            <form id="pegawaiForm" onsubmit="savePegawai(event)">
+                <input type="hidden" id="pegawaiId">
+
+                <div class="form-group">
+                    <label>NIP *</label>
+                    <input type="text" id="nip" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Nama Lengkap *</label>
+                    <input type="text" id="nama" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Jabatan</label>
+                    <input type="text" id="jabatan" placeholder="Contoh: Manager, Staff">
+                </div>
+
+                <div class="form-group">
+                    <label>Departemen</label>
+                    <input type="text" id="departemen" placeholder="Contoh: IT, Finance">
+                </div>
+
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="status">
+                        <option value="aktif">Aktif</option>
+                        <option value="nonaktif">Non-Aktif</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Fingerprint ID</label>
+                    <input type="number" id="fingerprintId" min="1" max="127" placeholder="1-127 (opsional)">
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 30px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">
+                        💾 Simpan
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">
+                        ❌ Batal
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        // Load data saat halaman dibuka
+        window.onload = () => {
+            loadPegawai();
+        };
+
+        // Load data pegawai
+        async function loadPegawai() {
+            try {
+                const response = await fetch('/api/pegawai');
+                const data = await response.json();
+
+                if (data.success && data.data) {
+                    renderTable(data.data);
+                } else {
+                    document.getElementById('tableContainer').innerHTML =
+                        '<p class="loading">Tidak ada data pegawai</p>';
+                }
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('tableContainer').innerHTML =
+                    '<p class="loading" style="color: red;">Error loading data</p>';
+            }
+        }
+
+        // Render table
+        function renderTable(pegawaiList) {
+            let html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>NIP</th>
+                            <th>Nama</th>
+                            <th>Jabatan</th>
+                            <th>Departemen</th>
+                            <th>Fingerprint</th>
+                            <th>Status</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            pegawaiList.forEach(p => {
+                const statusClass = p.status === 'aktif' ? 'status-active' : 'status-inactive';
+                const fingerprint = p.fingerprint_id ? `#${p.fingerprint_id}` : '-';
+
+                html += `
+                    <tr>
+                        <td>${p.id}</td>
+                        <td>${p.nip}</td>
+                        <td>${p.nama}</td>
+                        <td>${p.jabatan || '-'}</td>
+                        <td>${p.departemen || '-'}</td>
+                        <td>${fingerprint}</td>
+                        <td><span class="status-badge ${statusClass}">${p.status}</span></td>
+                        <td>
+                            ${!p.fingerprint_id ? `<button class="btn-action btn-enroll" onclick="enrollFingerprint(${p.id}, '${p.nip}', '${p.nama}')">📝 Enroll</button>` : ''}
+                            <button class="btn-action btn-edit" onclick="editPegawai(${p.id})">✏️ Edit</button>
+                            <button class="btn-action btn-delete" onclick="deletePegawai(${p.id}, '${p.nama}')">🗑️ Hapus</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                    </tbody>
+                </table>
+            `;
+
+            document.getElementById('tableContainer').innerHTML = html;
+        }
+
+        // Open Add Modal
+        function openAddModal() {
+            document.getElementById('modalTitle').textContent = 'Tambah Pegawai Baru';
+            document.getElementById('pegawaiForm').reset();
+            document.getElementById('pegawaiId').value = '';
+            document.getElementById('pegawaiModal').style.display = 'block';
+        }
+
+        // Close Modal
+        function closeModal() {
+            document.getElementById('pegawaiModal').style.display = 'none';
+        }
+
+        // Save Pegawai
+        async function savePegawai(event) {
+            event.preventDefault();
+
+            const id = document.getElementById('pegawaiId').value;
+            const data = {
+                nip: document.getElementById('nip').value,
+                nama: document.getElementById('nama').value,
+                jabatan: document.getElementById('jabatan').value || null,
+                departemen: document.getElementById('departemen').value || null,
+                status: document.getElementById('status').value,
+                fingerprint_id: document.getElementById('fingerprintId').value || null
+            };
+
+            try {
+                const url = id ? `/api/pegawai/${id}` : '/api/pegawai';
+                const method = id ? 'PUT' : 'POST';
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(id ? 'Data pegawai berhasil diupdate!' : 'Pegawai baru berhasil ditambahkan!');
+                    closeModal();
+                    loadPegawai();
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                alert('Error saving data: ' + error.message);
+            }
+        }
+
+        // Edit Pegawai
+        async function editPegawai(id) {
+            try {
+                const response = await fetch(`/api/pegawai/${id}`);
+                const result = await response.json();
+
+                if (result.success && result.data) {
+                    const p = result.data;
+                    document.getElementById('modalTitle').textContent = 'Edit Pegawai';
+                    document.getElementById('pegawaiId').value = p.id;
+                    document.getElementById('nip').value = p.nip;
+                    document.getElementById('nama').value = p.nama;
+                    document.getElementById('jabatan').value = p.jabatan || '';
+                    document.getElementById('departemen').value = p.departemen || '';
+                    document.getElementById('status').value = p.status;
+                    document.getElementById('fingerprintId').value = p.fingerprint_id || '';
+                    document.getElementById('pegawaiModal').style.display = 'block';
+                }
+            } catch (error) {
+                alert('Error loading data: ' + error.message);
+            }
+        }
+
+        // Delete Pegawai
+        async function deletePegawai(id, nama) {
+            if (!confirm(`Yakin ingin menghapus pegawai "${nama}"?`)) return;
+
+            try {
+                const response = await fetch(`/api/pegawai/${id}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('Pegawai berhasil dihapus!');
+                    loadPegawai();
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                alert('Error deleting data: ' + error.message);
+            }
+        }
+
+        // Enroll Fingerprint
+        function enrollFingerprint(pegawaiId, nip, nama) {
+            const fingerprintId = prompt(`Enroll fingerprint untuk ${nama}\n\nMasukkan Fingerprint ID (1-127):`);
+
+            if (!fingerprintId) return;
+
+            const fpId = parseInt(fingerprintId);
+            if (fpId < 1 || fpId > 127) {
+                alert('Fingerprint ID harus antara 1-127!');
+                return;
+            }
+
+            // Redirect ke halaman test enrollment dengan pre-fill
+            window.location.href = `test-fingerprint.html?fpid=${fpId}&pegid=${pegawaiId}&nip=${encodeURIComponent(nip)}&nama=${encodeURIComponent(nama)}`;
+        }
+
+        // Refresh Data
+        function refreshData() {
+            loadPegawai();
+        }
+    </script>
+</body>
+</html>

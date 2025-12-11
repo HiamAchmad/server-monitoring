@@ -1,0 +1,16 @@
+{
+  "companyName": "PT. Biro Jasa Mitra Jaya",
+  "timezone": "Asia/Jakarta",
+  "dateFormat": "DD/MM/YYYY",
+  "workStart": "08:00",
+  "workEnd": "17:00",
+  "lateTolerance": "15",
+  "overtimeStart": "18:00",
+  "notifyRealtime": true,
+  "notifyLate": true,
+  "notifyOvertime": true,
+  "notifySound": true,
+  "autoBackup": true,
+  "archivePeriod": "90",
+  "lastUpdated": "2025-11-29T04:18:30.264Z"
+}

@@ -1,0 +1,123 @@
+================================================================================
+🚀 CARA MENJALANKAN WEBSITE - SANGAT MUDAH!
+================================================================================
+
+LANGKAH 1: Buka Terminal
+-------------------------
+Buka terminal di folder ini atau ketik:
+   cd /home/hasan/Documents/Perancangan-20251031T151707Z-1-001/Perancangan/server-monitoring
+
+
+LANGKAH 2: Jalankan Setup (HANYA 1x)
+-------------------------------------
+Copy-paste command ini ke terminal:
+
+   bash SETUP_SEKARANG.sh
+
+Script ini akan:
+   ✅ Setup database PostgreSQL
+   ✅ Import data sample
+   ✅ Start server otomatis
+
+
+LANGKAH 3: Buka Website
+------------------------
+Setelah server running, buka browser dan kunjungi:
+
+   📱 Dashboard Admin:
+   http://localhost:3000/dashboard.html
+
+   📋 Manajemen Tugas:
+   http://localhost:3000/manajemen.html
+
+   📊 Riwayat Absensi:
+   http://localhost:3000/riwayat.html
+
+
+ALTERNATIF: Manual Setup (jika script tidak jalan)
+---------------------------------------------------
+Copy-paste SEMUA baris ini ke terminal:
+
+sudo -u postgres psql << 'EOF'
+CREATE USER absensi_user WITH PASSWORD 'absensi_password';
+CREATE DATABASE db_absensi OWNER absensi_user;
+GRANT ALL PRIVILEGES ON DATABASE db_absensi TO absensi_user;
+\c db_absensi
+GRANT ALL ON SCHEMA public TO absensi_user;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO absensi_user;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO absensi_user;
+\q
+EOF
+
+sudo -u postgres psql -d db_absensi -f database_postgresql.sql
+
+node server.js
+
+
+VERIFIKASI SERVER RUNNING
+--------------------------
+Jika berhasil, Anda akan melihat output seperti ini:
+
+   Penjadwalan arsip telah diatur.
+   🚀 MQTT Broker berjalan pada port 1883
+   🚀 Server absensi berjalan pada port 3000
+   ✅ Terhubung ke database PostgreSQL.
+
+Kemudian buka: http://localhost:3000/dashboard.html
+
+
+TROUBLESHOOTING
+---------------
+Jika ada error "password authentication failed":
+   1. Database belum di-setup
+   2. Jalankan command manual di atas
+
+Jika port 3000 sudah digunakan:
+   pkill -f "node.*server.js"
+   node server.js
+
+
+FITUR SISTEM
+------------
+✅ MQTT Protocol - Real-time data dari ESP32
+✅ PostgreSQL Database - Auto-start, tidak perlu manual!
+✅ OwnCloud Backup - File otomatis ke cloud (port 8080)
+✅ Dashboard Real-time - Update otomatis via WebSocket
+✅ Statistik Karyawan - Total absensi per karyawan
+✅ Manajemen Tugas - Upload & track tugas karyawan
+
+
+AKSES OWNCLOUD (BONUS!)
+------------------------
+OwnCloud sudah running di:
+   http://localhost:8080
+
+   Login:
+   Username: admin
+   Password: admin
+
+
+BUTUH BANTUAN?
+--------------
+Baca dokumentasi lengkap:
+   - POSTGRESQL_MIGRATION_COMPLETE.md
+   - README_MQTT.md
+   - JALANKAN_INI.md
+
+
+================================================================================
+TL;DR - CARA TERCEPAT:
+================================================================================
+
+Buka terminal, jalankan:
+
+   cd /home/hasan/Documents/Perancangan-20251031T151707Z-1-001/Perancangan/server-monitoring
+   bash SETUP_SEKARANG.sh
+
+Tunggu sampai "Server berjalan pada port 3000", lalu buka:
+
+   http://localhost:3000/dashboard.html
+
+SELESAI! 🎉
+
+================================================================================

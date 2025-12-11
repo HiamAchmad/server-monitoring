@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Settings - Sistem Absensi">
+    <meta name="theme-color" content="#667eea">
+    <title>Settings - Sistem Absensi</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="stylesheet" href="glass-style.css">
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <style>
+        .settings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: var(--space-6); }
+        @media (max-width: 768px) { .settings-grid { grid-template-columns: 1fr; } }
+        .settings-card { background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: var(--radius-xl); padding: var(--space-6); }
+        .settings-card-header { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-6); padding-bottom: var(--space-4); border-bottom: 1px solid var(--glass-border); }
+        .settings-card-icon { font-size: 24px; }
+        .settings-card-title { font-size: var(--text-lg); font-weight: 600; color: var(--text-primary); }
+        .setting-item { display: flex; justify-content: space-between; align-items: center; padding: var(--space-4) 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .setting-item:last-child { border-bottom: none; }
+        .setting-label { display: flex; flex-direction: column; gap: 4px; }
+        .setting-label-title { font-weight: 500; color: var(--text-primary); }
+        .setting-label-desc { font-size: var(--text-sm); color: var(--text-muted); }
+        .setting-control { min-width: 120px; text-align: right; }
+        .toggle-switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.1); transition: 0.3s; border-radius: 26px; }
+        .toggle-slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: 0.3s; border-radius: 50%; }
+        input:checked + .toggle-slider { background: var(--gradient-primary); }
+        input:checked + .toggle-slider:before { transform: translateX(24px); }
+        .glass-input-sm { padding: 8px 12px; font-size: var(--text-sm); max-width: 150px; }
+        .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 20px; font-size: var(--text-sm); font-weight: 500; }
+        .status-badge.online { background: rgba(16,185,129,0.2); color: #10b981; }
+        .status-badge.offline { background: rgba(239,68,68,0.2); color: #ef4444; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; animation: pulse 2s infinite; }
+        .status-dot.online { background: #10b981; }
+        .status-dot.offline { background: #ef4444; }
+        .btn-settings { padding: 10px 20px; border-radius: var(--radius-lg); font-size: var(--text-sm); font-weight: 500; cursor: pointer; transition: all 0.2s ease; border: none; }
+        .btn-primary-sm { background: var(--gradient-primary); color: white; }
+        .btn-danger-sm { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; }
+        .btn-secondary-sm { background: rgba(255,255,255,0.1); color: var(--text-primary); border: 1px solid var(--glass-border); }
+        .device-info { background: rgba(255,255,255,0.05); border-radius: var(--radius-lg); padding: var(--space-4); margin-top: var(--space-4); }
+        .device-info-row { display: flex; justify-content: space-between; padding: var(--space-2) 0; font-size: var(--text-sm); }
+        .device-info-label { color: var(--text-muted); }
+        .device-info-value { color: var(--text-primary); font-weight: 500; }
+        .save-notification { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: rgba(16,185,129,0.95); color: white; padding: 12px 24px; border-radius: var(--radius-lg); z-index: 9999; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .password-wrapper { position: relative; display: flex; align-items: center; }
+        .password-wrapper input { padding-right: 40px; }
+        .toggle-password { position: absolute; right: 8px; background: none; border: none; cursor: pointer; padding: 4px; font-size: 16px; opacity: 0.6; transition: opacity 0.2s; }
+        .toggle-password:hover { opacity: 1; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7V17L12 22L22 17V7L12 2Z" fill="url(#gradient1)"/><defs><linearGradient id="gradient1" x1="2" y1="2" x2="22" y2="22"><stop offset="0%" style="stop-color:#667eea"/><stop offset="100%" style="stop-color:#764ba2"/></linearGradient></defs></svg>
+            <span>Sistem Absensi</span>
+        </div>
+        <div class="navbar-menu">
+            <div id="notification-bell" style="position: relative; margin: 0 8px;"></div>
+            <a href="#" class="navbar-link" onclick="logout()">Logout</a>
+        </div>
+    </nav>
+    <aside class="sidebar">
+        <div class="sidebar-item" onclick="location.href='dashboard-glass.html'"><span class="sidebar-icon">📊</span><span>Dashboard</span></div>
+        <div class="sidebar-item" onclick="location.href='riwayat-glass.html'"><span class="sidebar-icon">📜</span><span>Riwayat</span></div>
+        <div class="sidebar-item" onclick="location.href='manajemen-karyawan-glass.html'"><span class="sidebar-icon">👥</span><span>Karyawan</span></div>
+        <div class="sidebar-item" onclick="location.href='cuti-glass.html'"><span class="sidebar-icon">📋</span><span>Cuti/Izin</span></div>
+        <div class="sidebar-item" onclick="location.href='jadwal-shift-glass.html'"><span class="sidebar-icon">📅</span><span>Jadwal</span></div>
+        <div class="sidebar-item" onclick="location.href='payroll-glass.html'"><span class="sidebar-icon">💰</span><span>Payroll</span></div>
+        <div class="sidebar-item" onclick="location.href='laporan-glass.html'"><span class="sidebar-icon">📈</span><span>Laporan</span></div>
+        <div class="sidebar-item active"><span class="sidebar-icon">⚙️</span><span>Settings</span></div>
+        <div class="sidebar-item" onclick="logout()"><span class="sidebar-icon">🚪</span><span>Logout</span></div>
+    </aside>
+    <div class="main-content-with-sidebar">
+        <div class="container">
+            <div class="page-header fade-in-up">
+                <h1 class="page-title">Settings</h1>
+                <p class="page-subtitle">Konfigurasi sistem absensi</p>
+            </div>
+            <div class="settings-grid">
+                <div class="settings-card fade-in-up">
+                    <div class="settings-card-header"><span class="settings-card-icon">🏢</span><span class="settings-card-title">Pengaturan Umum</span></div>
+                    <div class="setting-item"><div class="setting-label"><span class="setting-label-title">Nama Perusahaan</span><span class="setting-label-desc">Nama yang ditampilkan di sistem</span></div><div class="setting-control"><input type="text" class="glass-input glass-input-sm" id="company-name" value="PT. Contoh Indonesia"></div></div>
+                    <div class="setting-item"><div class="setting-label"><span class="setting-label-title">Zona Waktu</span><span class="setting-label-desc">Zona waktu untuk pencatatan</span></div><div class="setting-control"><select class="glass-select glass-input-sm" id="timezone"><option value="Asia/Jakarta" selected>WIB (Jakarta)</option><option value="Asia/Makassar">WITA (Makassar)</option><option value="Asia/Jayapura">WIT (Jayapura)</option></select></div></div>
+                    <div class="setting-item"><div class="setting-label"><span class="setting-label-title">Format Tanggal</span><span class="setting-label-desc">Format tampilan tanggal</span></div><div class="setting-control"><select class="glass-select glass-input-sm" id="date-format"><option value="DD/MM/YYYY" selected>DD/MM/YYYY</option><option value="MM/DD/YYYY">MM/DD/YYYY</option><option value="YYYY-MM-DD">YYYY-MM-DD</option></select></div></div>
+                </div>
+                <div class="settings-card fade-in-up">
+                    <div class="settings-card-header"><span class="settings-card-icon">🕐</span><span class="settings-card-title">Pengaturan Jam Kerja</span></div>
+                    <div class="setting-item"><div class="setting-label"><span class="setting-label-title">Jam Masuk</span><span class="setting-label-desc">Waktu mulai kerja</span></div><div class="setting-control"><input type="time" class="glass-input glass-input-sm" id="work-start" value="08:00"></div></div>
+                    <div class="setting-item"><div class="setting-label"><span class="setting-label-title">Jam Pulang</span><span class="setting-label-desc">Waktu selesai kerja</span></div><div class="setting-control"><input type="time" class="glass-input glass-input-sm" id="work-end" value="17:00"></div></div>
+                    <div class="setting-item"><div class="setting-label"><span class="setting-label-title">Toleransi Terlambat</span><span class="setting-label-desc">Batas keterlambatan (menit)</span></div><div class="setting-control"><input type="number" class="glass-input glass-input-sm" id="late-tolerance" value="15" min="0" max="60" style="width:80px;"></div></div>
+                    <div class="setting-item"><div class="setting-label"><span class="setting-label-title">Jam Mulai Lembur</span><span class="setting-label-desc">Waktu perhitungan lembur</span></div><div class="setting-control"><input type="time" class="glass-input glass-input-sm" id="overtime-start" value="18:00"></div></div>
+                </div>
+                <div class="settings-card fade-in-up">
+                    <div class="settings-card-header"><span class="settings-card-icon">🔔</span><span class="settings-card-title">Pengaturan Notifikasi</span></div>
+                    <div class="setting-item"><div class="setting-label"><span class="setting-label-title">Notifikasi Real-time</span><span class="setting-label-desc">Tampilkan notifikasi saat absensi</span></div><div class="setting-control"><label class="toggle-switch"><input type="checkbox" id="notify-realtime" checked><span class="toggle-slider"></span></label></div></div>
+                    <div class="setting-item"><div class="setting-label"><span class="setting-label-title">Notifikasi Terlambat</span><span class="setting-label-desc">Alert saat karyawan terlambat</span></div><div class="setting-control"><label class="toggle-switch"><input type="checkbox" id="notify-late" checked><span class="toggle-slider"></span></label></div></div>
+                    <div class="setting-item"><div class="setting-label"><span class="setting-label-title">Notifikasi Lembur</span><span class="setting-label-desc">Alert saat karyawan lembur</span></div><div class="setting-control"><label class="toggle-switch"><input type="checkbox" id="notify-overtime" checked><span class="toggle-slider"></span></label></div></div>
+                    <div class="setting-item"><div class="setting-label"><span class="setting-label-title">Suara Notifikasi</span><span class="setting-label-desc">Bunyi saat ada absensi baru</span></div><div class="setting-control"><label class="toggle-switch"><input type="checkbox" id="notify-sound" checked><span class="toggle-slider"></span></label></div></div>
+                </div>
+                <div class="settings-card fade-in-up">
+                    <div class="settings-card-header"><span class="settings-card-icon">📡</span><span class="settings-card-title">Perangkat IoT</span></div>
+                    <div class="setting-item"><div class="setting-label"><span class="setting-label-title">Status ESP32</span><span class="setting-label-desc">Koneksi perangkat fingerprint</span></div><div class="setting-control"><span class="status-badge online" id="esp32-status"><span class="status-dot online"></span><span>Online</span></span></div></div>
+                    <div class="setting-item"><div class="setting-label"><span class="setting-label-title">Status MQTT Broker</span><span class="setting-label-desc">Server komunikasi IoT</span></div><div class="setting-control"><span class="status-badge online"><span class="status-dot online"></span><span>Online</span></span></div></div>
+                    <div class="device-info">
+                        <div class="device-info-row"><span class="device-info-label">MQTT Port</span><span class="device-info-value">1883</span></div>
+                        <div class="device-info-row"><span class="device-info-label">Server Port</span><span class="device-info-value">3000</span></div>
+                        <div class="device-info-row"><span class="device-info-label">Total Fingerprint</span><span class="device-info-value" id="total-fingerprint">-</span></div>
+                    </div>
+                    <button class="btn-settings btn-danger-sm" onclick="resetFingerprints()" style="width:100%;margin-top:var(--space-4);">🗑️ Reset Semua Fingerprint</button>
+                </div>
+                <div class="settings-card fade-in-up">
+                    <div class="settings-card-header"><span class="settings-card-icon">💾</span><span class="settings-card-title">Backup & Data</span></div>
+                    <div class="setting-item"><div class="setting-label"><span class="setting-label-title">Auto Backup</span><span class="setting-label-desc">Backup otomatis setiap hari</span></div><div class="setting-control"><label class="toggle-switch"><input type="checkbox" id="auto-backup" checked><span class="toggle-slider"></span></label></div></div>
+                    <div class="setting-item"><div class="setting-label"><span class="setting-label-title">Arsip Otomatis</span><span class="setting-label-desc">Pindahkan data lama ke arsip</span></div><div class="setting-control"><select class="glass-select glass-input-sm" id="archive-period"><option value="30">30 Hari</option><option value="60">60 Hari</option><option value="90" selected>90 Hari</option><option value="180">180 Hari</option></select></div></div>
+                    <div style="display:flex;gap:var(--space-3);margin-top:var(--space-4);"><button class="btn-settings btn-primary-sm" onclick="exportData('csv')" style="flex:1;">📊 Export CSV</button><button class="btn-settings btn-secondary-sm" onclick="exportData('json')" style="flex:1;">📋 Export JSON</button></div>
+                </div>
+                <div class="settings-card fade-in-up">
+                    <div class="settings-card-header"><span class="settings-card-icon">☁️</span><span class="settings-card-title">OwnCloud Backup</span></div>
+                    <div class="setting-item"><div class="setting-label"><span class="setting-label-title">Status OwnCloud</span><span class="setting-label-desc">Server penyimpanan cloud</span></div><div class="setting-control"><span class="status-badge offline" id="owncloud-status"><span class="status-dot offline"></span><span>Checking...</span></span></div></div>
+                    <div class="device-info">
+                        <div class="device-info-row"><span class="device-info-label">Server URL</span><span class="device-info-value" id="owncloud-url">-</span></div>
+                        <div class="device-info-row"><span class="device-info-label">Last Backup</span><span class="device-info-value" id="last-backup">-</span></div>
+                    </div>
+                    <button class="btn-settings btn-primary-sm" onclick="backupToOwnCloud()" style="width:100%;margin-top:var(--space-4);" id="btn-backup">☁️ Backup ke OwnCloud Sekarang</button>
+                </div>
+                <div class="settings-card fade-in-up">
+                    <div class="settings-card-header"><span class="settings-card-icon">🔐</span><span class="settings-card-title">Akun Admin</span></div>
+                    <div class="setting-item"><div class="setting-label"><span class="setting-label-title">Username</span></div><div class="setting-control"><input type="text" class="glass-input glass-input-sm" value="admin" readonly style="background:rgba(255,255,255,0.05);"></div></div>
+                    <div class="setting-item"><div class="setting-label"><span class="setting-label-title">Password Lama</span></div><div class="setting-control"><div class="password-wrapper"><input type="password" class="glass-input glass-input-sm" id="old-password" placeholder="••••••"><button type="button" class="toggle-password" onclick="togglePassword('old-password', this)">👁️</button></div></div></div>
+                    <div class="setting-item"><div class="setting-label"><span class="setting-label-title">Password Baru</span></div><div class="setting-control"><div class="password-wrapper"><input type="password" class="glass-input glass-input-sm" id="new-password" placeholder="••••••"><button type="button" class="toggle-password" onclick="togglePassword('new-password', this)">👁️</button></div></div></div>
+                    <div class="setting-item"><div class="setting-label"><span class="setting-label-title">Konfirmasi Password</span></div><div class="setting-control"><div class="password-wrapper"><input type="password" class="glass-input glass-input-sm" id="confirm-password" placeholder="••••••"><button type="button" class="toggle-password" onclick="togglePassword('confirm-password', this)">👁️</button></div></div></div>
+                    <button class="btn-settings btn-primary-sm" onclick="changePassword()" style="width:100%;margin-top:var(--space-4);">🔐 Ubah Password</button>
+                </div>
+            </div>
+            <div style="margin-top:var(--space-8);text-align:center;"><button class="btn-primary" onclick="saveSettings()"><span>💾</span><span>Simpan Semua Pengaturan</span></button></div>
+        </div>
+    </div>
+    <div class="bottom-nav">
+        <div class="nav-item" onclick="window.location.href='dashboard-glass.html'"><span class="nav-item-icon">📊</span><span>Dashboard</span></div>
+        <div class="nav-item" onclick="window.location.href='riwayat-glass.html'"><span class="nav-item-icon">📜</span><span>Riwayat</span></div>
+        <div class="nav-item" onclick="window.location.href='manajemen-karyawan-glass.html'"><span class="nav-item-icon">👥</span><span>Karyawan</span></div>
+        <div class="nav-item active"><span class="nav-item-icon">⚙️</span><span>Settings</span></div>
+    </div>
+    <script>
+        if (!sessionStorage.getItem('isLoggedIn')) window.location.href = 'index-glass.html';
+        function logout() { sessionStorage.clear(); window.location.href = 'index-glass.html'; }
+        const socket = io();
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSettings();
+            loadFingerprintCount();
+            checkMqttStatus();
+            checkOwnCloudStatus();
+            loadLastBackupTime();
+            // Refresh status setiap 30 detik
+            setInterval(() => {
+                checkMqttStatus();
+                checkOwnCloudStatus();
+            }, 30000);
+        });
+
+        async function loadSettings() {
+            // Coba load dari server dulu, fallback ke localStorage
+            try {
+                const res = await fetch('/api/settings');
+                const result = await res.json();
+                if (result.success && result.data) {
+                    applySettings(result.data);
+                    return;
+                }
+            } catch (e) { console.error('Load from server failed, using localStorage'); }
+
+            // Fallback ke localStorage
+            const s = JSON.parse(localStorage.getItem('attendanceSettings')) || {};
+            applySettings(s);
+        }
+
+        function applySettings(s) {
+            if (s.companyName) document.getElementById('company-name').value = s.companyName;
+            if (s.timezone) document.getElementById('timezone').value = s.timezone;
+            if (s.dateFormat) document.getElementById('date-format').value = s.dateFormat;
+            if (s.workStart) document.getElementById('work-start').value = s.workStart;
+            if (s.workEnd) document.getElementById('work-end').value = s.workEnd;
+            if (s.lateTolerance) document.getElementById('late-tolerance').value = s.lateTolerance;
+            if (s.overtimeStart) document.getElementById('overtime-start').value = s.overtimeStart;
+            if (s.notifyRealtime !== undefined) document.getElementById('notify-realtime').checked = s.notifyRealtime;
+            if (s.notifyLate !== undefined) document.getElementById('notify-late').checked = s.notifyLate;
+            if (s.notifyOvertime !== undefined) document.getElementById('notify-overtime').checked = s.notifyOvertime;
+            if (s.notifySound !== undefined) document.getElementById('notify-sound').checked = s.notifySound;
+            if (s.autoBackup !== undefined) document.getElementById('auto-backup').checked = s.autoBackup;
+            if (s.archivePeriod) document.getElementById('archive-period').value = s.archivePeriod;
+        }
+
+        async function saveSettings() {
+            const settings = {
+                companyName: document.getElementById('company-name').value,
+                timezone: document.getElementById('timezone').value,
+                dateFormat: document.getElementById('date-format').value,
+                workStart: document.getElementById('work-start').value,
+                workEnd: document.getElementById('work-end').value,
+                lateTolerance: document.getElementById('late-tolerance').value,
+                overtimeStart: document.getElementById('overtime-start').value,
+                notifyRealtime: document.getElementById('notify-realtime').checked,
+                notifyLate: document.getElementById('notify-late').checked,
+                notifyOvertime: document.getElementById('notify-overtime').checked,
+                notifySound: document.getElementById('notify-sound').checked,
+                autoBackup: document.getElementById('auto-backup').checked,
+                archivePeriod: document.getElementById('archive-period').value,
+                lastUpdated: new Date().toISOString()
+            };
+
+            // Simpan ke localStorage
+            localStorage.setItem('attendanceSettings', JSON.stringify(settings));
+
+            // Simpan ke server juga
+            try {
+                await fetch('/api/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(settings)
+                });
+            } catch (e) { console.error('Save to server failed'); }
+
+            showNotification('Pengaturan berhasil disimpan!');
+        }
+
+        async function checkMqttStatus() {
+            try {
+                const res = await fetch('/api/mqtt-status');
+                const result = await res.json();
+                const esp32Status = document.getElementById('esp32-status');
+
+                if (result.esp32 === 'online') {
+                    esp32Status.className = 'status-badge online';
+                    esp32Status.innerHTML = '<span class="status-dot online"></span><span>Online</span>';
+                } else {
+                    esp32Status.className = 'status-badge offline';
+                    esp32Status.innerHTML = '<span class="status-dot offline"></span><span>Offline</span>';
+                }
+            } catch (e) {
+                console.error('Error checking MQTT status:', e);
+            }
+        }
+
+        async function checkOwnCloudStatus() {
+            try {
+                const res = await fetch('/api/owncloud-status');
+                const result = await res.json();
+                const statusEl = document.getElementById('owncloud-status');
+                const urlEl = document.getElementById('owncloud-url');
+
+                if (result.status === 'online') {
+                    statusEl.className = 'status-badge online';
+                    statusEl.innerHTML = '<span class="status-dot online"></span><span>Online</span>';
+                } else {
+                    statusEl.className = 'status-badge offline';
+                    statusEl.innerHTML = '<span class="status-dot offline"></span><span>Offline</span>';
+                }
+
+                // Format URL untuk display
+                const url = result.url || '-';
+                urlEl.textContent = url.replace('/remote.php/dav/files/admin/', '').replace('http://', '');
+            } catch (e) {
+                console.error('Error checking OwnCloud status:', e);
+            }
+        }
+
+        function loadLastBackupTime() {
+            const lastBackup = localStorage.getItem('lastOwnCloudBackup');
+            const el = document.getElementById('last-backup');
+            if (lastBackup) {
+                const date = new Date(lastBackup);
+                el.textContent = date.toLocaleString('id-ID');
+            } else {
+                el.textContent = 'Belum pernah';
+            }
+        }
+
+        async function backupToOwnCloud() {
+            const btn = document.getElementById('btn-backup');
+            btn.disabled = true;
+            btn.textContent = '⏳ Sedang backup...';
+
+            try {
+                const res = await fetch('/api/backup-owncloud', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const result = await res.json();
+
+                if (result.success) {
+                    localStorage.setItem('lastOwnCloudBackup', new Date().toISOString());
+                    loadLastBackupTime();
+                    showNotification(`Backup berhasil! ${result.records} record diupload ke OwnCloud`);
+                } else {
+                    showNotification(result.message, 'error');
+                }
+            } catch (e) {
+                showNotification('Error: ' + e.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '☁️ Backup ke OwnCloud Sekarang';
+            }
+        }
+
+        async function loadFingerprintCount() {
+            try {
+                const res = await fetch('/stats/employees');
+                const result = await res.json();
+                if (result.success) {
+                    const count = result.data.filter(e => e.fingerprint_id).length;
+                    document.getElementById('total-fingerprint').textContent = count + ' terdaftar';
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function resetFingerprints() {
+            if (!confirm('PERINGATAN! Semua fingerprint akan dihapus dari database dan ESP32. Lanjutkan?')) return;
+            if (!confirm('Konfirmasi terakhir: Hapus semua fingerprint?')) return;
+            try {
+                const res = await fetch('/api/reset-fingerprints', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+                const result = await res.json();
+                if (result.success) {
+                    showNotification(`${result.count} fingerprint berhasil direset!`);
+                    loadFingerprintCount();
+                }
+                else showNotification('Gagal: ' + result.message, 'error');
+            } catch (e) { showNotification('Error: ' + e.message, 'error'); }
+        }
+
+        async function exportData(format) {
+            try {
+                showNotification('Mengunduh data...', 'info');
+                const res = await fetch('/api/export?format=' + format);
+                if (!res.ok) throw new Error('Export failed');
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'absensi_' + new Date().toISOString().split('T')[0] + '.' + format;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                showNotification('Data berhasil diexport!');
+            } catch (e) { showNotification('Gagal export: ' + e.message, 'error'); }
+        }
+
+        async function changePassword() {
+            const oldP = document.getElementById('old-password').value;
+            const newP = document.getElementById('new-password').value;
+            const confP = document.getElementById('confirm-password').value;
+            if (!oldP || !newP || !confP) { showNotification('Semua field harus diisi!', 'error'); return; }
+            if (newP !== confP) { showNotification('Password tidak cocok!', 'error'); return; }
+            if (newP.length < 6) { showNotification('Password minimal 6 karakter!', 'error'); return; }
+            try {
+                const res = await fetch('/api/change-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ oldPassword: oldP, newPassword: newP }) });
+                const result = await res.json();
+                if (result.success) { showNotification('Password berhasil diubah!'); document.getElementById('old-password').value = ''; document.getElementById('new-password').value = ''; document.getElementById('confirm-password').value = ''; }
+                else showNotification(result.message, 'error');
+            } catch (e) { showNotification('Error: ' + e.message, 'error'); }
+        }
+
+        function showNotification(msg, type = 'success') {
+            const existing = document.querySelector('.save-notification');
+            if (existing) existing.remove();
+            const n = document.createElement('div');
+            n.className = 'save-notification';
+            if (type === 'error') n.style.background = 'rgba(239,68,68,0.95)';
+            else if (type === 'info') n.style.background = 'rgba(59,130,246,0.95)';
+            else n.style.background = 'rgba(16,185,129,0.95)';
+            n.textContent = msg;
+            document.body.appendChild(n);
+            setTimeout(() => n.remove(), 3000);
+        }
+
+        function togglePassword(inputId, btn) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.textContent = '🙈';
+            } else {
+                input.type = 'password';
+                btn.textContent = '👁️';
+            }
+        }
+    </script>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script src="/notification-component.js"></script>
+    <script>
+        // Initialize notification for admin
+        window.notificationComponent = new NotificationComponent({
+            isAdmin: true,
+            containerId: 'notification-bell'
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test ESP32 Fingerprint - MQTT Debug</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .status-box {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .status-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .status-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            margin-right: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .status-icon.loading {
+            background: #ffc107;
+            color: white;
+        }
+
+        .status-icon.success {
+            background: #28a745;
+            color: white;
+        }
+
+        .status-icon.error {
+            background: #dc3545;
+            color: white;
+        }
+
+        .test-section {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .test-section h2 {
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .log-box {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            line-height: 1.5;
+        }
+
+        .log-entry.error {
+            color: #ff6b6b;
+        }
+
+        .log-entry.success {
+            color: #51cf66;
+        }
+
+        .log-entry.info {
+            color: #74c0fc;
+        }
+
+        .back-btn {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: #6c757d;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .back-btn:hover {
+            background: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 ESP32 Fingerprint Test</h1>
+        <p class="subtitle">Debug & Test MQTT Communication</p>
+
+        <!-- Status Koneksi -->
+        <div class="status-box">
+            <h2 style="margin-bottom: 15px; font-size: 16px;">Status Koneksi</h2>
+            <div class="status-item">
+                <div class="status-icon loading" id="serverStatus">⏳</div>
+                <div>Server: <span id="serverText">Connecting...</span></div>
+            </div>
+            <div class="status-item">
+                <div class="status-icon loading" id="mqttStatus">⏳</div>
+                <div>MQTT Broker: <span id="mqttText">Connecting...</span></div>
+            </div>
+            <div class="status-item">
+                <div class="status-icon loading" id="esp32Status">⏳</div>
+                <div>ESP32: <span id="esp32Text">Checking...</span></div>
+            </div>
+        </div>
+
+        <!-- Test Enrollment -->
+        <div class="test-section">
+            <h2>📝 Test Enrollment Fingerprint</h2>
+
+            <div class="input-group">
+                <label>Fingerprint ID (1-127)</label>
+                <input type="number" id="fingerprintId" min="1" max="127" value="1">
+            </div>
+
+            <div class="input-group">
+                <label>Pegawai ID</label>
+                <input type="number" id="pegawaiId" value="999">
+            </div>
+
+            <div class="input-group">
+                <label>NIP</label>
+                <input type="text" id="nip" value="TEST123" placeholder="NIP">
+            </div>
+
+            <div class="input-group">
+                <label>Nama</label>
+                <input type="text" id="nama" value="Test User" placeholder="Nama Pegawai">
+            </div>
+
+            <button class="btn btn-primary" id="btnTest">
+                🚀 Kirim Test Enrollment ke ESP32
+            </button>
+        </div>
+
+        <!-- Log -->
+        <div class="log-box" id="logBox">
+            <div class="log-entry info">🔍 Waiting for action...</div>
+        </div>
+
+        <a href="dashboard-glass.html" class="back-btn">← Kembali ke Dashboard</a>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const logBox = document.getElementById('logBox');
+
+        function addLog(message, type = 'info') {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            const timestamp = new Date().toLocaleTimeString();
+            entry.textContent = `[${timestamp}] ${message}`;
+            logBox.appendChild(entry);
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        function updateStatus(element, status, text) {
+            const iconEl = document.getElementById(element + 'Status');
+            const textEl = document.getElementById(element + 'Text');
+
+            iconEl.className = `status-icon ${status}`;
+            if (status === 'success') iconEl.textContent = '✓';
+            else if (status === 'error') iconEl.textContent = '✗';
+            else iconEl.textContent = '⏳';
+
+            textEl.textContent = text;
+        }
+
+        // Socket.io events
+        socket.on('connect', () => {
+            addLog('✅ Connected to server', 'success');
+            updateStatus('server', 'success', 'Connected');
+            updateStatus('mqtt', 'success', 'Active');
+        });
+
+        socket.on('disconnect', () => {
+            addLog('❌ Disconnected from server', 'error');
+            updateStatus('server', 'error', 'Disconnected');
+        });
+
+        // ESP32 status (check from MQTT clients list)
+        setTimeout(() => {
+            fetch('/api/mqtt-status')
+                .then(r => r.json())
+                .then(data => {
+                    const esp32Connected = data.clients && data.clients.includes('ESP32_Fingerprint');
+                    if (esp32Connected) {
+                        updateStatus('esp32', 'success', 'Connected');
+                        addLog('✅ ESP32 detected on MQTT broker', 'success');
+                    } else {
+                        updateStatus('esp32', 'error', 'Not Connected');
+                        addLog('⚠️ ESP32 not found on MQTT broker', 'error');
+                    }
+                })
+                .catch(() => {
+                    updateStatus('esp32', 'loading', 'Unknown');
+                    addLog('⚠️ Cannot check ESP32 status', 'error');
+                });
+        }, 1000);
+
+        // Listen for enrollment response from ESP32
+        socket.on('enrollment_response', (data) => {
+            addLog('📥 Response from ESP32:', 'info');
+            addLog(JSON.stringify(data, null, 2), data.success ? 'success' : 'error');
+
+            if (data.success) {
+                addLog('✅ Enrollment SUCCESS!', 'success');
+            } else {
+                addLog('❌ Enrollment FAILED: ' + data.message, 'error');
+            }
+        });
+
+        // Test button
+        document.getElementById('btnTest').addEventListener('click', async () => {
+            const btn = document.getElementById('btnTest');
+            const fingerprintId = document.getElementById('fingerprintId').value;
+            const pegawaiId = document.getElementById('pegawaiId').value;
+            const nip = document.getElementById('nip').value;
+            const nama = document.getElementById('nama').value;
+
+            btn.disabled = true;
+            btn.textContent = '⏳ Sending...';
+
+            addLog('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'info');
+            addLog('🚀 Sending MQTT command to ESP32...', 'info');
+            addLog(`   Fingerprint ID: ${fingerprintId}`, 'info');
+            addLog(`   Pegawai ID: ${pegawaiId}`, 'info');
+            addLog(`   NIP: ${nip}`, 'info');
+            addLog(`   Nama: ${nama}`, 'info');
+
+            const payload = {
+                command: 'ENROLL',
+                fingerprint_id: parseInt(fingerprintId),
+                pegawai_id: parseInt(pegawaiId),
+                nip: nip,
+                nama: nama
+            };
+
+            try {
+                const response = await fetch('/api/test-mqtt-publish', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        topic: 'fingerprint/enroll/request',
+                        payload: payload
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    addLog('✅ MQTT message published successfully', 'success');
+                    addLog('⏳ Waiting for ESP32 response... (30s timeout)', 'info');
+                } else {
+                    addLog('❌ Failed to publish MQTT: ' + result.message, 'error');
+                }
+            } catch (error) {
+                addLog('❌ Error: ' + error.message, 'error');
+            }
+
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.textContent = '🚀 Kirim Test Enrollment ke ESP32';
+            }, 2000);
+        });
+
+        addLog('✅ Test page loaded', 'success');
+        addLog('📡 Connecting to server...', 'info');
+    </script>
+</body>
+</html>

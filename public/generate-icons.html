@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PWA Icon Generator</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%);
+            color: white;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .generator-section {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .preview-item {
+            text-align: center;
+        }
+
+        .preview-item canvas {
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-group {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .info {
+            background: rgba(16, 185, 129, 0.1);
+            border-left: 3px solid #10b981;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 PWA Icon Generator</h1>
+
+        <div class="generator-section">
+            <h2>Generate Icons</h2>
+            <p>Klik tombol di bawah untuk generate dan download semua icon yang dibutuhkan untuk PWA.</p>
+
+            <div class="info">
+                ℹ️ Icon akan di-generate dengan ukuran: 72x72, 96x96, 128x128, 144x144, 152x152, 192x192, 384x384, dan 512x512 pixels
+            </div>
+
+            <div class="btn-group">
+                <button class="btn" onclick="generateAllIcons()">Generate Semua Icons</button>
+                <button class="btn" onclick="downloadAll()">Download Semua</button>
+            </div>
+
+            <div class="preview-grid" id="previewGrid"></div>
+        </div>
+
+        <div class="generator-section">
+            <h2>📂 Cara Menggunakan</h2>
+            <ol>
+                <li>Klik tombol "Generate Semua Icons"</li>
+                <li>Preview icon akan muncul di bawah</li>
+                <li>Klik "Download Semua" untuk download semua icon sekaligus</li>
+                <li>Buat folder <code>/public/icons/</code> di project Anda</li>
+                <li>Pindahkan semua icon yang sudah di-download ke folder tersebut</li>
+                <li>PWA siap digunakan!</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+        const canvases = {};
+
+        function generateIcon(size) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+
+            // Background gradient
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#667eea');
+            gradient.addColorStop(1, '#764ba2');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+
+            // White circle
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.beginPath();
+            ctx.arc(size / 2, size / 2, size * 0.35, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Icon symbol (fingerprint)
+            ctx.strokeStyle = '#667eea';
+            ctx.lineWidth = size / 30;
+            ctx.lineCap = 'round';
+
+            const centerX = size / 2;
+            const centerY = size / 2;
+            const radius = size * 0.25;
+
+            // Draw fingerprint-like arcs
+            for (let i = 0; i < 5; i++) {
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius - (i * size / 30), 0.3, Math.PI * 1.7);
+                ctx.stroke();
+            }
+
+            // Add some accent curves
+            ctx.beginPath();
+            ctx.arc(centerX - size * 0.08, centerY, radius * 0.6, 0.5, Math.PI * 1.5);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(centerX + size * 0.08, centerY, radius * 0.6, Math.PI * 0.5, Math.PI * 2.5);
+            ctx.stroke();
+
+            return canvas;
+        }
+
+        function generateAllIcons() {
+            const grid = document.getElementById('previewGrid');
+            grid.innerHTML = '';
+
+            sizes.forEach(size => {
+                const canvas = generateIcon(size);
+                canvases[size] = canvas;
+
+                const item = document.createElement('div');
+                item.className = 'preview-item';
+
+                canvas.style.width = '120px';
+                canvas.style.height = '120px';
+
+                item.innerHTML = `
+                    <canvas width="${size}" height="${size}" style="width: 120px; height: 120px;"></canvas>
+                    <div>${size}x${size}</div>
+                    <button class="btn" style="padding: 6px 12px; margin-top: 10px;" onclick="downloadIcon(${size})">Download</button>
+                `;
+
+                // Copy canvas content
+                const itemCanvas = item.querySelector('canvas');
+                const itemCtx = itemCanvas.getContext('2d');
+                itemCtx.drawImage(canvas, 0, 0);
+
+                grid.appendChild(item);
+            });
+        }
+
+        function downloadIcon(size) {
+            const canvas = canvases[size];
+            if (!canvas) {
+                alert('Generate icons terlebih dahulu!');
+                return;
+            }
+
+            canvas.toBlob(blob => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `icon-${size}x${size}.png`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+        }
+
+        function downloadAll() {
+            if (Object.keys(canvases).length === 0) {
+                alert('Generate icons terlebih dahulu!');
+                return;
+            }
+
+            // Download each icon with a small delay
+            sizes.forEach((size, index) => {
+                setTimeout(() => {
+                    downloadIcon(size);
+                }, index * 500);
+            });
+
+            alert('Download semua icons dimulai! Tunggu beberapa saat...');
+        }
+
+        // Auto-generate on load
+        window.addEventListener('load', () => {
+            generateAllIcons();
+        });
+    </script>
+</body>
+</html>

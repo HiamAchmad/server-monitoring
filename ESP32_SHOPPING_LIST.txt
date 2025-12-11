@@ -1,0 +1,258 @@
+╔══════════════════════════════════════════════════════════════╗
+║  🛒 SHOPPING LIST - ESP32 ABSENSI SYSTEM                    ║
+╚══════════════════════════════════════════════════════════════╝
+
+Tanggal: 6 November 2025
+Budget Total: Rp 100.000 - 150.000
+
+═══════════════════════════════════════════════════════════════
+
+📦 KOMPONEN UTAMA (WAJIB):
+
+1. ESP32 Development Board
+   ├─ Tipe: ESP32-WROOM-32 / ESP32 DevKit V1
+   ├─ Quantity: 1 pcs
+   ├─ Harga: Rp 50.000 - 70.000
+   ├─ Spesifikasi:
+   │  • WiFi 2.4GHz built-in
+   │  • Bluetooth built-in
+   │  • 30+ GPIO pins
+   │  • Micro USB port
+   └─ Beli di: Tokopedia, Shopee, Bukalapak
+      Search: "ESP32 DevKit V1"
+
+2. RFID Module RC522
+   ├─ Tipe: MFRC522 13.56MHz
+   ├─ Quantity: 1 pcs
+   ├─ Harga: Rp 15.000 - 25.000
+   ├─ Spesifikasi:
+   │  • Frequency: 13.56MHz
+   │  • Protocol: SPI
+   │  • Range: 3-5cm
+   │  • Voltage: 3.3V
+   └─ Beli di: Tokopedia, Shopee
+      Search: "RFID RC522"
+
+3. RFID Card / Keyfob Tags
+   ├─ Tipe: Mifare 13.56MHz
+   ├─ Quantity: 5-10 pcs (sesuai jumlah karyawan)
+   ├─ Harga: Rp 2.000 - 3.000 per pcs
+   ├─ Pilihan:
+   │  • Kartu putih (seperti ATM)
+   │  • Keyfob (gantungan kunci)
+   │  • Sticker
+   └─ Beli di: Biasanya 1 paket dengan RFID module
+      atau search: "RFID Card 13.56MHz"
+
+
+═══════════════════════════════════════════════════════════════
+
+🔌 KOMPONEN ELEKTRONIK (WAJIB):
+
+4. LED Indicator
+   ├─ LED Green: 1 pcs (Rp 500)
+   ├─ LED Red: 1 pcs (Rp 500)
+   └─ Total: Rp 1.000
+      Search: "LED 5mm"
+
+5. Resistor
+   ├─ Tipe: 220 Ohm (untuk LED)
+   ├─ Quantity: 2 pcs
+   ├─ Harga: Rp 500 (dapat beberapa)
+   └─ Search: "Resistor 220 Ohm"
+
+6. Buzzer
+   ├─ Tipe: Active Buzzer 5V
+   ├─ Quantity: 1 pcs
+   ├─ Harga: Rp 3.000 - 5.000
+   └─ Search: "Active Buzzer 5V"
+
+
+═══════════════════════════════════════════════════════════════
+
+🔧 TOOLS & ACCESSORIES (WAJIB):
+
+7. Breadboard
+   ├─ Tipe: 400 point atau 830 point
+   ├─ Quantity: 1 pcs
+   ├─ Harga: Rp 10.000 - 15.000
+   └─ Search: "Breadboard 400"
+
+8. Jumper Wires
+   ├─ Tipe: Male-Female (untuk ESP32 ke breadboard)
+   ├─ Quantity: 1 set (40 pcs)
+   ├─ Harga: Rp 5.000 - 8.000
+   └─ Search: "Jumper Wire Male Female"
+
+9. Kabel USB Micro
+   ├─ Fungsi: Programming & Power ESP32
+   ├─ Quantity: 1 pcs
+   ├─ Harga: Rp 5.000 - 10.000
+   └─ Biasanya sudah include dengan ESP32
+
+
+═══════════════════════════════════════════════════════════════
+
+🎁 OPTIONAL (Tambahan):
+
+10. Power Supply 5V
+    ├─ Tipe: Adaptor 5V 2A Micro USB
+    ├─ Fungsi: Power ESP32 tanpa PC
+    ├─ Harga: Rp 15.000 - 25.000
+    └─ Search: "Adaptor 5V Micro USB"
+
+11. Case/Box
+    ├─ Tipe: Project Box plastik
+    ├─ Fungsi: Housing untuk ESP32 & komponen
+    ├─ Harga: Rp 10.000 - 20.000
+    └─ Search: "Project Box ESP32"
+
+12. LCD Display 16x2 I2C
+    ├─ Fungsi: Display nama karyawan saat scan
+    ├─ Harga: Rp 25.000 - 35.000
+    └─ Search: "LCD 16x2 I2C"
+
+13. SD Card Module
+    ├─ Fungsi: Backup log offline
+    ├─ Harga: Rp 10.000 - 15.000
+    └─ Search: "SD Card Module Micro"
+
+
+═══════════════════════════════════════════════════════════════
+
+💰 RINGKASAN BUDGET:
+
+┌─────────────────────────────────────────────────────┐
+│ PAKET MINIMAL (Tanpa Optional)                      │
+├─────────────────────────────────────────────────────┤
+│ ESP32 DevKit             Rp  50.000 - 70.000        │
+│ RFID RC522 + 5 Cards     Rp  20.000 - 30.000        │
+│ LED (2 pcs)              Rp   1.000                 │
+│ Resistor (2 pcs)         Rp     500                 │
+│ Buzzer                   Rp   3.000 -  5.000        │
+│ Breadboard               Rp  10.000 - 15.000        │
+│ Jumper Wires             Rp   5.000 -  8.000        │
+│ Kabel USB Micro          Rp   5.000 - 10.000        │
+├─────────────────────────────────────────────────────┤
+│ TOTAL MINIMAL:           Rp  94.500 - 139.500       │
+└─────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────┐
+│ PAKET LENGKAP (Dengan Optional)                     │
+├─────────────────────────────────────────────────────┤
+│ Paket Minimal            Rp 100.000 - 140.000       │
+│ Power Supply 5V          Rp  15.000 -  25.000       │
+│ Project Box              Rp  10.000 -  20.000       │
+│ LCD Display (optional)   Rp  25.000 -  35.000       │
+├─────────────────────────────────────────────────────┤
+│ TOTAL LENGKAP:           Rp 150.000 - 220.000       │
+└─────────────────────────────────────────────────────┘
+
+
+═══════════════════════════════════════════════════════════════
+
+🛍️ REKOMENDASI TEMPAT BELI:
+
+1. Online Shop:
+   ✓ Tokopedia - Search: "ESP32 RFID Kit"
+   ✓ Shopee - Search: "ESP32 Starter Kit"
+   ✓ Bukalapak - Electronics section
+   ✓ Toko RoboticA (Tokopedia/Shopee)
+   ✓ Toko ElectronicaInd (Tokopedia)
+
+2. Offline (Toko Elektronik):
+   ✓ Pasar Glodok (Jakarta)
+   ✓ Pasar Kenari (Jakarta)
+   ✓ Toko Komponen Elektronik lokal
+
+3. Paket Bundle:
+   Cari: "ESP32 RFID Starter Kit"
+   Biasanya sudah include:
+   • ESP32
+   • RFID RC522
+   • 5 RFID Cards
+   • Breadboard
+   • Jumper wires
+   • LED & Resistor
+   Harga: Rp 100.000 - 150.000
+
+
+═══════════════════════════════════════════════════════════════
+
+✅ CHECKLIST BELANJA:
+
+KOMPONEN UTAMA:
+□ ESP32 Development Board (1 pcs)
+□ RFID RC522 Module (1 pcs)
+□ RFID Cards/Tags (5-10 pcs)
+
+KOMPONEN ELEKTRONIK:
+□ LED Green (1 pcs)
+□ LED Red (1 pcs)
+□ Resistor 220Ω (2 pcs)
+□ Active Buzzer 5V (1 pcs)
+
+TOOLS & ACCESSORIES:
+□ Breadboard 400/830 point (1 pcs)
+□ Jumper Wire Male-Female (1 set)
+□ Kabel USB Micro (1 pcs)
+
+OPTIONAL:
+□ Power Supply 5V Micro USB (1 pcs)
+□ Project Box (1 pcs)
+□ LCD Display 16x2 I2C (1 pcs)
+□ SD Card Module (1 pcs)
+
+
+═══════════════════════════════════════════════════════════════
+
+📦 PAKET ALTERNATIF:
+
+Jika ingin lebih murah, beli paket "ESP32 RFID Starter Kit"
+yang sudah include semua komponen utama.
+
+Harga paket: Rp 100.000 - 150.000
+
+Link search Tokopedia:
+"ESP32 RFID RC522 Kit Starter Package"
+
+
+═══════════════════════════════════════════════════════════════
+
+⚠️ TIPS BELANJA:
+
+1. Prioritas: Beli ESP32 + RFID RC522 dulu
+   Sisanya bisa nyusul
+
+2. Cek Review: Pastikan toko punya rating bagus
+
+3. Garansi: Pilih toko yang kasih garansi tukar
+   (case ESP32 rusak/DOA)
+
+4. Spesifikasi: Pastikan RFID 13.56MHz (bukan 125kHz)
+
+5. Kartu RFID: Minimal beli 5 cards untuk testing
+
+6. Breadboard: Ukuran 400 point sudah cukup
+
+7. Jumper: Beli yang Male-Female (bukan Male-Male)
+
+
+═══════════════════════════════════════════════════════════════
+
+📌 CATATAN PENTING:
+
+• RFID RC522 harus yang 3.3V (bukan 5V!)
+• ESP32 original Espressif lebih bagus daripada clone
+• Kartu RFID yang kompatibel: Mifare Classic 1K (13.56MHz)
+• LED bisa warna lain, yang penting ada 2 untuk indikator
+• Active Buzzer lebih mudah daripada Passive Buzzer
+
+
+═══════════════════════════════════════════════════════════════
+
+Last Updated: 6 November 2025
+Budget Range: Rp 100.000 - 220.000
+Status: Ready to Shop!
+
+Happy Shopping! 🛒

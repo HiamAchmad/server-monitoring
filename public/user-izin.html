@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Pengajuan Izin/Cuti - Sistem Absensi">
+    <meta name="theme-color" content="#667eea">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <title>Pengajuan Izin - Sistem Absensi</title>
+
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="glass-style.css">
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            padding-top: 60px;
+            padding-bottom: 70px;
+            min-height: 100vh;
+        }
+
+        .mobile-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 var(--space-4);
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+        }
+
+        .back-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            font-size: 20px;
+        }
+
+        .back-btn:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .header-title h3 {
+            font-size: var(--text-lg);
+            margin: 0;
+            color: var(--text-primary);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .icon-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all var(--transition-base);
+        }
+
+        .icon-btn:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .container-mobile {
+            padding: var(--space-4);
+            max-width: 100%;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-2);
+            margin-bottom: var(--space-4);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: var(--space-3);
+            text-align: center;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--transition-base);
+            color: var(--text-secondary);
+            font-size: var(--text-sm);
+            border: none;
+            background: transparent;
+        }
+
+        .tab-btn.active {
+            background: var(--gradient-primary);
+            color: white;
+            font-weight: var(--weight-semibold);
+        }
+
+        .tab-btn:active {
+            transform: scale(0.97);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Form Card */
+        .form-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            margin-bottom: var(--space-4);
+        }
+
+        .form-card h4 {
+            margin: 0 0 var(--space-4) 0;
+            color: var(--text-primary);
+            font-size: var(--text-base);
+        }
+
+        .form-group {
+            margin-bottom: var(--space-4);
+        }
+
+        .form-group label {
+            display: block;
+            color: var(--text-secondary);
+            font-size: var(--text-sm);
+            margin-bottom: var(--space-2);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: var(--space-3);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-size: var(--text-base);
+            font-family: var(--font-primary);
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-start);
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+        }
+
+        .form-group select option {
+            background: #1e1e2e;
+            color: white;
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .date-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-3);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: var(--space-4);
+            background: var(--gradient-primary);
+            border: none;
+            border-radius: var(--radius-md);
+            color: white;
+            font-size: var(--text-base);
+            font-weight: var(--weight-semibold);
+            cursor: pointer;
+            transition: all var(--transition-base);
+        }
+
+        .submit-btn:active {
+            transform: scale(0.98);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Request Card */
+        .request-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            margin-bottom: var(--space-3);
+        }
+
+        .request-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: var(--space-3);
+        }
+
+        .request-type {
+            font-size: var(--text-base);
+            font-weight: var(--weight-semibold);
+            color: var(--text-primary);
+        }
+
+        .request-status {
+            padding: 4px 12px;
+            border-radius: var(--radius-full);
+            font-size: var(--text-xs);
+            font-weight: var(--weight-medium);
+        }
+
+        .status-menunggu {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+        }
+
+        .status-disetujui {
+            background: rgba(74, 222, 128, 0.2);
+            color: #4ade80;
+        }
+
+        .status-ditolak {
+            background: rgba(248, 113, 113, 0.2);
+            color: #f87171;
+        }
+
+        .request-dates {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            margin-bottom: var(--space-2);
+        }
+
+        .request-reason {
+            font-size: var(--text-sm);
+            color: var(--text-tertiary);
+            padding: var(--space-3);
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: var(--radius-sm);
+        }
+
+        .request-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: var(--space-3);
+            padding-top: var(--space-3);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: var(--text-xs);
+            color: var(--text-tertiary);
+        }
+
+        /* Stats Summary */
+        .stats-summary {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-4);
+            margin-bottom: var(--space-4);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--space-3);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: var(--text-xl);
+            font-weight: var(--weight-bold);
+            color: var(--text-primary);
+        }
+
+        .stat-label {
+            font-size: var(--text-xs);
+            color: var(--text-tertiary);
+            margin-top: var(--space-1);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: var(--space-8) var(--space-4);
+            color: var(--text-tertiary);
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: var(--space-4);
+            opacity: 0.5;
+        }
+
+        /* Loading */
+        .loading-spinner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: var(--space-8);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(102, 126, 234, 0.3);
+            border-top-color: var(--primary-start);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav-user {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 100;
+            box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-item-user {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-2);
+            cursor: pointer;
+            transition: all var(--transition-base);
+            text-decoration: none;
+        }
+
+        .nav-item-user.active {
+            color: var(--primary-start);
+        }
+
+        .nav-icon {
+            font-size: 24px;
+            margin-bottom: var(--space-1);
+        }
+
+        .nav-label {
+            font-size: var(--text-xs);
+            color: var(--text-tertiary);
+        }
+
+        .nav-item-user.active .nav-label {
+            color: var(--primary-start);
+            font-weight: var(--weight-semibold);
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: var(--space-3) var(--space-5);
+            background: var(--success);
+            color: white;
+            border-radius: var(--radius-md);
+            font-size: var(--text-sm);
+            z-index: 1000;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .toast.error {
+            background: var(--error);
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        @media (min-width: 768px) {
+            .container-mobile {
+                max-width: 768px;
+                margin: 0 auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Mobile Header -->
+    <div class="mobile-header">
+        <div class="header-left">
+            <div class="back-btn" onclick="window.location.href='/user-dashboard.html'">&#8592;</div>
+            <div class="header-title">
+                <h3>Pengajuan Izin/Cuti</h3>
+            </div>
+        </div>
+        <div class="header-right">
+            <div id="notification-bell" style="position: relative;"></div>
+            <div class="icon-btn" onclick="refreshData()">&#128260;</div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container-mobile">
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('form', this)">Ajukan Baru</button>
+            <button class="tab-btn" onclick="switchTab('history', this)">Riwayat</button>
+        </div>
+
+        <!-- Tab: Form Pengajuan -->
+        <div id="formTab" class="tab-content active">
+            <div class="form-card">
+                <h4>Form Pengajuan Izin/Cuti</h4>
+                <form id="cutiForm" onsubmit="submitCuti(event)">
+                    <div class="form-group">
+                        <label>Jenis Izin/Cuti</label>
+                        <select id="jenisCuti" required>
+                            <option value="">Pilih jenis...</option>
+                            <option value="Cuti Tahunan">Cuti Tahunan</option>
+                            <option value="Cuti Sakit">Cuti Sakit</option>
+                            <option value="Izin Khusus">Izin Khusus</option>
+                            <option value="Cuti Melahirkan">Cuti Melahirkan</option>
+                        </select>
+                    </div>
+
+                    <div class="date-row">
+                        <div class="form-group">
+                            <label>Tanggal Mulai</label>
+                            <input type="date" id="tanggalMulai" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Tanggal Selesai</label>
+                            <input type="date" id="tanggalSelesai" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Alasan</label>
+                        <textarea id="alasan" placeholder="Jelaskan alasan pengajuan izin/cuti..." required></textarea>
+                    </div>
+
+                    <button type="submit" class="submit-btn" id="submitBtn">
+                        Ajukan Izin/Cuti
+                    </button>
+                </form>
+            </div>
+
+            <div class="form-card">
+                <h4>Informasi Cuti</h4>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="sisaCuti">12</div>
+                        <div class="stat-label">Sisa Cuti</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="cutiTerpakai">0</div>
+                        <div class="stat-label">Terpakai</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="cutiPending">0</div>
+                        <div class="stat-label">Menunggu</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Riwayat Pengajuan -->
+        <div id="historyTab" class="tab-content">
+            <div class="stats-summary">
+                <h4 style="margin: 0 0 var(--space-3) 0; color: var(--text-primary); font-size: var(--text-sm);">Ringkasan Pengajuan</h4>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="statMenunggu">0</div>
+                        <div class="stat-label">Menunggu</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="statDisetujui">0</div>
+                        <div class="stat-label">Disetujui</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="statDitolak">0</div>
+                        <div class="stat-label">Ditolak</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="historyContainer">
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav-user">
+        <a href="/user-dashboard.html" class="nav-item-user">
+            <div class="nav-icon">&#127968;</div>
+            <div class="nav-label">Beranda</div>
+        </a>
+
+        <a href="/user-riwayat.html" class="nav-item-user">
+            <div class="nav-icon">&#128220;</div>
+            <div class="nav-label">Absensi</div>
+        </a>
+
+        <a href="/user-izin.html" class="nav-item-user active">
+            <div class="nav-icon">&#128203;</div>
+            <div class="nav-label">Izin</div>
+        </a>
+
+        <a href="/user-gaji.html" class="nav-item-user">
+            <div class="nav-icon">&#128176;</div>
+            <div class="nav-label">Gaji</div>
+        </a>
+
+        <a href="/user-profil.html" class="nav-item-user">
+            <div class="nav-icon">&#128100;</div>
+            <div class="nav-label">Profil</div>
+        </a>
+    </div>
+
+    <script>
+        // Check if logged in
+        if (!sessionStorage.getItem('userLoggedIn')) {
+            window.location.href = '/user-login.html';
+        }
+
+        const pegawai_id = parseInt(sessionStorage.getItem('pegawai_id'));
+        let allRequests = [];
+
+        // Set minimum date to today
+        document.getElementById('tanggalMulai').min = new Date().toISOString().split('T')[0];
+        document.getElementById('tanggalSelesai').min = new Date().toISOString().split('T')[0];
+
+        // Auto update end date minimum when start date changes
+        document.getElementById('tanggalMulai').addEventListener('change', function() {
+            document.getElementById('tanggalSelesai').min = this.value;
+            if (document.getElementById('tanggalSelesai').value < this.value) {
+                document.getElementById('tanggalSelesai').value = this.value;
+            }
+        });
+
+        // Switch tabs
+        function switchTab(tab, element) {
+            // Update active tab button
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            element.classList.add('active');
+
+            // Show/hide tab content
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            if (tab === 'form') {
+                document.getElementById('formTab').classList.add('active');
+            } else {
+                document.getElementById('historyTab').classList.add('active');
+                loadHistory();
+            }
+        }
+
+        // Submit cuti request
+        async function submitCuti(event) {
+            event.preventDefault();
+
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Mengirim...';
+
+            try {
+                const data = {
+                    pegawai_id: pegawai_id,
+                    jenis: document.getElementById('jenisCuti').value,
+                    tanggal_mulai: document.getElementById('tanggalMulai').value,
+                    tanggal_selesai: document.getElementById('tanggalSelesai').value,
+                    alasan: document.getElementById('alasan').value
+                };
+
+                const response = await fetch('/api/cuti', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showToast('Pengajuan berhasil dikirim!');
+                    document.getElementById('cutiForm').reset();
+                    loadCutiStats();
+                } else {
+                    showToast(result.message || 'Gagal mengirim pengajuan', true);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Terjadi kesalahan', true);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Ajukan Izin/Cuti';
+            }
+        }
+
+        // Load history
+        async function loadHistory() {
+            try {
+                const response = await fetch('/api/cuti');
+                const result = await response.json();
+
+                if (result.success) {
+                    // Filter for current user
+                    allRequests = result.data.filter(item => item.pegawai_id === pegawai_id);
+
+                    // Update stats
+                    updateHistoryStats();
+
+                    // Display requests
+                    displayHistory();
+                }
+            } catch (error) {
+                console.error('Error loading history:', error);
+                showEmptyState();
+            }
+        }
+
+        // Update history stats
+        function updateHistoryStats() {
+            const menunggu = allRequests.filter(r => r.status === 'Menunggu').length;
+            const disetujui = allRequests.filter(r => r.status === 'Disetujui').length;
+            const ditolak = allRequests.filter(r => r.status === 'Ditolak').length;
+
+            document.getElementById('statMenunggu').textContent = menunggu;
+            document.getElementById('statDisetujui').textContent = disetujui;
+            document.getElementById('statDitolak').textContent = ditolak;
+        }
+
+        // Display history
+        function displayHistory() {
+            const container = document.getElementById('historyContainer');
+
+            if (allRequests.length === 0) {
+                showEmptyState();
+                return;
+            }
+
+            container.innerHTML = '';
+
+            allRequests.forEach(request => {
+                const card = document.createElement('div');
+                card.className = 'request-card';
+
+                const tanggalMulai = new Date(request.tanggal_mulai).toLocaleDateString('id-ID', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric'
+                });
+
+                const tanggalSelesai = new Date(request.tanggal_selesai).toLocaleDateString('id-ID', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric'
+                });
+
+                const createdAt = new Date(request.created_at).toLocaleDateString('id-ID', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric'
+                });
+
+                let statusClass = 'status-menunggu';
+                if (request.status === 'Disetujui') statusClass = 'status-disetujui';
+                if (request.status === 'Ditolak') statusClass = 'status-ditolak';
+
+                card.innerHTML = `
+                    <div class="request-header">
+                        <span class="request-type">${request.jenis}</span>
+                        <span class="request-status ${statusClass}">${request.status}</span>
+                    </div>
+                    <div class="request-dates">
+                        &#128197; ${tanggalMulai} - ${tanggalSelesai} (${request.jumlah_hari || 1} hari)
+                    </div>
+                    <div class="request-reason">
+                        ${request.alasan || '-'}
+                    </div>
+                    ${request.komentar_approval ? `
+                        <div class="request-reason" style="margin-top: var(--space-2); border-left: 2px solid var(--primary-start);">
+                            <strong>Komentar:</strong> ${request.komentar_approval}
+                        </div>
+                    ` : ''}
+                    <div class="request-footer">
+                        <span>Diajukan: ${createdAt}</span>
+                        ${request.tanggal_disetujui ? `<span>Diproses: ${new Date(request.tanggal_disetujui).toLocaleDateString('id-ID')}</span>` : ''}
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        // Show empty state
+        function showEmptyState() {
+            const container = document.getElementById('historyContainer');
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">&#128203;</div>
+                    <div style="font-size: var(--text-lg); margin-bottom: var(--space-2);">Belum ada pengajuan</div>
+                    <div>Anda belum pernah mengajukan izin/cuti</div>
+                </div>
+            `;
+        }
+
+        // Load cuti stats for form tab
+        async function loadCutiStats() {
+            try {
+                const response = await fetch('/api/cuti');
+                const result = await response.json();
+
+                if (result.success) {
+                    const myRequests = result.data.filter(item => item.pegawai_id === pegawai_id);
+
+                    const disetujui = myRequests.filter(r => r.status === 'Disetujui');
+                    const pending = myRequests.filter(r => r.status === 'Menunggu');
+
+                    // Calculate used days (only approved Cuti Tahunan)
+                    let usedDays = 0;
+                    disetujui.forEach(r => {
+                        if (r.jenis === 'Cuti Tahunan') {
+                            usedDays += r.jumlah_hari || 1;
+                        }
+                    });
+
+                    // Calculate pending days (Cuti Tahunan yang menunggu)
+                    let pendingDays = 0;
+                    pending.forEach(r => {
+                        if (r.jenis === 'Cuti Tahunan') {
+                            pendingDays += r.jumlah_hari || 1;
+                        }
+                    });
+
+                    // Update UI - Sisa cuti dikurangi yang sudah disetujui
+                    document.getElementById('cutiTerpakai').textContent = usedDays;
+                    document.getElementById('sisaCuti').textContent = Math.max(12 - usedDays, 0);
+                    // Tampilkan jumlah hari yang pending, bukan jumlah pengajuan
+                    document.getElementById('cutiPending').textContent = pendingDays > 0 ? pendingDays : pending.length;
+
+                    console.log('Cuti stats updated:', { usedDays, pendingDays, pendingCount: pending.length });
+                }
+            } catch (error) {
+                console.error('Error loading cuti stats:', error);
+            }
+        }
+
+        // Show toast notification
+        function showToast(message, isError = false) {
+            const toast = document.createElement('div');
+            toast.className = 'toast' + (isError ? ' error' : '');
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        // Refresh data
+        function refreshData() {
+            loadCutiStats();
+            if (document.getElementById('historyTab').classList.contains('active')) {
+                loadHistory();
+            }
+        }
+
+        // Initialize
+        loadCutiStats();
+
+        // Initialize notification
+        function initUserNotification() {
+            const userData = JSON.parse(sessionStorage.getItem('userData') || '{}');
+            if (userData.id_pegawai) {
+                window.notificationComponent = new NotificationComponent({
+                    isAdmin: false,
+                    pegawaiId: userData.id_pegawai,
+                    containerId: 'notification-bell'
+                });
+            }
+        }
+        setTimeout(initUserNotification, 500);
+    </script>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script src="/notification-component.js"></script>
+</body>
+</html>
