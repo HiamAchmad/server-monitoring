@@ -276,6 +276,11 @@ app.use(express.static(path.join(__dirname, 'public'), {
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Serve index.html from root directory
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
 // Konfigurasi Koneksi PostgreSQL
 const db = new Pool({
     host: 'localhost',

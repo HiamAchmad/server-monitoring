@@ -1,120 +1,130 @@
-# NGINX Configuration untuk Sistem Absensi
+# NGINX Configuration untuk mitrjaya.my.id
 
-## Prasyarat
+## Langkah Instalasi di Server (47.84.67.102)
 
-1. NGINX terinstall
-2. Node.js server berjalan di port 3000
-
-## Instalasi
-
-### 1. Install NGINX (jika belum)
+### 1. Install NGINX
 
 ```bash
-# Ubuntu/Debian
 sudo apt update
-sudo apt install nginx
-
-# CentOS/RHEL
-sudo yum install nginx
+sudo apt install nginx -y
 ```
 
-### 2. Copy Konfigurasi
+### 2. Install Certbot untuk SSL
 
 ```bash
-# Copy file konfigurasi
-sudo cp absensi.conf /etc/nginx/sites-available/
+sudo apt install certbot python3-certbot-nginx -y
+```
 
-# Buat symbolic link
-sudo ln -s /etc/nginx/sites-available/absensi.conf /etc/nginx/sites-enabled/
+### 3. Copy Konfigurasi NGINX
 
-# Hapus default config (opsional)
+```bash
+# Copy file dari project ke nginx
+sudo cp /home/hasan/Documents/Perancangan/Perancangan/server-monitoring/nginx/absensi.conf /etc/nginx/sites-available/mitrjaya.my.id
+
+# Enable site
+sudo ln -s /etc/nginx/sites-available/mitrjaya.my.id /etc/nginx/sites-enabled/
+
+# Hapus default (opsional)
 sudo rm /etc/nginx/sites-enabled/default
 ```
 
-### 3. Test dan Reload
+### 4. Dapatkan SSL Certificate
+
+```bash
+# Pastikan Cloudflare proxy OFF dulu (DNS only) untuk verifikasi
+sudo certbot --nginx -d mitrjaya.my.id -d www.mitrjaya.my.id
+```
+
+### 5. Test dan Reload NGINX
 
 ```bash
 # Test konfigurasi
 sudo nginx -t
 
-# Reload NGINX
+# Reload
 sudo systemctl reload nginx
 ```
 
-## Konfigurasi untuk Production
+### 6. Jalankan Node.js Server
 
-### Menggunakan Domain
-
-Edit `absensi.conf`:
-
-```nginx
-server_name absensi.example.com;
-```
-
-### Menggunakan SSL (HTTPS)
-
-1. Install Certbot:
 ```bash
-sudo apt install certbot python3-certbot-nginx
+cd /home/hasan/Documents/Perancangan/Perancangan/server-monitoring
+
+# Install dependencies
+npm install
+
+# Jalankan server (development)
+node server.js
+
+# Atau dengan PM2 (production)
+npm install -g pm2
+pm2 start server.js --name "absensi"
+pm2 save
+pm2 startup
 ```
 
-2. Dapatkan sertifikat:
-```bash
-sudo certbot --nginx -d absensi.example.com
-```
+## URL Akses
 
-3. Uncomment bagian SSL di `absensi.conf`
+| URL | Halaman |
+|-----|---------|
+| https://mitrjaya.my.id | Landing Page |
+| https://mitrjaya.my.id/admin/ | Portal Admin |
+| https://mitrjaya.my.id/user/ | Portal Karyawan |
+| https://api.mitrjaya.my.id | API (opsional) |
 
-## Struktur URL
+## Cloudflare Settings
 
-| URL | Deskripsi |
-|-----|-----------|
-| `/` | Landing page (pilih portal) |
-| `/admin/` | Portal Admin |
-| `/admin/index-glass.html` | Login Admin |
-| `/admin/dashboard-glass.html` | Dashboard Admin |
-| `/user/` | Portal Karyawan |
-| `/user/user-login.html` | Login Karyawan |
-| `/user/user-dashboard.html` | Dashboard Karyawan |
-| `/api/*` | API endpoints |
+Pastikan di Cloudflare:
+- **SSL/TLS**: Full (strict)
+- **Always Use HTTPS**: ON
+- **Proxy status**: Proxied (orange cloud)
 
 ## Troubleshooting
 
-### Permission Denied
+### SSL Certificate Error
 
 ```bash
-# Pastikan NGINX bisa membaca folder public
-sudo chmod -R 755 /home/hasan/Documents/Perancangan/Perancangan/server-monitoring/public
+# Matikan proxy Cloudflare dulu (DNS only)
+# Lalu jalankan:
+sudo certbot --nginx -d mitrjaya.my.id -d www.mitrjaya.my.id
 
-# Atau tambahkan user nginx ke group
-sudo usermod -aG hasan www-data
+# Setelah berhasil, nyalakan proxy Cloudflare lagi
 ```
 
 ### 502 Bad Gateway
 
 ```bash
-# Pastikan Node.js server berjalan
-cd /home/hasan/Documents/Perancangan/Perancangan/server-monitoring
-node server.js
+# Cek Node.js berjalan
+pm2 status
 
-# Cek apakah port 3000 aktif
+# Atau cek port 3000
 netstat -tlnp | grep 3000
+
+# Restart server jika perlu
+pm2 restart absensi
 ```
 
-### WebSocket Tidak Berfungsi
-
-Pastikan konfigurasi `location /socket.io/` ada dan benar.
-
-## Menjalankan dengan PM2 (Production)
+### Permission Denied
 
 ```bash
-# Install PM2
-npm install -g pm2
+# Beri akses ke folder project
+sudo chmod -R 755 /home/hasan/Documents/Perancangan/Perancangan/server-monitoring
 
-# Jalankan server
-pm2 start server.js --name "absensi-server"
+# Tambahkan www-data ke group user
+sudo usermod -aG hasan www-data
+```
 
-# Auto-start saat boot
-pm2 startup
-pm2 save
+### WebSocket/Socket.IO Error
+
+Pastikan di Cloudflare:
+- **Network > WebSockets**: ON
+
+## Firewall
+
+```bash
+# Buka port yang diperlukan
+sudo ufw allow 80
+sudo ufw allow 443
+sudo ufw allow 3000  # Untuk akses langsung (opsional)
+sudo ufw enable
 ```
