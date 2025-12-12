@@ -1,13 +1,13 @@
 // Service Worker for Sistem Absensi PWA
-const CACHE_NAME = 'absensi-pwa-v7.2.0';
-const RUNTIME_CACHE = 'absensi-runtime-v7.2.0';
+const CACHE_NAME = 'absensi-pwa-v8.0.0';
+const RUNTIME_CACHE = 'absensi-runtime-v8.0.0';
 
 // Files to cache on install
 const STATIC_CACHE_URLS = [
   '/',
-  '/user-login.html',
-  '/user-dashboard.html',
-  '/glass-style.css',
+  '/user/user-login.html',
+  '/user/user-dashboard.html',
+  '/css/glass-style.css',
   '/manifest.json',
   '/icons/icon-192x192.png',
   '/icons/icon-512x512.png'
@@ -132,7 +132,7 @@ self.addEventListener('fetch', (event) => {
           .catch(() => {
             // Return offline fallback page
             if (request.destination === 'document') {
-              return caches.match('/user-login.html');
+              return caches.match('/user/user-login.html');
             }
             return new Response('Offline - Resource not available', {
               status: 503,
@@ -198,7 +198,7 @@ self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
   event.waitUntil(
-    clients.openWindow('/user-dashboard.html')
+    clients.openWindow('/user/user-dashboard.html')
   );
 });
 

@@ -66,7 +66,7 @@
       "name": "Login Admin",
       "short_name": "Admin",
       "description": "Login sebagai administrator",
-      "url": "/index-glass.html",
+      "url": "/admin/index-glass.html",
       "icons": [
         {
           "src": "/icons/icon-192x192.png",
@@ -78,7 +78,7 @@
       "name": "Login Karyawan",
       "short_name": "Karyawan",
       "description": "Login sebagai karyawan",
-      "url": "/user-login.html",
+      "url": "/user/user-login.html",
       "icons": [
         {
           "src": "/icons/icon-192x192.png",
@@ -90,7 +90,7 @@
       "name": "Dashboard Admin",
       "short_name": "Dashboard",
       "description": "Akses dashboard administrator",
-      "url": "/dashboard-glass.html",
+      "url": "/admin/dashboard-glass.html",
       "icons": [
         {
           "src": "/icons/icon-192x192.png",
@@ -102,7 +102,7 @@
       "name": "Riwayat Absensi",
       "short_name": "Riwayat",
       "description": "Lihat riwayat absensi",
-      "url": "/riwayat-glass.html",
+      "url": "/admin/riwayat-glass.html",
       "icons": [
         {
           "src": "/icons/icon-192x192.png",

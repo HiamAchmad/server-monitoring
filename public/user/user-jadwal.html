@@ -14,7 +14,7 @@
     <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png">
 
     <!-- Styles -->
-    <link rel="stylesheet" href="glass-style.css">
+    <link rel="stylesheet" href="/css/glass-style.css">
 
     <style>
         body {
@@ -349,27 +349,27 @@
 
     <!-- Bottom Navigation -->
     <div class="bottom-nav-user">
-        <a href="/user-dashboard.html" class="nav-item-user">
+        <a href="/user/user-dashboard.html" class="nav-item-user">
             <div class="nav-icon">🏠</div>
             <div class="nav-label">Beranda</div>
         </a>
 
-        <a href="/user-riwayat.html" class="nav-item-user">
+        <a href="/user/user-riwayat.html" class="nav-item-user">
             <div class="nav-icon">📜</div>
             <div class="nav-label">Absensi</div>
         </a>
 
-        <a href="/user-izin.html" class="nav-item-user">
+        <a href="/user/user-izin.html" class="nav-item-user">
             <div class="nav-icon">📋</div>
             <div class="nav-label">Izin</div>
         </a>
 
-        <a href="/user-gaji.html" class="nav-item-user">
+        <a href="/user/user-gaji.html" class="nav-item-user">
             <div class="nav-icon">💰</div>
             <div class="nav-label">Gaji</div>
         </a>
 
-        <a href="/user-profil.html" class="nav-item-user">
+        <a href="/user/user-profil.html" class="nav-item-user">
             <div class="nav-icon">👤</div>
             <div class="nav-label">Profil</div>
         </a>
@@ -379,7 +379,7 @@
     <script>
         // Check login
         if (!sessionStorage.getItem('userLoggedIn')) {
-            window.location.href = '/user-login.html';
+            window.location.href = '/user/user-login.html';
         }
 
         let currentDate = new Date();

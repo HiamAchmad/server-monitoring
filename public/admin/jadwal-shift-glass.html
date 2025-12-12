@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jadwal & Shift - Sistem Absensi</title>
-    <link rel="stylesheet" href="glass-style.css">
+    <link rel="stylesheet" href="/css/glass-style.css">
     <style>
         body { background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%); min-height: 100vh; }
         .main-content-with-sidebar .container { max-width: 1200px; margin: 0 auto; padding: var(--space-6); }
@@ -215,7 +215,7 @@
         function logout() {
             localStorage.removeItem('isLoggedIn');
             sessionStorage.removeItem('isLoggedIn');
-            window.location.href = '/index-glass.html';
+            window.location.href = '/admin/index-glass.html';
         }
 
         let shifts = [];
@@ -432,7 +432,7 @@
         }
     </script>
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-    <script src="/notification-component.js"></script>
+    <script src="/js/notification-component.js"></script>
     <script>
         // Initialize notification for admin
         window.notificationComponent = new NotificationComponent({

@@ -1641,6 +1641,26 @@ app.put('/api/cuti/:id/status', async (req, res) => {
     }
 });
 
+// Delete cuti
+app.delete('/api/cuti/:id', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const query = 'DELETE FROM pengajuan_cuti WHERE id_pengajuan = $1 RETURNING *';
+        const result = await db.query(query, [id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'Data cuti tidak ditemukan' });
+        }
+
+        io.emit('cuti_updated', { deleted: true, id });
+        res.json({ success: true, message: 'Data cuti berhasil dihapus' });
+    } catch (error) {
+        console.error('Error delete cuti:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
 // ============================================
 // API ENDPOINTS - MANAJEMEN KARYAWAN (Enhanced)
 // ============================================

@@ -29,8 +29,11 @@ class NotificationComponent {
             return;
         }
 
+        // Store reference in window for onclick handlers
+        window.notificationComponent = this;
+
         container.innerHTML = `
-            <div class="notif-bell" onclick="notificationComponent.toggleDropdown()">
+            <div class="notif-bell" onclick="window.notificationComponent.toggleDropdown()">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                     <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
@@ -41,7 +44,7 @@ class NotificationComponent {
                 <div class="notif-header">
                     <h4>Notifikasi</h4>
                     <div class="notif-actions">
-                        <button onclick="notificationComponent.markAllRead()" title="Tandai semua dibaca">
+                        <button onclick="window.notificationComponent.markAllRead()" title="Tandai semua dibaca">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <polyline points="20 6 9 17 4 12"></polyline>
                             </svg>
@@ -323,7 +326,7 @@ class NotificationComponent {
 
         list.innerHTML = this.notifications.map(notif => `
             <div class="notif-item ${notif.is_read ? '' : 'unread'}"
-                 onclick="notificationComponent.handleClick(${notif.id_notifikasi}, '${notif.link || ''}')">
+                 onclick="window.notificationComponent.handleClick(${notif.id_notifikasi}, '${notif.link || ''}')">
                 <div class="notif-icon ${notif.tipe}">
                     ${this.getIcon(notif.tipe)}
                 </div>
@@ -552,5 +555,5 @@ class NotificationComponent {
     }
 }
 
-// Global instance
-let notificationComponent = null;
+// Note: notificationComponent should be declared in each page that uses this component
+// e.g., var notificationComponent = null; before creating new NotificationComponent()

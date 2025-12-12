@@ -8,7 +8,7 @@
 
     <title>Tambah Karyawan - Sistem Absensi</title>
 
-    <link rel="stylesheet" href="glass-style.css">
+    <link rel="stylesheet" href="/css/glass-style.css">
 
     <style>
         body {
@@ -748,7 +748,7 @@
                 showNotification('✅ Pendaftaran sidik jari berhasil!', 'success');
 
                 setTimeout(() => {
-                    window.location.href = '/index-glass.html';
+                    window.location.href = '/admin/index-glass.html';
                 }, 3000);
             }
         });
@@ -809,7 +809,7 @@
         function logout() {
             localStorage.removeItem('isLoggedIn');
             localStorage.removeItem('userData');
-            window.location.href = '/index-glass.html';
+            window.location.href = '/admin/index-glass.html';
         }
 
         // Reset form function

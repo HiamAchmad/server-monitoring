@@ -14,7 +14,7 @@
     <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png">
 
     <!-- Styles -->
-    <link rel="stylesheet" href="glass-style.css">
+    <link rel="stylesheet" href="/css/glass-style.css">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -669,27 +669,27 @@
 
     <!-- Bottom Navigation -->
     <div class="bottom-nav-user">
-        <a href="/user-dashboard.html" class="nav-item-user">
+        <a href="/user/user-dashboard.html" class="nav-item-user">
             <div class="nav-icon">🏠</div>
             <div class="nav-label">Beranda</div>
         </a>
 
-        <a href="/user-riwayat.html" class="nav-item-user">
+        <a href="/user/user-riwayat.html" class="nav-item-user">
             <div class="nav-icon">📜</div>
             <div class="nav-label">Absensi</div>
         </a>
 
-        <a href="/user-izin.html" class="nav-item-user">
+        <a href="/user/user-izin.html" class="nav-item-user">
             <div class="nav-icon">📋</div>
             <div class="nav-label">Izin</div>
         </a>
 
-        <a href="/user-gaji.html" class="nav-item-user">
+        <a href="/user/user-gaji.html" class="nav-item-user">
             <div class="nav-icon">💰</div>
             <div class="nav-label">Gaji</div>
         </a>
 
-        <a href="/user-profil.html" class="nav-item-user active">
+        <a href="/user/user-profil.html" class="nav-item-user active">
             <div class="nav-icon">👤</div>
             <div class="nav-label">Profil</div>
         </a>
@@ -699,7 +699,7 @@
     <script>
         // Check login
         if (!sessionStorage.getItem('userLoggedIn')) {
-            window.location.href = '/user-login.html';
+            window.location.href = '/user/user-login.html';
         }
 
         // Load profile data
@@ -911,7 +911,7 @@
         function logout() {
             if (confirm('Yakin ingin logout?')) {
                 sessionStorage.clear();
-                window.location.href = '/user-login.html';
+                window.location.href = '/user/user-login.html';
             }
         }
 
@@ -999,21 +999,38 @@
 
         // Initialize
         loadProfile();
-
+    </script>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script src="/js/notification-component.js"></script>
+    <script>
         // Initialize notification
         function initUserNotification() {
             const userData = JSON.parse(sessionStorage.getItem('userData') || '{}');
-            if (userData.id_pegawai) {
-                window.notificationComponent = new NotificationComponent({
+            const pegawaiId = userData.id_pegawai || sessionStorage.getItem('pegawai_id');
+            if (pegawaiId && !window.notificationComponent) {
+                new NotificationComponent({
                     isAdmin: false,
-                    pegawaiId: userData.id_pegawai,
+                    pegawaiId: parseInt(pegawaiId),
                     containerId: 'notification-bell'
                 });
             }
         }
-        setTimeout(initUserNotification, 500);
+        setTimeout(initUserNotification, 300);
+
+        // Fallback bell icon
+        (function() {
+            const bellContainer = document.getElementById('notification-bell');
+            if (bellContainer && !bellContainer.innerHTML.trim()) {
+                bellContainer.innerHTML = `
+                    <div class="notif-bell" style="padding:8px;cursor:pointer;display:flex;align-items:center;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#a0aec0" stroke-width="2">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                    </div>
+                `;
+            }
+        })();
     </script>
-    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-    <script src="/notification-component.js"></script>
 </body>
 </html>

@@ -15,7 +15,7 @@
     <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png">
     <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
 
-    <link rel="stylesheet" href="glass-style.css">
+    <link rel="stylesheet" href="/css/glass-style.css">
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
@@ -1220,10 +1220,10 @@
     </script>
 
     <!-- Notification Component -->
-    <script src="/notification-component.js"></script>
+    <script src="/js/notification-component.js"></script>
     <script>
         // Initialize notification component for admin
-        notificationComponent = new NotificationComponent({
+        var notificationComponent = new NotificationComponent({
             isAdmin: true,
             containerId: 'notification-bell'
         });
