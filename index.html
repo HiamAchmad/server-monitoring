@@ -3,26 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sistem Absensi Karyawan - Portal Admin & Karyawan">
+    <meta name="theme-color" content="#667eea">
     <title>Sistem Absensi - Pilih Portal</title>
-    <link rel="stylesheet" href="/css/glass-style.css">
+
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" href="/icons/icon-192x192.png">
+
     <style>
+        :root {
+            --primary-start: #667eea;
+            --primary-end: #764ba2;
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --bg-dark: #0f0f23;
+            --bg-card: rgba(255, 255, 255, 0.05);
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-primary: #ffffff;
+            --text-secondary: #a0aec0;
+            --radius-xl: 24px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-dark);
+            background-image:
+                radial-gradient(ellipse at top left, rgba(102, 126, 234, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at bottom right, rgba(118, 75, 162, 0.15) 0%, transparent 50%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0;
             padding: 20px;
+            color: var(--text-primary);
         }
 
         .portal-container {
             text-align: center;
-            max-width: 600px;
+            max-width: 700px;
             width: 100%;
         }
 
-        .portal-title {
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: var(--gradient-primary);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
             font-size: 2.5rem;
+            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.4);
+        }
+
+        .portal-title {
+            font-size: 2.8rem;
             font-weight: 700;
             background: var(--gradient-primary);
             -webkit-background-clip: text;
@@ -39,56 +81,101 @@
 
         .portal-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
         }
 
         .portal-card {
             background: var(--glass-bg);
             backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
             border-radius: var(--radius-xl);
-            padding: 3rem 2rem;
+            padding: 2.5rem 2rem;
             text-decoration: none;
             transition: all 0.3s ease;
             display: block;
+            cursor: pointer;
         }
 
         .portal-card:hover {
             transform: translateY(-8px);
-            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3);
             border-color: var(--primary-start);
         }
 
+        .admin-card:hover {
+            box-shadow: 0 20px 60px rgba(102, 126, 234, 0.4);
+            background: rgba(102, 126, 234, 0.15);
+        }
+
+        .user-card:hover {
+            box-shadow: 0 20px 60px rgba(72, 187, 120, 0.4);
+            border-color: #48bb78;
+            background: rgba(72, 187, 120, 0.15);
+        }
+
         .portal-icon {
-            font-size: 4rem;
-            margin-bottom: 1.5rem;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            font-size: 2.5rem;
+        }
+
+        .admin-card .portal-icon {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.3), rgba(118, 75, 162, 0.3));
+        }
+
+        .user-card .portal-icon {
+            background: linear-gradient(135deg, rgba(72, 187, 120, 0.3), rgba(56, 161, 105, 0.3));
         }
 
         .portal-card-title {
             font-size: 1.5rem;
             font-weight: 600;
             color: var(--text-primary);
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.75rem;
         }
 
         .portal-card-desc {
             color: var(--text-secondary);
             font-size: 0.95rem;
+            line-height: 1.5;
         }
 
-        .admin-card:hover {
-            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3);
+        .footer-text {
+            margin-top: 3rem;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            opacity: 0.7;
         }
 
-        .user-card:hover {
-            box-shadow: 0 20px 40px rgba(72, 187, 120, 0.3);
-            border-color: #48bb78;
+        .footer-text a {
+            color: var(--primary-start);
+            text-decoration: none;
+        }
+
+        @media (max-width: 600px) {
+            .portal-title {
+                font-size: 2rem;
+            }
+
+            .portal-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .portal-card {
+                padding: 2rem 1.5rem;
+            }
         }
     </style>
 </head>
 <body>
     <div class="portal-container">
+        <div class="logo">📋</div>
         <h1 class="portal-title">Sistem Absensi</h1>
         <p class="portal-subtitle">Pilih portal untuk melanjutkan</p>
 
@@ -96,15 +183,19 @@
             <a href="/admin/index-glass.html" class="portal-card admin-card">
                 <div class="portal-icon">👨‍💼</div>
                 <h2 class="portal-card-title">Portal Admin</h2>
-                <p class="portal-card-desc">Kelola data karyawan, absensi, gaji, dan laporan</p>
+                <p class="portal-card-desc">Kelola data karyawan, absensi, penggajian, dan laporan perusahaan</p>
             </a>
 
             <a href="/user/user-login.html" class="portal-card user-card">
                 <div class="portal-icon">👤</div>
                 <h2 class="portal-card-title">Portal Karyawan</h2>
-                <p class="portal-card-desc">Lihat absensi, slip gaji, dan ajukan izin/cuti</p>
+                <p class="portal-card-desc">Lihat riwayat absensi, slip gaji, dan ajukan izin atau cuti</p>
             </a>
         </div>
+
+        <p class="footer-text">
+            &copy; 2025 Sistem Absensi | <a href="https://mitrjaya.my.id">mitrjaya.my.id</a>
+        </p>
     </div>
 </body>
 </html>
