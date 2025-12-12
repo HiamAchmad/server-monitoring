@@ -360,7 +360,7 @@
     <script>
         // Check if logged in
         if (!sessionStorage.getItem('userLoggedIn')) {
-            window.location.href = '/user/user-login.html';
+            window.location.href = "/";
         }
 
         const socket = io();
@@ -431,7 +431,7 @@
         function logout() {
             if (confirm('Apakah Anda yakin ingin keluar?')) {
                 sessionStorage.clear();
-                window.location.href = '/user/user-login.html';
+                window.location.href = "/";
             }
         }
 

@@ -145,8 +145,8 @@
         <div class="nav-item active"><span class="nav-item-icon">⚙️</span><span>Settings</span></div>
     </div>
     <script>
-        if (!sessionStorage.getItem('isLoggedIn')) window.location.href = 'index-glass.html';
-        function logout() { sessionStorage.clear(); window.location.href = 'index-glass.html'; }
+        if (!sessionStorage.getItem('isLoggedIn')) window.location.href = '/';
+        function logout() { sessionStorage.clear(); window.location.href = '/'; }
         const socket = io();
 
         document.addEventListener('DOMContentLoaded', () => {
