@@ -7,10 +7,10 @@ const STATIC_CACHE_URLS = [
   '/',
   '/user/user-login.html',
   '/user/user-dashboard.html',
-  '/css/glass-style.css',
+  '/public/css/glass-style.css',
   '/manifest.json',
-  '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png'
+  '/public/icons/icon-192x192.png',
+  '/public/icons/icon-512x512.png'
 ];
 
 // Install event - cache static assets

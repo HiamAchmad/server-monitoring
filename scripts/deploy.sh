@@ -3,15 +3,19 @@
 # ================================================
 # Deployment Script for Sistem Absensi
 # Domain: mitrjaya.my.id
+# Path: /var/www/server-monitoring
 # ================================================
 
 set -e
 
-PROJECT_DIR="/root/server-monitoring"
+PROJECT_DIR="/var/www/server-monitoring"
 NGINX_CONF="nginx/absensi.conf"
 NGINX_DEST="/etc/nginx/sites-available/mitrjaya.my.id"
 
 echo "🚀 Starting deployment..."
+
+# Create directory if not exists
+mkdir -p "$PROJECT_DIR"
 
 # Navigate to project directory
 cd "$PROJECT_DIR"
@@ -20,10 +24,9 @@ cd "$PROJECT_DIR"
 echo "📥 Pulling latest changes from Git..."
 git pull origin main || git pull origin master
 
-# Fix permissions for NGINX (www-data user)
+# Set permissions
 echo "🔐 Setting permissions..."
-chmod 755 /root
-chmod -R 755 /root/server-monitoring
+chmod -R 755 /var/www/server-monitoring
 
 # Install dependencies
 echo "📦 Installing dependencies..."
@@ -36,18 +39,20 @@ if pm2 list | grep -q "absensi"; then
 else
     pm2 start server.js --name "absensi"
 fi
+pm2 save
 
 # Update NGINX configuration
 echo "🔧 Updating NGINX configuration..."
-sudo cp "$NGINX_CONF" "$NGINX_DEST"
+cp "$NGINX_CONF" "$NGINX_DEST"
+ln -sf "$NGINX_DEST" /etc/nginx/sites-enabled/
 
 # Test NGINX configuration
 echo "🧪 Testing NGINX configuration..."
-sudo nginx -t
+nginx -t
 
 # Reload NGINX
 echo "🔄 Reloading NGINX..."
-sudo systemctl reload nginx
+systemctl reload nginx
 
 echo "✅ Deployment completed successfully!"
 echo "🌐 Site: https://mitrjaya.my.id"

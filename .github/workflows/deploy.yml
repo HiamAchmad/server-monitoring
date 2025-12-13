@@ -22,8 +22,11 @@ jobs:
           password: ${{ secrets.SERVER_PASSWORD }}
           port: 22
           script: |
+            # Create directory if not exists
+            mkdir -p /var/www/server-monitoring
+
             # Navigate to project directory
-            cd /root/server-monitoring || mkdir -p /root/server-monitoring
+            cd /var/www/server-monitoring
 
             # Clone if not exists, else pull
             if [ ! -d ".git" ]; then
@@ -33,9 +36,8 @@ jobs:
               git reset --hard origin/main || git reset --hard origin/master
             fi
 
-            echo "🔐 Setting permissions for NGINX..."
-            chmod 755 /root
-            chmod -R 755 /root/server-monitoring
+            # Set permissions
+            chmod -R 755 /var/www/server-monitoring
 
             echo "📦 Installing dependencies..."
             npm install --production

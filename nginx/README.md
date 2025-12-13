@@ -4,7 +4,7 @@
 
 - **Server IP**: 47.84.67.102
 - **Domain**: mitrjaya.my.id
-- **Project Path**: /root/server-monitoring
+- **Project Path**: /var/www/server-monitoring
 
 ## Langkah Instalasi di Server
 
@@ -21,27 +21,21 @@ apt install nginx -y
 apt install certbot python3-certbot-nginx -y
 ```
 
-### 3. Set Permission untuk Folder /root/
-
-**PENTING**: NGINX berjalan sebagai user `www-data`, perlu akses ke `/root/`
+### 3. Setup Project Directory
 
 ```bash
-# Beri akses execute ke folder /root/
-chmod 755 /root
+# Buat folder project
+mkdir -p /var/www/server-monitoring
 
-# Beri akses ke project folder
-chmod -R 755 /root/server-monitoring
-
-# Verifikasi permission
-ls -la /root/
-ls -la /root/server-monitoring/
+# Set permission
+chmod -R 755 /var/www/server-monitoring
 ```
 
 ### 4. Copy Konfigurasi NGINX
 
 ```bash
 # Copy file dari project ke nginx
-cp /root/server-monitoring/nginx/absensi.conf /etc/nginx/sites-available/mitrjaya.my.id
+cp /var/www/server-monitoring/nginx/absensi.conf /etc/nginx/sites-available/mitrjaya.my.id
 
 # Enable site
 ln -sf /etc/nginx/sites-available/mitrjaya.my.id /etc/nginx/sites-enabled/
@@ -70,7 +64,7 @@ systemctl reload nginx
 ### 7. Jalankan Node.js Server
 
 ```bash
-cd /root/server-monitoring
+cd /var/www/server-monitoring
 
 # Install dependencies
 npm install
@@ -89,14 +83,6 @@ pm2 startup
 | https://mitrjaya.my.id | Landing Page |
 | https://mitrjaya.my.id/admin/ | Portal Admin |
 | https://mitrjaya.my.id/user/ | Portal Karyawan |
-| https://api.mitrjaya.my.id | API (opsional) |
-
-## Cloudflare Settings
-
-Pastikan di Cloudflare:
-- **SSL/TLS**: Full (strict)
-- **Always Use HTTPS**: ON
-- **Proxy status**: Proxied (orange cloud)
 
 ## Troubleshooting
 
@@ -105,7 +91,7 @@ Pastikan di Cloudflare:
 ```bash
 # Matikan proxy Cloudflare dulu (DNS only)
 # Lalu jalankan:
-sudo certbot --nginx -d mitrjaya.my.id -d www.mitrjaya.my.id
+certbot --nginx -d mitrjaya.my.id -d www.mitrjaya.my.id
 
 # Setelah berhasil, nyalakan proxy Cloudflare lagi
 ```
@@ -126,11 +112,8 @@ pm2 restart absensi
 ### Permission Denied / 403 Forbidden
 
 ```bash
-# Beri akses ke folder /root/
-chmod 755 /root
-
 # Beri akses ke project folder
-chmod -R 755 /root/server-monitoring
+chmod -R 755 /var/www/server-monitoring
 
 # Restart NGINX
 systemctl restart nginx
@@ -145,8 +128,25 @@ Pastikan di Cloudflare:
 
 ```bash
 # Buka port yang diperlukan
-sudo ufw allow 80
-sudo ufw allow 443
-sudo ufw allow 3000  # Untuk akses langsung (opsional)
-sudo ufw enable
+ufw allow 80
+ufw allow 443
+ufw enable
+```
+
+## File Structure
+
+```
+/var/www/server-monitoring/
+├── index.html              # Landing page
+├── server.js               # Node.js server
+├── package.json
+├── public/
+│   ├── admin/              # Admin pages
+│   ├── user/               # User pages
+│   ├── css/                # Stylesheets
+│   ├── js/                 # JavaScript
+│   └── icons/              # PWA icons
+├── uploads/                # Uploaded files
+└── nginx/
+    └── absensi.conf        # NGINX config
 ```
