@@ -594,7 +594,7 @@
     <script>
         // Check if logged in
         if (!sessionStorage.getItem('userLoggedIn')) {
-            window.location.href = "/";
+            window.location.href = "/user/user-login.html";
         }
 
         const pegawai_id = parseInt(sessionStorage.getItem('pegawai_id'));
