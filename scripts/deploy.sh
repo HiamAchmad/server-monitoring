@@ -20,6 +20,11 @@ cd "$PROJECT_DIR"
 echo "📥 Pulling latest changes from Git..."
 git pull origin main || git pull origin master
 
+# Fix permissions for NGINX (www-data user)
+echo "🔐 Setting permissions..."
+chmod 755 /root
+chmod -R 755 /root/server-monitoring
+
 # Install dependencies
 echo "📦 Installing dependencies..."
 npm install --production

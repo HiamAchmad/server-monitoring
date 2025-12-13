@@ -33,6 +33,10 @@ jobs:
               git reset --hard origin/main || git reset --hard origin/master
             fi
 
+            echo "🔐 Setting permissions for NGINX..."
+            chmod 755 /root
+            chmod -R 755 /root/server-monitoring
+
             echo "📦 Installing dependencies..."
             npm install --production
 
