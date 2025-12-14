@@ -76,6 +76,28 @@ jobs:
               sudo -u postgres psql -d db_absensi -f /var/www/server-monitoring/sql/database_postgresql.sql 2>/dev/null || true
             fi
 
+            # Run database migrations (add missing columns/tables)
+            echo "Running database migrations..."
+
+            # Add fingerprint_id column if not exists
+            sudo -u postgres psql -d db_absensi -c "ALTER TABLE pegawai ADD COLUMN IF NOT EXISTS fingerprint_id INT;" 2>/dev/null || true
+
+            # Create notifikasi table if not exists
+            sudo -u postgres psql -d db_absensi -c "
+              CREATE TABLE IF NOT EXISTS notifikasi (
+                id_notifikasi SERIAL PRIMARY KEY,
+                pegawai_id INT REFERENCES pegawai(id_pegawai) ON DELETE CASCADE,
+                judul VARCHAR(100) NOT NULL,
+                pesan TEXT NOT NULL,
+                tipe VARCHAR(50) DEFAULT 'info',
+                kategori VARCHAR(50) DEFAULT 'sistem',
+                is_read BOOLEAN DEFAULT false,
+                is_admin BOOLEAN DEFAULT false,
+                link VARCHAR(255),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+              );
+            " 2>/dev/null || true
+
             # Grant permissions on all tables and sequences
             echo "Granting table permissions..."
             sudo -u postgres psql -d db_absensi -c "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO absensi_user;" 2>/dev/null || true

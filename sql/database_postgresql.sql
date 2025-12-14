@@ -32,9 +32,13 @@ CREATE TABLE IF NOT EXISTS pegawai (
     no_telepon VARCHAR(20),
     tanggal_bergabung DATE,
     status status_pegawai DEFAULT 'Aktif',
+    fingerprint_id INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Komentar untuk kolom fingerprint
+COMMENT ON COLUMN pegawai.fingerprint_id IS 'ID Fingerprint dari mesin absensi';
 
 -- Komentar untuk kolom
 COMMENT ON COLUMN pegawai.nip IS 'Nomor Induk Pegawai';
@@ -115,6 +119,33 @@ COMMENT ON COLUMN tugas.upload_date IS 'Waktu upload';
 -- Index untuk optimasi
 CREATE INDEX idx_pegawai_tugas ON tugas(pegawai_id);
 CREATE INDEX idx_deadline ON tugas(deadline);
+
+-- ================================================
+-- TABEL: notifikasi
+-- Menyimpan notifikasi untuk admin dan user
+-- ================================================
+CREATE TABLE IF NOT EXISTS notifikasi (
+    id_notifikasi SERIAL PRIMARY KEY,
+    pegawai_id INT REFERENCES pegawai(id_pegawai) ON DELETE CASCADE,
+    judul VARCHAR(100) NOT NULL,
+    pesan TEXT NOT NULL,
+    tipe VARCHAR(50) DEFAULT 'info',
+    kategori VARCHAR(50) DEFAULT 'sistem',
+    is_read BOOLEAN DEFAULT false,
+    is_admin BOOLEAN DEFAULT false,
+    link VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Komentar untuk kolom notifikasi
+COMMENT ON COLUMN notifikasi.tipe IS 'Tipe notifikasi: info, success, warning, error';
+COMMENT ON COLUMN notifikasi.kategori IS 'Kategori: sistem, absensi, cuti, izin';
+COMMENT ON COLUMN notifikasi.is_admin IS 'True jika notifikasi untuk admin';
+
+-- Index untuk optimasi notifikasi
+CREATE INDEX idx_notifikasi_pegawai ON notifikasi(pegawai_id);
+CREATE INDEX idx_notifikasi_admin ON notifikasi(is_admin);
+CREATE INDEX idx_notifikasi_created ON notifikasi(created_at);
 
 -- ================================================
 -- DATA SAMPLE
