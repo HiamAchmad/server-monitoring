@@ -21,7 +21,11 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SERVER_PASSWORD }}
           port: 22
+          command_timeout: 30m
           script: |
+            set -e
+            export DEBIAN_FRONTEND=noninteractive
+
             # Create directory if not exists
             mkdir -p /var/www/server-monitoring
 
@@ -43,36 +47,39 @@ jobs:
             # Install PostgreSQL if not installed
             if ! command -v psql &> /dev/null; then
               echo "Installing PostgreSQL..."
-              apt-get update
-              apt-get install -y postgresql postgresql-contrib
+              apt-get update -qq
+              apt-get install -y -qq postgresql postgresql-contrib
             fi
 
             # Start PostgreSQL if not running
-            systemctl start postgresql || true
-            systemctl enable postgresql || true
+            systemctl start postgresql 2>/dev/null || true
+            systemctl enable postgresql 2>/dev/null || true
 
-            # Setup database user and database (idempotent)
+            # Wait for PostgreSQL to be ready
+            sleep 3
+
+            # Setup database user and database
             echo "Setting up database..."
-            sudo -u postgres psql -c "SELECT 1 FROM pg_user WHERE usename = 'absensi_user'" | grep -q 1 || \
+            sudo -u postgres psql -tc "SELECT 1 FROM pg_user WHERE usename = 'absensi_user'" | grep -q 1 || \
               sudo -u postgres psql -c "CREATE USER absensi_user WITH PASSWORD 'absensi_password';"
 
-            sudo -u postgres psql -c "SELECT 1 FROM pg_database WHERE datname = 'db_absensi'" | grep -q 1 || \
+            sudo -u postgres psql -tc "SELECT 1 FROM pg_database WHERE datname = 'db_absensi'" | grep -q 1 || \
               sudo -u postgres psql -c "CREATE DATABASE db_absensi OWNER absensi_user;"
 
-            sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE db_absensi TO absensi_user;"
-            sudo -u postgres psql -d db_absensi -c "GRANT ALL ON SCHEMA public TO absensi_user;"
+            sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE db_absensi TO absensi_user;" 2>/dev/null || true
+            sudo -u postgres psql -d db_absensi -c "GRANT ALL ON SCHEMA public TO absensi_user;" 2>/dev/null || true
 
             # Import schema if tables don't exist
-            if ! sudo -u postgres psql -d db_absensi -c "SELECT 1 FROM pegawai LIMIT 1" &> /dev/null; then
+            if ! sudo -u postgres psql -d db_absensi -tc "SELECT 1 FROM pegawai LIMIT 1" 2>/dev/null | grep -q 1; then
               echo "Importing database schema..."
-              sudo -u postgres psql -d db_absensi -f /var/www/server-monitoring/sql/database_postgresql.sql || true
+              sudo -u postgres psql -d db_absensi -f /var/www/server-monitoring/sql/database_postgresql.sql 2>/dev/null || true
             fi
 
             echo "📦 Installing dependencies..."
             npm install --production
 
             echo "🔄 Restarting Node.js server..."
-            pm2 restart absensi || pm2 start server.js --name "absensi"
+            pm2 restart absensi 2>/dev/null || pm2 start server.js --name "absensi"
             pm2 save
 
             echo "🔄 Updating NGINX configuration..."
