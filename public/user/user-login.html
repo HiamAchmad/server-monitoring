@@ -593,15 +593,31 @@
             btnLogin.disabled = true;
 
             try {
-                // Simulate API call (replace with actual API later)
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                // Fetch pegawai data to validate NIP and get pegawai_id
+                const response = await fetch('/pegawai');
+                const result = await response.json();
 
-                // Simple validation (replace with actual backend validation)
-                // For demo: NIP as password
+                if (!result.success) {
+                    alert('❌ Gagal mengambil data pegawai');
+                    return;
+                }
+
+                // Find pegawai by NIP
+                const pegawai = result.data.find(p => p.nip === nip);
+
+                if (!pegawai) {
+                    alert('❌ NIP tidak ditemukan!');
+                    return;
+                }
+
+                // Simple validation (for demo: NIP as password or 'password')
                 if (password === nip || password === 'password') {
-                    // Save login state
+                    // Save login state with pegawai data
                     sessionStorage.setItem('userLoggedIn', 'true');
                     sessionStorage.setItem('userNIP', nip);
+                    sessionStorage.setItem('pegawai_id', pegawai.id_pegawai);
+                    sessionStorage.setItem('userName', pegawai.nama_pegawai);
+                    sessionStorage.setItem('userData', JSON.stringify(pegawai));
 
                     if (rememberMe) {
                         localStorage.setItem('rememberedNIP', nip);
