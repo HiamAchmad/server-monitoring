@@ -815,12 +815,10 @@ app.get('/api/export', async (req, res) => {
                 p.nip,
                 p.nama_pegawai,
                 p.posisi,
+                p.divisi,
                 a.waktu_absen,
-                a.waktu_keluar,
                 a.keterangan,
-                a.durasi_kerja,
-                a.durasi_lembur,
-                a.status_lembur,
+                DATE(a.timestamp) as tanggal,
                 a.timestamp
             FROM absensi a
             JOIN pegawai p ON a.pegawai_id = p.id_pegawai
@@ -842,10 +840,10 @@ app.get('/api/export', async (req, res) => {
             res.json(result.rows);
         } else {
             // CSV format
-            let csv = 'ID,NIP,Nama,Posisi,Waktu Masuk,Waktu Keluar,Keterangan,Durasi Kerja,Durasi Lembur,Status Lembur,Timestamp\n';
+            let csv = 'ID,NIP,Nama,Posisi,Divisi,Waktu Absen,Keterangan,Tanggal,Timestamp\n';
 
             result.rows.forEach(row => {
-                csv += `${row.id_absensi},${row.nip},"${row.nama_pegawai}",${row.posisi || ''},${row.waktu_absen || ''},${row.waktu_keluar || ''},${row.keterangan || ''},${row.durasi_kerja || ''},${row.durasi_lembur || ''},${row.status_lembur || ''},${row.timestamp}\n`;
+                csv += `${row.id_absensi},${row.nip},"${row.nama_pegawai}",${row.posisi || ''},${row.divisi || ''},${row.waktu_absen || ''},${row.keterangan || ''},${row.tanggal || ''},${row.timestamp}\n`;
             });
 
             res.setHeader('Content-Type', 'text/csv');
