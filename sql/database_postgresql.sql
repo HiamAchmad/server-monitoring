@@ -28,11 +28,13 @@ CREATE TABLE IF NOT EXISTS pegawai (
     nip VARCHAR(50) UNIQUE NOT NULL,
     nama_pegawai VARCHAR(100) NOT NULL,
     posisi VARCHAR(50) DEFAULT 'Karyawan',
+    divisi VARCHAR(50),
     email VARCHAR(100),
     no_telepon VARCHAR(20),
     tanggal_bergabung DATE,
     status status_pegawai DEFAULT 'Aktif',
     fingerprint_id INT,
+    gaji_pokok DECIMAL(12,2) DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -146,6 +148,106 @@ COMMENT ON COLUMN notifikasi.is_admin IS 'True jika notifikasi untuk admin';
 CREATE INDEX idx_notifikasi_pegawai ON notifikasi(pegawai_id);
 CREATE INDEX idx_notifikasi_admin ON notifikasi(is_admin);
 CREATE INDEX idx_notifikasi_created ON notifikasi(created_at);
+
+-- ================================================
+-- TABEL: shift
+-- Menyimpan data shift kerja
+-- ================================================
+CREATE TABLE IF NOT EXISTS shift (
+    id_shift SERIAL PRIMARY KEY,
+    nama_shift VARCHAR(50) NOT NULL,
+    jam_masuk TIME NOT NULL,
+    jam_keluar TIME NOT NULL,
+    toleransi_terlambat INT DEFAULT 15,
+    jam_lembur_mulai TIME,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Komentar untuk kolom shift
+COMMENT ON COLUMN shift.toleransi_terlambat IS 'Toleransi terlambat dalam menit';
+COMMENT ON COLUMN shift.jam_lembur_mulai IS 'Jam mulai dihitung lembur';
+
+-- ================================================
+-- TABEL: pengajuan_cuti
+-- Menyimpan data pengajuan izin/cuti karyawan
+-- ================================================
+CREATE TABLE IF NOT EXISTS pengajuan_cuti (
+    id_pengajuan SERIAL PRIMARY KEY,
+    pegawai_id INT REFERENCES pegawai(id_pegawai) ON DELETE CASCADE,
+    jenis VARCHAR(50) NOT NULL,
+    tanggal_mulai DATE NOT NULL,
+    tanggal_selesai DATE NOT NULL,
+    jumlah_hari INT,
+    alasan TEXT,
+    status VARCHAR(20) DEFAULT 'Menunggu',
+    disetujui_oleh INT REFERENCES pegawai(id_pegawai),
+    tanggal_disetujui TIMESTAMP,
+    komentar_approval TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Komentar untuk kolom pengajuan_cuti
+COMMENT ON COLUMN pengajuan_cuti.jenis IS 'Jenis cuti: Cuti Tahunan, Cuti Sakit, Izin, dll';
+COMMENT ON COLUMN pengajuan_cuti.status IS 'Status: Menunggu, Disetujui, Ditolak';
+
+-- Index untuk optimasi pengajuan_cuti
+CREATE INDEX idx_cuti_pegawai ON pengajuan_cuti(pegawai_id);
+CREATE INDEX idx_cuti_status ON pengajuan_cuti(status);
+
+-- ================================================
+-- TABEL: hari_libur
+-- Menyimpan data hari libur nasional dan cuti bersama
+-- ================================================
+CREATE TABLE IF NOT EXISTS hari_libur (
+    id_libur SERIAL PRIMARY KEY,
+    tanggal DATE UNIQUE NOT NULL,
+    nama_libur VARCHAR(100) NOT NULL,
+    jenis VARCHAR(50) DEFAULT 'Nasional',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Komentar untuk kolom hari_libur
+COMMENT ON COLUMN hari_libur.jenis IS 'Jenis: Nasional, Cuti Bersama, Keagamaan';
+
+-- ================================================
+-- TABEL: payroll
+-- Menyimpan data penggajian karyawan
+-- ================================================
+CREATE TABLE IF NOT EXISTS payroll (
+    id_payroll SERIAL PRIMARY KEY,
+    pegawai_id INT REFERENCES pegawai(id_pegawai) ON DELETE CASCADE,
+    bulan INT NOT NULL,
+    tahun INT NOT NULL,
+    total_hadir INT DEFAULT 0,
+    total_terlambat INT DEFAULT 0,
+    total_izin INT DEFAULT 0,
+    total_sakit INT DEFAULT 0,
+    total_jam_lembur DECIMAL(10,2) DEFAULT 0,
+    gaji_pokok DECIMAL(12,2) DEFAULT 0,
+    uang_lembur DECIMAL(12,2) DEFAULT 0,
+    tunjangan DECIMAL(12,2) DEFAULT 0,
+    potongan_absen DECIMAL(12,2) DEFAULT 0,
+    total_gaji DECIMAL(12,2) DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(pegawai_id, bulan, tahun)
+);
+
+-- Index untuk optimasi payroll
+CREATE INDEX idx_payroll_pegawai ON payroll(pegawai_id);
+CREATE INDEX idx_payroll_periode ON payroll(bulan, tahun);
+
+-- ================================================
+-- TABEL: setting_payroll
+-- Menyimpan pengaturan penggajian
+-- ================================================
+CREATE TABLE IF NOT EXISTS setting_payroll (
+    id_setting SERIAL PRIMARY KEY,
+    nama_setting VARCHAR(50) UNIQUE NOT NULL,
+    nilai DECIMAL(12,2) DEFAULT 0,
+    keterangan TEXT,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
 -- ================================================
 -- DATA SAMPLE

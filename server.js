@@ -897,6 +897,38 @@ app.post('/api/reset-fingerprints', async (req, res) => {
 });
 
 // Endpoint untuk ubah password admin
+// Endpoint untuk login admin
+app.post('/api/admin/login', async (req, res) => {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+        return res.status(400).json({ success: false, message: 'Username dan password harus diisi' });
+    }
+
+    try {
+        // Baca file settings atau gunakan default
+        const settingsPath = path.join(__dirname, 'admin-settings.json');
+        let settings = { username: 'admin', password: 'admin123' };
+
+        if (fs.existsSync(settingsPath)) {
+            settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+        }
+
+        // Verifikasi credentials
+        if (username === settings.username && password === settings.password) {
+            console.log('🔐 Admin login successful');
+            res.json({ success: true, message: 'Login berhasil' });
+        } else {
+            console.log('❌ Admin login failed: invalid credentials');
+            res.status(401).json({ success: false, message: 'Username atau password salah' });
+        }
+
+    } catch (error) {
+        console.error('❌ Error during login:', error);
+        res.status(500).json({ success: false, message: 'Gagal login: ' + error.message });
+    }
+});
+
 app.post('/api/change-password', async (req, res) => {
     const { oldPassword, newPassword } = req.body;
 
@@ -1567,12 +1599,18 @@ app.post('/api/cuti', async (req, res) => {
     }
 
     try {
+        // Calculate jumlah_hari (number of days)
+        const startDate = new Date(tanggal_mulai);
+        const endDate = new Date(tanggal_selesai);
+        const diffTime = Math.abs(endDate - startDate);
+        const jumlah_hari = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 karena inklusif
+
         const query = `
-            INSERT INTO pengajuan_cuti (pegawai_id, jenis, tanggal_mulai, tanggal_selesai, alasan)
-            VALUES ($1, $2, $3, $4, $5)
+            INSERT INTO pengajuan_cuti (pegawai_id, jenis, tanggal_mulai, tanggal_selesai, alasan, jumlah_hari)
+            VALUES ($1, $2, $3, $4, $5, $6)
             RETURNING *
         `;
-        const result = await db.query(query, [pegawai_id, jenis, tanggal_mulai, tanggal_selesai, alasan]);
+        const result = await db.query(query, [pegawai_id, jenis, tanggal_mulai, tanggal_selesai, alasan, jumlah_hari]);
 
         // Get nama pegawai
         const pegawaiResult = await db.query('SELECT nama_pegawai FROM pegawai WHERE id_pegawai = $1', [pegawai_id]);

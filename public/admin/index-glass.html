@@ -286,51 +286,73 @@
     </div>
 
     <script>
-        // Default credentials info
-        const defaultCredentials = {
-            username: 'admin',
-            password: 'admin123'
-        };
-
-        // Login Form Handler
-        document.getElementById('loginForm').addEventListener('submit', (e) => {
+        // Login Form Handler - menggunakan API untuk validasi
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
 
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             const remember = document.getElementById('remember').checked;
+            const submitBtn = document.querySelector('.login-btn');
 
-            // Simple validation (replace with real authentication)
-            if (username === defaultCredentials.username && password === defaultCredentials.password) {
-                // Save to localStorage if remember me
-                if (remember) {
-                    localStorage.setItem('rememberedUser', username);
+            // Disable button saat proses
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span>⏳</span><span>Memverifikasi...</span>';
+
+            try {
+                // Validasi ke server
+                const response = await fetch('/api/admin/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Save to localStorage if remember me
+                    if (remember) {
+                        localStorage.setItem('rememberedUser', username);
+                    } else {
+                        localStorage.removeItem('rememberedUser');
+                    }
+
+                    // Save session
+                    sessionStorage.setItem('isLoggedIn', 'true');
+                    sessionStorage.setItem('username', username);
+
+                    // Show success notification
+                    showNotification('✅ Login berhasil! Mengalihkan...', 'success');
+
+                    // Redirect to dashboard
+                    setTimeout(() => {
+                        window.location.href = 'dashboard-glass.html';
+                    }, 1000);
                 } else {
-                    localStorage.removeItem('rememberedUser');
+                    showNotification('❌ ' + (data.message || 'Username atau password salah!'), 'error');
+                    shakeForm();
                 }
-
-                // Save session
-                sessionStorage.setItem('isLoggedIn', 'true');
-                sessionStorage.setItem('username', username);
-
-                // Show success notification
-                showNotification('✅ Login berhasil! Mengalihkan...', 'success');
-
-                // Redirect to dashboard
-                setTimeout(() => {
-                    window.location.href = 'dashboard-glass.html';
-                }, 1000);
-            } else {
-                showNotification('❌ Username atau password salah!', 'error');
-
-                // Shake animation
-                const form = document.getElementById('loginForm');
-                form.style.animation = 'shake 0.5s';
-                setTimeout(() => {
-                    form.style.animation = '';
-                }, 500);
+            } catch (error) {
+                console.error('Login error:', error);
+                showNotification('❌ Gagal terhubung ke server!', 'error');
+                shakeForm();
+            } finally {
+                // Re-enable button
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span>🚀</span><span>Login ke Dashboard</span>';
             }
         });
+
+        // Shake animation function
+        function shakeForm() {
+            const form = document.getElementById('loginForm');
+            form.style.animation = 'shake 0.5s';
+            setTimeout(() => {
+                form.style.animation = '';
+            }, 500);
+        }
 
         // Show Notification
         function showNotification(message, type) {
@@ -357,17 +379,6 @@
                 document.getElementById('username').focus();
             }
 
-            // Show credentials hint
-            setTimeout(() => {
-                const hint = document.createElement('div');
-                hint.innerHTML = `
-                    <div style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(102, 126, 234, 0.9); backdrop-filter: blur(10px); color: white; padding: 12px 20px; border-radius: 8px; box-shadow: var(--shadow-glass-lg); z-index: 9999; animation: fadeIn 0.5s; font-size: var(--text-sm); text-align: center;">
-                        💡 <strong>Demo:</strong> username: admin | password: admin123
-                    </div>
-                `;
-                document.body.appendChild(hint);
-                setTimeout(() => hint.remove(), 5000);
-            }, 1000);
         });
 
         // Animations
