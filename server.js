@@ -1,3 +1,6 @@
+// Load environment variables from .env file
+require('dotenv').config();
+
 const express = require('express');
 const path = require('path');
 const http = require('http');
@@ -252,11 +255,11 @@ const upload = multer({
     }
 });
 
-// --- KONFIGURASI OWNCLOUD ---
+// --- KONFIGURASI OWNCLOUD (dari environment variables) ---
 const ownCloudConfig = {
-    url: 'http://localhost:8080/remote.php/dav/files/admin/',
-    username: 'admin',
-    password: 'admin'
+    url: process.env.OWNCLOUD_URL || 'http://localhost:8080/remote.php/dav/files/admin/',
+    username: process.env.OWNCLOUD_USERNAME || 'admin',
+    password: process.env.OWNCLOUD_PASSWORD || 'admin'
 };
 
 app.use(express.json());

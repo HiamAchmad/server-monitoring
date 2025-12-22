@@ -196,8 +196,17 @@ jobs:
             echo "📦 Installing dependencies..."
             npm install --production
 
+            echo "🔄 Setting up environment variables..."
+            # Create .env file for OwnCloud (optional - from GitHub Secrets)
+            cat > /var/www/server-monitoring/.env << 'ENVEOF'
+            OWNCLOUD_URL=${{ secrets.OWNCLOUD_URL }}
+            OWNCLOUD_USERNAME=${{ secrets.OWNCLOUD_USERNAME }}
+            OWNCLOUD_PASSWORD=${{ secrets.OWNCLOUD_PASSWORD }}
+            ENVEOF
+
             echo "🔄 Restarting Node.js server..."
-            pm2 restart absensi 2>/dev/null || pm2 start server.js --name "absensi"
+            pm2 delete absensi 2>/dev/null || true
+            cd /var/www/server-monitoring && pm2 start ecosystem.config.js 2>/dev/null || pm2 start server.js --name "absensi"
             pm2 save
 
             echo "🔄 Updating NGINX configuration..."

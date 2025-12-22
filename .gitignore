@@ -3,3 +3,11 @@
 .vscode/c_cpp_properties.json
 .vscode/launch.json
 .vscode/ipch
+
+# Environment variables (jangan commit!)
+.env
+.env.local
+.env.production
+
+# Node modules
+node_modules/
