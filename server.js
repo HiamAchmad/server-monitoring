@@ -2122,7 +2122,7 @@ app.post('/api/payroll/generate', async (req, res) => {
                     COUNT(CASE WHEN keterangan = 'Terlambat' THEN 1 END) as terlambat,
                     COUNT(CASE WHEN keterangan = 'Izin' THEN 1 END) as izin,
                     COUNT(CASE WHEN keterangan = 'Sakit' THEN 1 END) as sakit,
-                    COALESCE(SUM(CASE WHEN status_lembur = 'Ya' AND durasi_lembur IS NOT NULL THEN durasi_lembur / 60.0 ELSE 0 END), 0) as jam_lembur
+                    COALESCE(SUM(CASE WHEN status_lembur = 'Ya' AND durasi_lembur IS NOT NULL THEN EXTRACT(EPOCH FROM durasi_lembur) / 3600.0 ELSE 0 END), 0) as jam_lembur
                 FROM absensi
                 WHERE pegawai_id = $1
                 AND EXTRACT(MONTH FROM "timestamp") = $2
