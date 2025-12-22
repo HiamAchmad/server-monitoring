@@ -1439,12 +1439,18 @@ app.get('/stats/employees', (req, res) => {
             p.nip,
             p.posisi,
             p.fingerprint_id,
+            p.status,
+            p.email,
+            p.no_telepon,
+            p.divisi,
+            p.tanggal_bergabung,
+            p.foto,
             COUNT(a.id_absensi) as total_absensi,
             MAX(a.timestamp) as absensi_terakhir
         FROM pegawai p
         LEFT JOIN absensi a ON p.id_pegawai = a.pegawai_id
-        GROUP BY p.id_pegawai, p.nama_pegawai, p.nip, p.posisi, p.fingerprint_id
-        ORDER BY total_absensi DESC, p.nama_pegawai ASC
+        GROUP BY p.id_pegawai, p.nama_pegawai, p.nip, p.posisi, p.fingerprint_id, p.status, p.email, p.no_telepon, p.divisi, p.tanggal_bergabung, p.foto
+        ORDER BY p.nama_pegawai ASC
     `;
 
     db.query(query, (err, result) => {
