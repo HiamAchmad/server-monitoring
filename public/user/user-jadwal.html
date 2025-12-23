@@ -286,6 +286,22 @@
             font-weight: var(--weight-semibold);
         }
 
+        /* SVG Icon Styles */
+        .nav-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-icon svg {
+            stroke: var(--text-tertiary);
+            transition: stroke 0.2s ease;
+        }
+
+        .nav-item-user.active .nav-icon svg {
+            stroke: var(--primary-start);
+        }
+
         /* Loading */
         .loading-spinner {
             display: flex;
@@ -322,7 +338,15 @@
         <div class="header-left">
             <div class="back-btn" onclick="window.location.href='/user/user-dashboard.html'">←</div>
             <div class="header-title">
-                <h3>📅 Jadwal Kerja</h3>
+                <h3 style="display: flex; align-items: center; gap: 8px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary-start)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                    Jadwal Kerja
+                </h3>
             </div>
         </div>
     </div>
@@ -350,27 +374,56 @@
     <!-- Bottom Navigation -->
     <div class="bottom-nav-user">
         <a href="/user/user-dashboard.html" class="nav-item-user">
-            <div class="nav-icon">🏠</div>
+            <div class="nav-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+            </div>
             <div class="nav-label">Beranda</div>
         </a>
 
         <a href="/user/user-riwayat.html" class="nav-item-user">
-            <div class="nav-icon">📜</div>
+            <div class="nav-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                </svg>
+            </div>
             <div class="nav-label">Absensi</div>
         </a>
 
         <a href="/user/user-izin.html" class="nav-item-user">
-            <div class="nav-icon">📋</div>
+            <div class="nav-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                    <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                    <line x1="9" y1="12" x2="15" y2="12"></line>
+                    <line x1="9" y1="16" x2="15" y2="16"></line>
+                </svg>
+            </div>
             <div class="nav-label">Izin</div>
         </a>
 
         <a href="/user/user-gaji.html" class="nav-item-user">
-            <div class="nav-icon">💰</div>
+            <div class="nav-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="1" x2="12" y2="23"></line>
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                </svg>
+            </div>
             <div class="nav-label">Gaji</div>
         </a>
 
         <a href="/user/user-profil.html" class="nav-item-user">
-            <div class="nav-icon">👤</div>
+            <div class="nav-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+            </div>
             <div class="nav-label">Profil</div>
         </a>
     </div>
@@ -425,7 +478,19 @@
                 if (isWeekend) {
                     scheduleContent = `
                         <div class="schedule-time">
-                            <div class="schedule-time-icon">🏖️</div>
+                            <div class="schedule-time-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="5"></circle>
+                                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                                </svg>
+                            </div>
                             <div class="schedule-time-text">Libur</div>
                         </div>
                     `;
@@ -434,7 +499,12 @@
                 } else {
                     scheduleContent = `
                         <div class="schedule-time">
-                            <div class="schedule-time-icon">🕐</div>
+                            <div class="schedule-time-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary-start)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <polyline points="12 6 12 12 16 14"></polyline>
+                                </svg>
+                            </div>
                             <div class="schedule-time-text">08:00 - 17:00</div>
                         </div>
                     `;
@@ -444,7 +514,7 @@
 
                 if (isToday) {
                     badgeClass = 'badge-today';
-                    badgeText = '✨ Hari Ini';
+                    badgeText = 'Hari Ini';
                 }
 
                 card.innerHTML = `
