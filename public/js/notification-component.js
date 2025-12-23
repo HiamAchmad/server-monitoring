@@ -381,6 +381,11 @@ class NotificationComponent {
         if (dropdown) {
             this.isOpen = !this.isOpen;
             dropdown.classList.toggle('show', this.isOpen);
+
+            // Otomatis tandai semua sebagai dibaca saat dropdown dibuka
+            if (this.isOpen && this.unreadCount > 0) {
+                this.markAllRead();
+            }
         }
     }
 
