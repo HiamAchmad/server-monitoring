@@ -191,12 +191,6 @@ class NotificationComponent {
                 gap: 12px;
                 padding: 14px 20px;
                 border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-                cursor: pointer;
-                transition: all 0.2s ease;
-            }
-
-            .notif-item:hover {
-                background: rgba(255, 255, 255, 0.05);
             }
 
             .notif-item.unread {
@@ -325,8 +319,7 @@ class NotificationComponent {
         }
 
         list.innerHTML = this.notifications.map(notif => `
-            <div class="notif-item ${notif.is_read ? '' : 'unread'}"
-                 onclick="window.notificationComponent.handleClick(${notif.id_notifikasi}, '${notif.link || ''}')">
+            <div class="notif-item ${notif.is_read ? '' : 'unread'}">
                 <div class="notif-icon ${notif.tipe}">
                     ${this.getIcon(notif.tipe)}
                 </div>
