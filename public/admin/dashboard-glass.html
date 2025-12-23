@@ -260,12 +260,11 @@
                                 <th>Fingerprint</th>
                                 <th>Total Absensi</th>
                                 <th>Terakhir Absen</th>
-                                <th>Aksi</th>
                             </tr>
                         </thead>
                         <tbody id="tabel-statistik-karyawan">
                             <tr>
-                                <td colspan="8" style="text-align: center; padding: var(--space-8);">
+                                <td colspan="7" style="text-align: center; padding: var(--space-8);">
                                     <div style="display: inline-block; width: 40px; height: 40px; border: 3px solid rgba(102, 126, 234, 0.3); border-top: 3px solid var(--primary-start); border-radius: 50%; animation: spin 1s linear infinite;"></div>
                                     <p style="margin-top: var(--space-3); color: var(--text-secondary);">Memuat data...</p>
                                 </td>
@@ -857,36 +856,16 @@
                                     <span class="badge ${badgeClass}">${karyawan.total_absensi || 0}</span>
                                 </td>
                                 <td style="text-align: center; font-size: var(--text-sm);">${absensiTerakhir}</td>
-                                <td style="text-align: center;">
-                                    <button class="btn btn-sm btn-enroll"
-                                            data-pegawai-id="${karyawan.id_pegawai}"
-                                            data-pegawai-nama="${karyawan.nama_pegawai}"
-                                            data-pegawai-nip="${karyawan.nip}"
-                                            style="background: var(--gradient-primary); padding: 6px 12px; font-size: 12px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; cursor: pointer;">
-                                        <span>👆</span>
-                                        <span>${karyawan.fingerprint_id ? 'Update' : 'Enroll'}</span>
-                                    </button>
-                                </td>
                             `;
                             row.classList.add('fade-in');
                             tabelKaryawan.appendChild(row);
                         });
-
-                        // Add event listeners to enroll buttons
-                        document.querySelectorAll('.btn-enroll').forEach(btn => {
-                            btn.addEventListener('click', function() {
-                                const pegawaiId = this.getAttribute('data-pegawai-id');
-                                const nama = this.getAttribute('data-pegawai-nama');
-                                const nip = this.getAttribute('data-pegawai-nip');
-                                window.enrollFingerprint(pegawaiId, nama, nip);
-                            });
-                        });
                     } else {
-                        tabelKaryawan.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: var(--space-8); color: var(--text-secondary);">Tidak ada data karyawan</td></tr>';
+                        tabelKaryawan.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: var(--space-8); color: var(--text-secondary);">Tidak ada data karyawan</td></tr>';
                     }
                 } catch (error) {
                     console.error('Error memuat statistik karyawan:', error);
-                    tabelKaryawan.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: var(--space-8); color: var(--error);">❌ Error memuat data</td></tr>';
+                    tabelKaryawan.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: var(--space-8); color: var(--error);">❌ Error memuat data</td></tr>';
                 }
             }
 
