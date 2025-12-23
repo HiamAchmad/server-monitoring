@@ -704,9 +704,11 @@
         function displaySlip(data) {
             const container = document.getElementById('slipContainer');
 
-            let statusClass = 'status-draft';
-            if (data.status === 'Diproses') statusClass = 'status-diproses';
-            if (data.status === 'Selesai') statusClass = 'status-selesai';
+            // Default status to 'Selesai' if payroll data exists
+            const status = data.status || 'Selesai';
+            let statusClass = 'status-selesai';
+            if (status === 'Draft') statusClass = 'status-draft';
+            if (status === 'Diproses') statusClass = 'status-diproses';
 
             const pendapatan = (parseFloat(data.gaji_pokok) || 0) +
                               (parseFloat(data.uang_lembur) || 0) +
@@ -740,7 +742,7 @@
                             </div>
                             <div class="slip-row">
                                 <span class="slip-row-label">Status</span>
-                                <span class="status-badge ${statusClass}">${data.status}</span>
+                                <span class="status-badge ${statusClass}">${status}</span>
                             </div>
                         </div>
 
@@ -861,9 +863,11 @@
             });
 
             sorted.slice(0, 6).forEach(item => {
-                let statusClass = 'status-draft';
-                if (item.status === 'Diproses') statusClass = 'status-diproses';
-                if (item.status === 'Selesai') statusClass = 'status-selesai';
+                // Default status to 'Selesai' if payroll data exists
+                const itemStatus = item.status || 'Selesai';
+                let statusClass = 'status-selesai';
+                if (itemStatus === 'Draft') statusClass = 'status-draft';
+                if (itemStatus === 'Diproses') statusClass = 'status-diproses';
 
                 const div = document.createElement('div');
                 div.className = 'history-item';
@@ -877,7 +881,7 @@
                 div.innerHTML = `
                     <div class="history-info">
                         <span class="history-month">${monthNames[item.bulan - 1]} ${item.tahun}</span>
-                        <span class="history-status status-badge ${statusClass}">${item.status}</span>
+                        <span class="history-status status-badge ${statusClass}">${itemStatus}</span>
                     </div>
                     <span class="history-amount">${formatCurrency(item.total_gaji)}</span>
                 `;
