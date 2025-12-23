@@ -50,6 +50,40 @@
                 height: 250px;
             }
         }
+
+        /* SVG Icon Styles for Sidebar */
+        .sidebar-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar-icon svg {
+            stroke: var(--text-secondary);
+            transition: stroke 0.2s ease;
+        }
+
+        .sidebar-item:hover .sidebar-icon svg,
+        .sidebar-item.active .sidebar-icon svg {
+            stroke: var(--primary-start);
+        }
+
+        /* SVG Icon Styles for Bottom Nav */
+        .nav-item-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-item-icon svg {
+            stroke: var(--text-tertiary);
+            transition: stroke 0.2s ease;
+        }
+
+        .nav-item:hover .nav-item-icon svg,
+        .nav-item.active .nav-item-icon svg {
+            stroke: var(--primary-start);
+        }
     </style>
 </head>
 <body>
@@ -75,24 +109,96 @@
 
     <!-- Sidebar (Desktop) -->
     <aside class="sidebar">
-        <div class="sidebar-item active"><span class="sidebar-icon">📊</span><span>Dashboard</span></div>
-        <div class="sidebar-item" onclick="location.href='riwayat-glass.html'"><span class="sidebar-icon">📜</span><span>Riwayat</span></div>
-        <div class="sidebar-item" onclick="location.href='manajemen-karyawan-glass.html'"><span class="sidebar-icon">👥</span><span>Karyawan</span></div>
-        <div class="sidebar-item" onclick="location.href='cuti-glass.html'"><span class="sidebar-icon">📋</span><span>Cuti/Izin</span></div>
-        <div class="sidebar-item" onclick="location.href='jadwal-shift-glass.html'"><span class="sidebar-icon">📅</span><span>Jadwal</span></div>
-        <div class="sidebar-item" onclick="location.href='payroll-glass.html'"><span class="sidebar-icon">💰</span>
+        <div class="sidebar-item active">
+            <span class="sidebar-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect>
+                    <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
+            </span>
+            <span>Dashboard</span>
+        </div>
+        <div class="sidebar-item" onclick="location.href='riwayat-glass.html'">
+            <span class="sidebar-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+            </span>
+            <span>Riwayat</span>
+        </div>
+        <div class="sidebar-item" onclick="location.href='manajemen-karyawan-glass.html'">
+            <span class="sidebar-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+            </span>
+            <span>Karyawan</span>
+        </div>
+        <div class="sidebar-item" onclick="location.href='cuti-glass.html'">
+            <span class="sidebar-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+            </span>
+            <span>Cuti/Izin</span>
+        </div>
+        <div class="sidebar-item" onclick="location.href='jadwal-shift-glass.html'">
+            <span class="sidebar-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+            </span>
+            <span>Jadwal</span>
+        </div>
+        <div class="sidebar-item" onclick="location.href='payroll-glass.html'">
+            <span class="sidebar-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="1" x2="12" y2="23"></line>
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                </svg>
+            </span>
             <span>Payroll</span>
         </div>
         <div class="sidebar-item" onclick="window.location.href='laporan-glass.html'">
-            <span class="sidebar-icon">📈</span>
+            <span class="sidebar-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="20" x2="18" y2="10"></line>
+                    <line x1="12" y1="20" x2="12" y2="4"></line>
+                    <line x1="6" y1="20" x2="6" y2="14"></line>
+                </svg>
+            </span>
             <span>Laporan</span>
         </div>
         <div class="sidebar-item" onclick="window.location.href='settings-glass.html'">
-            <span class="sidebar-icon">⚙️</span>
+            <span class="sidebar-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+            </span>
             <span>Settings</span>
         </div>
         <div class="sidebar-item" onclick="logout()">
-            <span class="sidebar-icon">🚪</span>
+            <span class="sidebar-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+            </span>
             <span>Logout</span>
         </div>
     </aside>
@@ -109,7 +215,14 @@
             <!-- Stats Cards -->
             <div class="stats-grid fade-in-up" style="animation-delay: 0.1s;">
                 <div class="stat-card">
-                    <div class="stat-icon">👥</div>
+                    <div class="stat-icon" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.2)); padding: 12px; border-radius: 12px; display: inline-flex;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                    </div>
                     <div class="stat-value" id="absensi-data">-/-</div>
                     <div class="stat-label">Absensi Hari Ini</div>
                     <div class="stat-trend up" id="trend-absensi">
@@ -119,19 +232,38 @@
                 </div>
 
                 <div class="stat-card">
-                    <div class="stat-icon">☁️</div>
+                    <div class="stat-icon" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.2)); padding: 12px; border-radius: 12px; display: inline-flex;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path>
+                        </svg>
+                    </div>
                     <div class="stat-value" id="status-cloud">Checking...</div>
                     <div class="stat-label">Status Cloud</div>
                 </div>
 
                 <div class="stat-card">
-                    <div class="stat-icon">📡</div>
+                    <div class="stat-icon" style="background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(139, 92, 246, 0.2)); padding: 12px; border-radius: 12px; display: inline-flex;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5.5 16.5a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"></path>
+                            <path d="M18.5 7.5a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"></path>
+                            <path d="M18.5 21.5a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"></path>
+                            <path d="M5.5 12.5V6a2 2 0 0 1 2-2h5"></path>
+                            <path d="M16.5 5.5h-4"></path>
+                            <path d="M7.5 14.5L16.5 18"></path>
+                        </svg>
+                    </div>
                     <div class="stat-value" id="status-iot">Checking...</div>
                     <div class="stat-label">Status IoT Device</div>
                 </div>
 
                 <div class="stat-card">
-                    <div class="stat-icon">📈</div>
+                    <div class="stat-icon" style="background: linear-gradient(135deg, rgba(244, 63, 94, 0.2), rgba(225, 29, 72, 0.2)); padding: 12px; border-radius: 12px; display: inline-flex;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="20" x2="18" y2="10"></line>
+                            <line x1="12" y1="20" x2="12" y2="4"></line>
+                            <line x1="6" y1="20" x2="6" y2="14"></line>
+                        </svg>
+                    </div>
                     <div class="stat-value" id="total-karyawan">0</div>
                     <div class="stat-label">Total Karyawan</div>
                 </div>
@@ -139,7 +271,14 @@
 
             <!-- Chart Section -->
             <div class="glass-card-no-hover fade-in-up" style="animation-delay: 0.2s; margin-bottom: var(--space-8);">
-                <h3 style="margin-bottom: var(--space-6);">📊 Grafik Kehadiran Mingguan</h3>
+                <h3 style="margin-bottom: var(--space-6); display: flex; align-items: center; gap: 10px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#667eea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="20" x2="18" y2="10"></line>
+                        <line x1="12" y1="20" x2="12" y2="4"></line>
+                        <line x1="6" y1="20" x2="6" y2="14"></line>
+                    </svg>
+                    Grafik Kehadiran Mingguan
+                </h3>
                 <div class="chart-container">
                     <canvas id="attendanceChart"></canvas>
                 </div>
@@ -148,7 +287,16 @@
             <!-- Pengajuan Cuti/Izin Terbaru -->
             <div class="glass-card-no-hover fade-in-up" style="animation-delay: 0.22s; margin-bottom: var(--space-8);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4); flex-wrap: wrap; gap: var(--space-3);">
-                    <h3 style="margin: 0;">📋 Pengajuan Cuti/Izin Menunggu Approval</h3>
+                    <h3 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                        Pengajuan Cuti/Izin Menunggu Approval
+                    </h3>
                     <a href="/admin/manajemen-karyawan-glass.html" class="btn-glass" style="font-size: var(--text-sm);">Lihat Semua →</a>
                 </div>
                 <div id="cutiNotifications" style="display: flex; flex-direction: column; gap: var(--space-3);">
@@ -158,7 +306,13 @@
 
             <!-- Manual Attendance Section -->
             <div class="glass-card-no-hover fade-in-up" style="animation-delay: 0.25s; margin-bottom: var(--space-8);">
-                <h3 style="margin-bottom: var(--space-6);">✋ Absensi Manual</h3>
+                <h3 style="margin-bottom: var(--space-6); display: flex; align-items: center; gap: 10px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                        <path d="M9 12l2 2 4-4"></path>
+                    </svg>
+                    Absensi Manual
+                </h3>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-6);">
                     <!-- Absen Masuk Form -->
@@ -243,9 +397,19 @@
             <!-- Employee Stats Table -->
             <div class="glass-card-no-hover fade-in-up" style="animation-delay: 0.3s;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-6); flex-wrap: wrap; gap: var(--space-4);">
-                    <h3 style="margin: 0;">👤 Total Absensi Per Karyawan</h3>
-                    <button class="btn-glass" onclick="loadEmployeeStats()">
-                        🔄 Refresh
+                    <h3 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                        Total Absensi Per Karyawan
+                    </h3>
+                    <button class="btn-glass" onclick="loadEmployeeStats()" style="display: flex; align-items: center; gap: 8px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="23 4 23 10 17 10"></polyline>
+                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                        </svg>
+                        Refresh
                     </button>
                 </div>
 
@@ -279,19 +443,44 @@
     <!-- Bottom Navigation (Mobile) -->
     <div class="bottom-nav">
         <div class="nav-item active">
-            <span class="nav-item-icon">📊</span>
+            <span class="nav-item-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect>
+                    <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
+            </span>
             <span>Dashboard</span>
         </div>
         <div class="nav-item" onclick="window.location.href='riwayat-glass.html'">
-            <span class="nav-item-icon">📜</span>
+            <span class="nav-item-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+            </span>
             <span>Riwayat</span>
         </div>
         <div class="nav-item" onclick="window.location.href='manajemen-karyawan-glass.html'">
-            <span class="nav-item-icon">👥</span>
+            <span class="nav-item-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+            </span>
             <span>Karyawan</span>
         </div>
         <div class="nav-item" onclick="logout()">
-            <span class="nav-item-icon">🚪</span>
+            <span class="nav-item-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+            </span>
             <span>Logout</span>
         </div>
     </div>
