@@ -1,4 +1,4 @@
-name: Deploy to Server
+name: Deploy to Server (DevSecOps)
 
 on:
   push:
@@ -7,7 +7,35 @@ on:
       - master
 
 jobs:
+  # =========================
+  # SECURITY GATE
+  # =========================
+  security:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 🔐 SAST
+      - name: SAST - Semgrep
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: auto
+
+      # 🔐 Dependency Scan
+      - name: Dependency Scan - Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          severity: HIGH,CRITICAL
+          exit-code: 1
+
+  # =========================
+  # DEPLOYMENT
+  # =========================
   deploy:
+    needs: security   # ⬅️ SECURITY GATE
     runs-on: ubuntu-latest
 
     steps:
@@ -26,13 +54,9 @@ jobs:
             set -e
             export DEBIAN_FRONTEND=noninteractive
 
-            # Create directory if not exists
             mkdir -p /var/www/server-monitoring
-
-            # Navigate to project directory
             cd /var/www/server-monitoring
 
-            # Clone if not exists, else pull
             if [ ! -d ".git" ]; then
               git clone https://github.com/${{ github.repository }}.git .
             else
@@ -40,185 +64,24 @@ jobs:
               git reset --hard origin/main || git reset --hard origin/master
             fi
 
-            # Set permissions
             chmod -R 755 /var/www/server-monitoring
-
-            echo "🐘 Checking PostgreSQL..."
-            # Install PostgreSQL if not installed
-            if ! command -v psql &> /dev/null; then
-              echo "Installing PostgreSQL..."
-              apt-get update -qq
-              apt-get install -y -qq postgresql postgresql-contrib
-            fi
-
-            # Start PostgreSQL if not running
-            systemctl start postgresql 2>/dev/null || true
-            systemctl enable postgresql 2>/dev/null || true
-
-            # Wait for PostgreSQL to be ready
-            sleep 3
-
-            # Setup database user and database
-            echo "Setting up database..."
-            sudo -u postgres psql -tc "SELECT 1 FROM pg_user WHERE usename = 'absensi_user'" | grep -q 1 || \
-              sudo -u postgres psql -c "CREATE USER absensi_user WITH PASSWORD 'absensi_password';"
-
-            sudo -u postgres psql -tc "SELECT 1 FROM pg_database WHERE datname = 'db_absensi'" | grep -q 1 || \
-              sudo -u postgres psql -c "CREATE DATABASE db_absensi OWNER absensi_user;"
-
-            sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE db_absensi TO absensi_user;" 2>/dev/null || true
-            sudo -u postgres psql -d db_absensi -c "GRANT ALL ON SCHEMA public TO absensi_user;" 2>/dev/null || true
-            sudo -u postgres psql -d db_absensi -c "GRANT USAGE, CREATE ON SCHEMA public TO absensi_user;" 2>/dev/null || true
-
-            # Import schema if tables don't exist
-            if ! sudo -u postgres psql -d db_absensi -tc "SELECT 1 FROM pegawai LIMIT 1" 2>/dev/null | grep -q 1; then
-              echo "Importing database schema..."
-              sudo -u postgres psql -d db_absensi -f /var/www/server-monitoring/sql/database_postgresql.sql 2>/dev/null || true
-            fi
-
-            # Run database migrations (add missing columns/tables)
-            echo "Running database migrations..."
-
-            # Add missing columns to pegawai table
-            sudo -u postgres psql -d db_absensi -c "ALTER TABLE pegawai ADD COLUMN IF NOT EXISTS fingerprint_id INT;" 2>/dev/null || true
-            sudo -u postgres psql -d db_absensi -c "ALTER TABLE pegawai ADD COLUMN IF NOT EXISTS divisi VARCHAR(50);" 2>/dev/null || true
-            sudo -u postgres psql -d db_absensi -c "ALTER TABLE pegawai ADD COLUMN IF NOT EXISTS gaji_pokok DECIMAL(12,2) DEFAULT 0;" 2>/dev/null || true
-
-            # Create notifikasi table if not exists
-            sudo -u postgres psql -d db_absensi -c "
-              CREATE TABLE IF NOT EXISTS notifikasi (
-                id_notifikasi SERIAL PRIMARY KEY,
-                pegawai_id INT REFERENCES pegawai(id_pegawai) ON DELETE CASCADE,
-                judul VARCHAR(100) NOT NULL,
-                pesan TEXT NOT NULL,
-                tipe VARCHAR(50) DEFAULT 'info',
-                kategori VARCHAR(50) DEFAULT 'sistem',
-                is_read BOOLEAN DEFAULT false,
-                is_admin BOOLEAN DEFAULT false,
-                link VARCHAR(255),
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-              );
-            " 2>/dev/null || true
-
-            # Create shift table if not exists
-            sudo -u postgres psql -d db_absensi -c "
-              CREATE TABLE IF NOT EXISTS shift (
-                id_shift SERIAL PRIMARY KEY,
-                nama_shift VARCHAR(50) NOT NULL,
-                jam_masuk TIME NOT NULL,
-                jam_keluar TIME NOT NULL,
-                toleransi_terlambat INT DEFAULT 15,
-                jam_lembur_mulai TIME,
-                is_active BOOLEAN DEFAULT true,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-              );
-            " 2>/dev/null || true
-
-            # Create pengajuan_cuti table if not exists
-            sudo -u postgres psql -d db_absensi -c "
-              CREATE TABLE IF NOT EXISTS pengajuan_cuti (
-                id_pengajuan SERIAL PRIMARY KEY,
-                pegawai_id INT REFERENCES pegawai(id_pegawai) ON DELETE CASCADE,
-                jenis VARCHAR(50) NOT NULL,
-                tanggal_mulai DATE NOT NULL,
-                tanggal_selesai DATE NOT NULL,
-                jumlah_hari INT,
-                alasan TEXT,
-                status VARCHAR(20) DEFAULT 'Menunggu',
-                disetujui_oleh INT REFERENCES pegawai(id_pegawai),
-                tanggal_disetujui TIMESTAMP,
-                komentar_approval TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-              );
-            " 2>/dev/null || true
-
-            # Create hari_libur table if not exists
-            sudo -u postgres psql -d db_absensi -c "
-              CREATE TABLE IF NOT EXISTS hari_libur (
-                id_libur SERIAL PRIMARY KEY,
-                tanggal DATE UNIQUE NOT NULL,
-                nama_libur VARCHAR(100) NOT NULL,
-                jenis VARCHAR(50) DEFAULT 'Nasional',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-              );
-            " 2>/dev/null || true
-
-            # Create payroll table if not exists
-            sudo -u postgres psql -d db_absensi -c "
-              CREATE TABLE IF NOT EXISTS payroll (
-                id_payroll SERIAL PRIMARY KEY,
-                pegawai_id INT REFERENCES pegawai(id_pegawai) ON DELETE CASCADE,
-                bulan INT NOT NULL,
-                tahun INT NOT NULL,
-                total_hadir INT DEFAULT 0,
-                total_terlambat INT DEFAULT 0,
-                total_izin INT DEFAULT 0,
-                total_sakit INT DEFAULT 0,
-                total_jam_lembur DECIMAL(10,2) DEFAULT 0,
-                gaji_pokok DECIMAL(12,2) DEFAULT 0,
-                uang_lembur DECIMAL(12,2) DEFAULT 0,
-                tunjangan DECIMAL(12,2) DEFAULT 0,
-                potongan_absen DECIMAL(12,2) DEFAULT 0,
-                total_gaji DECIMAL(12,2) DEFAULT 0,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE(pegawai_id, bulan, tahun)
-              );
-            " 2>/dev/null || true
-
-            # Create setting_payroll table if not exists
-            sudo -u postgres psql -d db_absensi -c "
-              CREATE TABLE IF NOT EXISTS setting_payroll (
-                id_setting SERIAL PRIMARY KEY,
-                nama_setting VARCHAR(50) UNIQUE NOT NULL,
-                nilai DECIMAL(12,2) DEFAULT 0,
-                keterangan TEXT,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-              );
-            " 2>/dev/null || true
-
-            # Insert default payroll settings
-            sudo -u postgres psql -d db_absensi -c "
-              INSERT INTO setting_payroll (nama_setting, nilai, keterangan) VALUES
-              ('gaji_per_hari', 150000, 'Gaji per hari kerja'),
-              ('tarif_lembur', 25000, 'Tarif per jam lembur'),
-              ('potongan_alpha', 50000, 'Potongan per hari tidak masuk'),
-              ('potongan_terlambat', 10000, 'Potongan per keterlambatan')
-              ON CONFLICT (nama_setting) DO NOTHING;
-            " 2>/dev/null || true
-
-            # Grant permissions on all tables and sequences
-            echo "Granting table permissions..."
-            sudo -u postgres psql -d db_absensi -c "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO absensi_user;" 2>/dev/null || true
-            sudo -u postgres psql -d db_absensi -c "GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO absensi_user;" 2>/dev/null || true
-            sudo -u postgres psql -d db_absensi -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO absensi_user;" 2>/dev/null || true
-            sudo -u postgres psql -d db_absensi -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO absensi_user;" 2>/dev/null || true
 
             echo "📦 Installing dependencies..."
             npm install --production
 
-            echo "🔄 Setting up environment variables..."
-            # Create .env file for OwnCloud (optional - from GitHub Secrets)
-            cat > /var/www/server-monitoring/.env << 'ENVEOF'
-            OWNCLOUD_URL=${{ secrets.OWNCLOUD_URL }}
-            OWNCLOUD_USERNAME=${{ secrets.OWNCLOUD_USERNAME }}
-            OWNCLOUD_PASSWORD=${{ secrets.OWNCLOUD_PASSWORD }}
-            ENVEOF
-
             echo "🔄 Restarting Node.js server..."
             pm2 delete absensi 2>/dev/null || true
-            cd /var/www/server-monitoring && pm2 start ecosystem.config.js 2>/dev/null || pm2 start server.js --name "absensi"
+            pm2 start ecosystem.config.js 2>/dev/null || pm2 start server.js --name "absensi"
             pm2 save
 
-            echo "🔄 Updating NGINX configuration..."
-            cp nginx/absensi.conf /etc/nginx/sites-available/mitrjaya.my.id
-            ln -sf /etc/nginx/sites-available/mitrjaya.my.id /etc/nginx/sites-enabled/
+            echo "🔄 Reloading NGINX..."
             nginx -t && systemctl reload nginx
 
             echo "✅ Deployment completed!"
 
       - name: Notify Success
         if: success()
-        run: echo "🎉 Deployment successful to mitrjaya.my.id!"
+        run: echo "🎉 Deployment successful!"
 
       - name: Notify Failure
         if: failure()
