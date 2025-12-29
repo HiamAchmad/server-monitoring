@@ -1,13 +1,20 @@
 // Service Worker for Sistem Absensi PWA
-const CACHE_NAME = 'absensi-pwa-v8.0.0';
-const RUNTIME_CACHE = 'absensi-runtime-v8.0.0';
+// Update version to force cache refresh
+const CACHE_NAME = 'absensi-pwa-v9.0.0';
+const RUNTIME_CACHE = 'absensi-runtime-v9.0.0';
 
 // Files to cache on install
 const STATIC_CACHE_URLS = [
   '/',
   '/user/user-login.html',
   '/user/user-dashboard.html',
+  '/user/user-riwayat.html',
+  '/user/user-gaji.html',
+  '/user/user-izin.html',
+  '/user/user-profil.html',
+  '/user/user-jadwal.html',
   '/public/css/glass-style.css',
+  '/public/js/notification-component.js',
   '/manifest.json',
   '/public/icons/icon-192x192.png',
   '/public/icons/icon-512x512.png'
@@ -103,7 +110,33 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Static assets - Cache First strategy
+  // HTML pages - Network First strategy (always get latest)
+  if (request.destination === 'document' || request.url.endsWith('.html')) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response && response.status === 200 && request.method === 'GET') {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, responseClone);
+            });
+          }
+          return response;
+        })
+        .catch(() => {
+          // Fallback to cache if offline
+          return caches.match(request).then((cachedResponse) => {
+            if (cachedResponse) {
+              return cachedResponse;
+            }
+            return caches.match('/user/user-login.html');
+          });
+        })
+    );
+    return;
+  }
+
+  // Static assets (CSS, JS, images) - Cache First strategy
   event.respondWith(
     caches.match(request)
       .then((cachedResponse) => {
@@ -119,7 +152,7 @@ self.addEventListener('fetch', (event) => {
               return response;
             }
 
-            // Only cache GET requests (Cache API doesn't support POST/PUT/DELETE)
+            // Only cache GET requests
             if (request.method === 'GET') {
               const responseClone = response.clone();
               caches.open(RUNTIME_CACHE).then((cache) => {
@@ -130,10 +163,6 @@ self.addEventListener('fetch', (event) => {
             return response;
           })
           .catch(() => {
-            // Return offline fallback page
-            if (request.destination === 'document') {
-              return caches.match('/user/user-login.html');
-            }
             return new Response('Offline - Resource not available', {
               status: 503,
               statusText: 'Service Unavailable'
