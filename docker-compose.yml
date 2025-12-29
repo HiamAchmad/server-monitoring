@@ -1,6 +1,29 @@
 version: "3.8"
 
 services:
+  app:
+    build: .
+    container_name: server_monitoring_app
+    restart: always
+    ports:
+      - "3000:3000"
+      - "1883:1883"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=absensi_user
+      - DB_PASSWORD=absensi_password
+      - DB_NAME=db_absensi
+      # Add other environment variables from .env here if needed
+      # - OWNCLOUD_URL=...
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./uploads:/app/uploads
+    networks:
+      - absensi_net
+
   postgres:
     image: postgres:15-alpine
     container_name: postgres_absensi
@@ -25,7 +48,13 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - absensi_net
 
 volumes:
   postgres_data:
     driver: local
+
+networks:
+  absensi_net:
+    driver: bridge

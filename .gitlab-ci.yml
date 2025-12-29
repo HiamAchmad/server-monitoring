@@ -1,0 +1,62 @@
+image: docker:24.0.5
+
+services:
+  - docker:24.0.5-dind
+
+variables:
+  DOCKER_TLS_CERTDIR: "/certs"
+
+stages:
+  - test
+  - build
+  - scan
+
+# Semgrep SAST Scan
+semgrep:
+  stage: test
+  image: semgrep/semgrep
+  script:
+    - semgrep --config=auto --json > semgrep_report.json
+    - cat semgrep_report.json # Optional: print to logs
+  artifacts:
+    name: "semgrep-report-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - semgrep_report.json
+    expire_in: 1 week
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "master"
+
+build:
+  stage: build
+  before_script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
+  script:
+    - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA -t $CI_REGISTRY_IMAGE:latest .
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+    - docker push $CI_REGISTRY_IMAGE:latest
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "master"
+
+# Trivy Container Scan
+trivy:
+  stage: scan
+  image:
+    name: aquasec/trivy:latest
+    entrypoint: [""]
+  variables:
+    TRIVY_USERNAME: "$CI_REGISTRY_USER"
+    TRIVY_PASSWORD: "$CI_REGISTRY_PASSWORD"
+    TRIVY_AUTH_URL: "$CI_REGISTRY"
+    TRIVY_NO_PROGRESS: "true"
+  script:
+    - trivy image --severity HIGH,CRITICAL --exit-code 0 --format json -o trivy-report.json $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+    - trivy image --severity HIGH,CRITICAL --exit-code 0 --format table $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA # Show valid human readable output in logs
+  needs:
+    - build
+  artifacts:
+    name: "trivy-report-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - trivy-report.json
+    expire_in: 1 week
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "master"
