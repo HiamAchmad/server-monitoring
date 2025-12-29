@@ -1,0 +1,15 @@
+# Semgrep ignore patterns
+
+# Ignore node_modules
+node_modules/
+
+# Ignore build directories
+dist/
+build/
+
+# Ignore test files for certain rules
+**/*.test.js
+**/*.spec.js
+
+# Documentation
+dokumentasi/

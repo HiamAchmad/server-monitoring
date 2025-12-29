@@ -5,6 +5,8 @@ services:
     image: postgres:15-alpine
     container_name: postgres_absensi
     restart: always
+    security_opt:
+      - no-new-privileges:true
     environment:
       POSTGRES_USER: absensi_user
       POSTGRES_PASSWORD: absensi_password
@@ -15,6 +17,9 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./database_postgresql.sql:/docker-entrypoint-initdb.d/init.sql
+    tmpfs:
+      - /tmp:mode=1777,size=64M
+      - /run:mode=1777,size=64M
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U absensi_user -d db_absensi"]
       interval: 10s

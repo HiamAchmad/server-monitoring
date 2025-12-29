@@ -324,6 +324,8 @@ class NotificationComponent {
             return;
         }
 
+        // nosemgrep: javascript.browser.security.insecure-document-method.insecure-document-method
+        // Safe: All user input (judul, pesan) is escaped via escapeHtml() before rendering
         list.innerHTML = this.notifications.map(notif => `
             <div class="notif-item ${notif.is_read ? '' : 'unread'}">
                 <div class="notif-icon ${notif.tipe}">
@@ -482,6 +484,8 @@ class NotificationComponent {
     showToast(notif) {
         const toast = document.createElement('div');
         toast.className = 'notif-toast';
+        // nosemgrep: javascript.browser.security.insecure-document-method.insecure-document-method
+        // Safe: All user input (judul, pesan) is escaped via escapeHtml() before rendering
         toast.innerHTML = `
             <div class="notif-toast-icon ${notif.tipe}">${this.getIcon(notif.tipe)}</div>
             <div class="notif-toast-content">

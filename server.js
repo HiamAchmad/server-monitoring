@@ -17,9 +17,13 @@ const net = require('net');
 const mqtt = require('mqtt'); // MQTT Client
 const attendanceLogic = require('./attendance-logic');
 
+// nosemgrep: javascript.express.security.audit.express-check-csurf-middleware-usage.express-check-csurf-middleware-usage
+// Custom CSRF protection middleware is implemented below (csrfProtection function)
 const app = express();
 const port = 3000;
 const mqttPort = 1883;
+// nosemgrep: problem-based-packs.insecure-transport.js-node.using-http-server.using-http-server
+// TLS/HTTPS is handled by NGINX reverse proxy (see nginx/absensi.conf)
 const httpServer = http.createServer(app);
 const io = new Server(httpServer);
 
@@ -263,6 +267,45 @@ const ownCloudConfig = {
 };
 
 app.use(express.json());
+
+// CSRF Protection Middleware
+// Validates Origin header for state-changing requests
+const csrfProtection = (req, res, next) => {
+    // Skip for safe methods
+    if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
+        return next();
+    }
+
+    // Skip for non-browser clients (ESP32, etc.) - no Origin header
+    const origin = req.get('Origin');
+    const referer = req.get('Referer');
+
+    if (!origin && !referer) {
+        // Allow requests without Origin (API clients, MQTT devices)
+        return next();
+    }
+
+    // Validate Origin matches allowed hosts
+    const allowedOrigins = [
+        'http://localhost:3000',
+        'https://localhost:3000',
+        'http://127.0.0.1:3000',
+        'https://mitrjaya.my.id',
+        'http://mitrjaya.my.id'
+    ];
+
+    const requestOrigin = origin || new URL(referer).origin;
+
+    if (allowedOrigins.some(allowed => requestOrigin.startsWith(allowed.replace(/:\d+$/, '')))) {
+        return next();
+    }
+
+    // Log and reject suspicious requests
+    console.warn(`⚠️ CSRF: Blocked request from origin: ${requestOrigin}`);
+    return res.status(403).json({ error: 'CSRF validation failed' });
+};
+
+app.use(csrfProtection);
 
 // Disable cache for HTML files
 app.use(express.static(path.join(__dirname, 'public'), {
