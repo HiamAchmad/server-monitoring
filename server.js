@@ -294,9 +294,18 @@ const csrfProtection = (req, res, next) => {
         'http://mitrjaya.my.id'
     ];
 
-    const requestOrigin = origin || new URL(referer).origin;
+    // Safely parse origin from referer
+    let requestOrigin = origin;
+    if (!requestOrigin && referer) {
+        try {
+            requestOrigin = new URL(referer).origin;
+        } catch (e) {
+            // Invalid referer URL, allow the request
+            return next();
+        }
+    }
 
-    if (allowedOrigins.some(allowed => requestOrigin.startsWith(allowed.replace(/:\d+$/, '')))) {
+    if (!requestOrigin || allowedOrigins.some(allowed => requestOrigin.startsWith(allowed.replace(/:\d+$/, '')))) {
         return next();
     }
 

@@ -12,11 +12,14 @@ stages:
   - scan
 
 # Semgrep SAST Scan
+# Semgrep SAST Scan
 semgrep:
   stage: test
-  image: semgrep/semgrep
+  image: 
+    name: semgrep/semgrep
+    entrypoint: [""]
   script:
-    - semgrep --config=auto --json > semgrep_report.json
+    - semgrep --config=auto --json . > semgrep_report.json
     - cat semgrep_report.json # Optional: print to logs
   artifacts:
     name: "semgrep-report-$CI_COMMIT_SHORT_SHA"
