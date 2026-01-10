@@ -209,11 +209,22 @@ http://localhost:3000
 
 ## Dokumentasi Lengkap
 
-- [Diagram Arsitektur](diagrams/arsitektur-sistem.md)
-- [Use Case Diagram](diagrams/use-case.md)
-- [Entity Relationship Diagram](diagrams/erd.md)
-- [Sequence Diagrams](diagrams/sequence-diagrams.md)
-- [Flowcharts](diagrams/flowchart.md)
+### Diagram UML
+- [Use Case Diagram](diagrams/use-case.md) - Diagram kasus penggunaan sistem
+- [Activity Diagram](diagrams/activity-diagram.md) - Diagram aktivitas proses bisnis
+- [Sequence Diagrams](diagrams/sequence-diagrams.md) - Diagram urutan interaksi
+- [Class Diagram](diagrams/class-diagram.md) - Diagram kelas dan relasi
+- [State Diagram](diagrams/state-diagram.md) - Diagram status objek
+- [Entity Relationship Diagram](diagrams/erd.md) - Diagram relasi entitas database
+
+### Diagram Arsitektur
+- [Diagram Arsitektur Sistem](diagrams/arsitektur-sistem.md) - Arsitektur keseluruhan
+- [Component Diagram](diagrams/component-diagram.md) - Diagram komponen sistem
+- [Deployment Diagram](diagrams/deployment-diagram.md) - Diagram deployment dan infrastruktur
+
+### Diagram Lainnya
+- [Flowcharts](diagrams/flowchart.md) - Diagram alur proses
+- [HIPO (Hierarchy plus Input-Process-Output)](diagrams/hipo.md) - Diagram hierarki fungsi
 
 ---
 
