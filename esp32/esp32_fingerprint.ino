@@ -159,14 +159,26 @@ int checkFingerprint() {
     return 0;  // Tidak ada jari atau error
   }
 
+  Serial.println("🔍 Jari terdeteksi, memproses...");
+
   p = finger.image2Tz();
   if (p != FINGERPRINT_OK) {
+    Serial.println("❌ Gagal convert image");
     return 0;
   }
 
   p = finger.fingerSearch();
   if (p == FINGERPRINT_OK) {
+    Serial.print("✅ Match! ID: ");
+    Serial.print(finger.fingerID);
+    Serial.print(" Confidence: ");
+    Serial.println(finger.confidence);
     return finger.fingerID;
+  } else if (p == FINGERPRINT_NOTFOUND) {
+    Serial.println("❌ Sidik jari tidak ditemukan di database sensor");
+  } else {
+    Serial.print("❌ Error search: ");
+    Serial.println(p);
   }
 
   return 0;
