@@ -38,12 +38,30 @@ const connectedMqttClients = new Set();
 mqttBroker.on('client', (client) => {
     console.log('📡 MQTT Client terhubung:', client.id);
     connectedMqttClients.add(client.id);
+
+    // Emit real-time status update ke dashboard
+    if (typeof io !== 'undefined') {
+        const isEsp32 = client.id.toLowerCase().includes('esp') || client.id.toLowerCase().includes('fingerprint');
+        if (isEsp32) {
+            io.emit('esp32_status', { status: 'online', clientId: client.id });
+            console.log('📢 ESP32 status: ONLINE');
+        }
+    }
 });
 
 // Event: Client disconnected
 mqttBroker.on('clientDisconnect', (client) => {
     console.log('🔌 MQTT Client terputus:', client.id);
     connectedMqttClients.delete(client.id);
+
+    // Emit real-time status update ke dashboard
+    if (typeof io !== 'undefined') {
+        const isEsp32 = client.id.toLowerCase().includes('esp') || client.id.toLowerCase().includes('fingerprint');
+        if (isEsp32) {
+            io.emit('esp32_status', { status: 'offline', clientId: client.id });
+            console.log('📢 ESP32 status: OFFLINE');
+        }
+    }
 });
 
 // --- KONFIGURASI MQTT CLIENT (untuk publish & subscribe) ---
@@ -94,6 +112,7 @@ mqttClient.on('message', async (topic, message) => {
 
             // Emit progress ke semua client
             io.emit('enrollment_progress', data);
+            io.emit('enroll-progress', data);  // For frontend compatibility
         } catch (error) {
             console.error('❌ Error parsing enrollment progress:', error);
         }
@@ -123,6 +142,13 @@ mqttClient.on('message', async (topic, message) => {
                         fingerprint_id: data.fingerprint_id,
                         message: data.message || 'Sidik jari berhasil didaftarkan'
                     });
+                    // For frontend compatibility
+                    io.emit('enroll-complete', {
+                        success: true,
+                        pegawai_id: data.pegawai_id,
+                        fingerprint_id: data.fingerprint_id,
+                        message: data.message || 'Sidik jari berhasil didaftarkan'
+                    });
                 } else {
                     console.error('❌ Pegawai tidak ditemukan untuk update (ID:', data.pegawai_id, ')');
                     // Still emit success for test page, but note database update failed
@@ -133,12 +159,23 @@ mqttClient.on('message', async (topic, message) => {
                         message: data.message + ' (Note: Pegawai not in database)',
                         db_updated: false
                     });
+                    io.emit('enroll-complete', {
+                        success: true,
+                        pegawai_id: data.pegawai_id,
+                        fingerprint_id: data.fingerprint_id,
+                        message: data.message + ' (Note: Pegawai not in database)'
+                    });
                 }
             } else {
                 console.error('❌ Enrollment gagal:', data.message);
 
                 // Broadcast error
                 io.emit('enrollment_error', {
+                    success: false,
+                    pegawai_id: data.pegawai_id,
+                    message: data.message || 'Enrollment gagal'
+                });
+                io.emit('enroll-failed', {
                     success: false,
                     pegawai_id: data.pegawai_id,
                     message: data.message || 'Enrollment gagal'
@@ -163,7 +200,7 @@ mqttClient.on('message', async (topic, message) => {
                 io.emit('attendance_error', {
                     success: false,
                     fingerprint_id: fingerprintID,
-                    message: 'Pegawai tidak ditemukan'
+                    message: 'Sidik jari tidak terdaftar'
                 });
                 return;
             }
@@ -171,30 +208,122 @@ mqttClient.on('message', async (topic, message) => {
             const pegawai = pegawaiResult.rows[0];
             const pegawaiId = pegawai.id_pegawai;
             const waktuAbsen = new Date();
+            const jamSekarang = waktuAbsen.getHours();
+            const menitSekarang = waktuAbsen.getMinutes();
+            const detikSekarang = waktuAbsen.getSeconds();
+            const waktuAbsenStr = `${String(jamSekarang).padStart(2, '0')}:${String(menitSekarang).padStart(2, '0')}:${String(detikSekarang).padStart(2, '0')}`;
 
             console.log('👤 Pegawai detected:', pegawai.nama_pegawai, '(NIP:', pegawai.nip, ')');
+            console.log('⏰ Waktu sekarang:', waktuAbsenStr, '- Jam:', jamSekarang);
 
-            // Simpan ke database menggunakan logic yang sudah ada
-            const absensiData = {
-                pegawai_id: pegawaiId,
-                waktu_absen: waktuAbsen.toISOString(),
-                keterangan: 'Hadir'
-            };
+            // Cek apakah sudah absen masuk hari ini
+            const cekAbsenQuery = `
+                SELECT * FROM absensi
+                WHERE pegawai_id = $1
+                AND DATE(timestamp) = CURRENT_DATE
+                AND tipe_absen = 'Masuk'
+                ORDER BY timestamp DESC
+                LIMIT 1
+            `;
+            const cekAbsenResult = await db.query(cekAbsenQuery, [pegawaiId]);
 
-            handleAbsensiData(absensiData);
+            // JAM KELUAR: 18:00 (6 PM)
+            const JAM_KELUAR = 18;
 
-            // Broadcast ke web clients
-            io.emit('attendance_success', {
-                success: true,
-                fingerprint_id: fingerprintID,
-                pegawai_id: pegawaiId,
-                nama: pegawai.nama_pegawai,
-                nip: pegawai.nip,
-                waktu: waktuAbsen,
-                message: 'Absensi berhasil dicatat'
-            });
+            if (cekAbsenResult.rows.length === 0) {
+                // BELUM ABSEN MASUK → Catat sebagai MASUK
+                console.log('📥 Belum ada absen masuk hari ini, mencatat MASUK...');
 
-            console.log('✅ Attendance recorded for', pegawai.nama_pegawai);
+                const insertQuery = `
+                    INSERT INTO absensi (pegawai_id, waktu_absen, keterangan, tipe_absen, timestamp)
+                    VALUES ($1, $2, 'Hadir', 'Masuk', NOW())
+                    RETURNING id_absensi
+                `;
+                const insertResult = await db.query(insertQuery, [pegawaiId, waktuAbsenStr]);
+
+                io.emit('attendance_success', {
+                    success: true,
+                    tipe: 'masuk',
+                    fingerprint_id: fingerprintID,
+                    pegawai_id: pegawaiId,
+                    nama: pegawai.nama_pegawai,
+                    nip: pegawai.nip,
+                    waktu: waktuAbsen,
+                    message: `Selamat datang, ${pegawai.nama_pegawai}! Absensi MASUK berhasil.`
+                });
+
+                // Broadcast update
+                broadcastAbsensiUpdate(insertResult.rows[0].id_absensi);
+                console.log('✅ Absen MASUK berhasil untuk', pegawai.nama_pegawai);
+
+            } else {
+                // SUDAH ABSEN MASUK
+                const absenMasuk = cekAbsenResult.rows[0];
+
+                // Cek apakah sudah absen keluar
+                if (absenMasuk.waktu_keluar) {
+                    // Sudah absen masuk DAN keluar hari ini
+                    io.emit('attendance_info', {
+                        success: true,
+                        tipe: 'sudah_lengkap',
+                        fingerprint_id: fingerprintID,
+                        pegawai_id: pegawaiId,
+                        nama: pegawai.nama_pegawai,
+                        message: `${pegawai.nama_pegawai}, Anda sudah menyelesaikan absensi hari ini.`
+                    });
+                    console.log('ℹ️ Pegawai sudah absen masuk dan keluar hari ini');
+
+                } else if (jamSekarang >= JAM_KELUAR) {
+                    // SUDAH JAM PULANG (≥18:00) → Catat sebagai KELUAR
+                    console.log('📤 Jam pulang, mencatat KELUAR...');
+
+                    const waktuMasuk = absenMasuk.waktu_absen;
+                    const durasiKerja = attendanceLogic.hitungDurasiKerja(waktuMasuk, waktuAbsenStr);
+                    const { durasi_lembur, status_lembur } = attendanceLogic.hitungLembur(waktuAbsenStr, durasiKerja);
+
+                    const updateQuery = `
+                        UPDATE absensi
+                        SET waktu_keluar = $1, durasi_kerja = $2, durasi_lembur = $3, status_lembur = $4
+                        WHERE id_absensi = $5
+                        RETURNING *
+                    `;
+                    await db.query(updateQuery, [waktuAbsenStr, durasiKerja, durasi_lembur, status_lembur, absenMasuk.id_absensi]);
+
+                    const durasiFormatted = attendanceLogic.formatDurasi(durasiKerja);
+
+                    io.emit('attendance_success', {
+                        success: true,
+                        tipe: 'keluar',
+                        fingerprint_id: fingerprintID,
+                        pegawai_id: pegawaiId,
+                        nama: pegawai.nama_pegawai,
+                        nip: pegawai.nip,
+                        waktu: waktuAbsen,
+                        durasi_kerja: durasiFormatted,
+                        lembur: status_lembur === 'Ya' ? attendanceLogic.formatDurasi(durasi_lembur) : null,
+                        message: `Sampai jumpa, ${pegawai.nama_pegawai}! Absensi KELUAR berhasil. Durasi kerja: ${durasiFormatted}`
+                    });
+
+                    // Broadcast update
+                    broadcastAbsensiUpdate(absenMasuk.id_absensi);
+                    console.log('✅ Absen KELUAR berhasil untuk', pegawai.nama_pegawai, '- Durasi:', durasiFormatted);
+
+                } else {
+                    // BELUM JAM PULANG (<18:00) → Sudah absen masuk
+                    const waktuMasukFormatted = absenMasuk.waktu_absen;
+
+                    io.emit('attendance_info', {
+                        success: true,
+                        tipe: 'sudah_masuk',
+                        fingerprint_id: fingerprintID,
+                        pegawai_id: pegawaiId,
+                        nama: pegawai.nama_pegawai,
+                        waktu_masuk: waktuMasukFormatted,
+                        message: `${pegawai.nama_pegawai}, Anda sudah absen masuk pukul ${waktuMasukFormatted}. Absensi keluar dapat dilakukan mulai jam ${JAM_KELUAR}:00.`
+                    });
+                    console.log('ℹ️ Pegawai sudah absen masuk pukul', waktuMasukFormatted);
+                }
+            }
 
         } catch (error) {
             console.error('❌ Error handling attendance:', error);
@@ -529,9 +658,9 @@ function broadcastAbsensiUpdate(id_absensi) {
     });
 }
 
-// Start MQTT Server
-mqttServer.listen(mqttPort, () => {
-    console.log(`🚀 MQTT Broker berjalan pada port ${mqttPort}`);
+// Start MQTT Server (bind to all interfaces for ESP32 access)
+mqttServer.listen(mqttPort, '0.0.0.0', () => {
+    console.log(`🚀 MQTT Broker berjalan pada port ${mqttPort} (semua interface)`);
 });
 
 io.on('connection', (socket) => {

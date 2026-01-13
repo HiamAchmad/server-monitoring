@@ -33,7 +33,6 @@ const char* mqtt_client_id = "ESP32_Fingerprint";
 // MQTT Topics
 const char* topic_enroll_request = "fingerprint/enroll/request";
 const char* topic_enroll_response = "fingerprint/enroll/response";
-const char* topic_enroll_progress = "fingerprint/enroll/progress";
 const char* topic_attendance = "fingerprint/attendance";
 
 // ===== LED CONFIGURATION =====
@@ -72,7 +71,6 @@ bool mqttReconnect();
 void handleEnrollmentRequest(JsonDocument& doc);
 void startEnrollment(int id, int pegawai_id, String nip, String nama);
 void publishEnrollmentResponse(bool success, String message);
-void publishProgress(String message, int step, int totalSteps);
 void setLED(int red, int green, int blue);
 void blinkLED(int pin, int times, int delayMs);
 int getFingerprintEnroll(int id);
@@ -138,66 +136,8 @@ void loop() {
     return;
   }
 
-  // Attendance scanning - cek fingerprint
-  int fingerprintID = checkFingerprint();
-  if (fingerprintID > 0) {
-    Serial.print("\n✓ Fingerprint matched! ID: ");
-    Serial.println(fingerprintID);
-
-    // Publish attendance ke server
-    publishAttendance(fingerprintID);
-
-    // Delay untuk mencegah multiple scan
-    delay(3000);
-  }
-}
-
-// Check fingerprint dan return ID jika match, 0 jika tidak ada/tidak match
-int checkFingerprint() {
-  uint8_t p = finger.getImage();
-  if (p != FINGERPRINT_OK) {
-    return 0;  // Tidak ada jari atau error
-  }
-
-  p = finger.image2Tz();
-  if (p != FINGERPRINT_OK) {
-    return 0;
-  }
-
-  p = finger.fingerSearch();
-  if (p == FINGERPRINT_OK) {
-    return finger.fingerID;
-  }
-
-  return 0;
-}
-
-// Publish attendance data ke MQTT
-void publishAttendance(int fingerprintID) {
-  JsonDocument doc;
-  doc["fingerprint_id"] = fingerprintID;
-  doc["confidence"] = finger.confidence;
-  doc["timestamp"] = millis();
-
-  char buffer[256];
-  serializeJson(doc, buffer);
-
-  Serial.print("📤 Publishing attendance: ");
-  Serial.println(buffer);
-
-  if (mqttClient.publish(topic_attendance, buffer)) {
-    Serial.println("✓ Attendance published!");
-    // LED hijau = success
-    setLED(0, 1, 0);
-    delay(500);
-    setLED(0, 0, 0);
-  } else {
-    Serial.println("✗ Failed to publish attendance!");
-    // LED merah = error
-    setLED(1, 0, 0);
-    delay(500);
-    setLED(0, 0, 0);
-  }
+  // TODO: Tambahkan logika attendance checking di sini
+  // Scan fingerprint setiap X detik untuk absensi otomatis
 }
 
 // ============================================
@@ -465,9 +405,6 @@ int getFingerprintEnroll(int id) {
   Serial.println("Waiting for finger...");
   Serial.println(">>> Place your finger on the sensor");
 
-  // Step 1: Menunggu jari pertama
-  publishProgress("📍 Langkah 1/4: Tempelkan jari pada sensor...", 1, 4);
-
   // LED biru blink cepat = waiting for finger
   unsigned long startTime = millis();
   while (p != FINGERPRINT_OK) {
@@ -483,7 +420,6 @@ int getFingerprintEnroll(int id) {
     // Timeout after 30 seconds
     if (millis() - startTime > 30000) {
       Serial.println("Timeout! No finger detected.");
-      publishProgress("⏱️ Timeout! Tidak ada jari terdeteksi", 0, 4);
       return FINGERPRINT_TIMEOUT;
     }
 
@@ -491,22 +427,18 @@ int getFingerprintEnroll(int id) {
       case FINGERPRINT_OK:
         Serial.println("Image taken!");
         setLED(0, 1, 0); // Green = OK
-        publishProgress("✅ Gambar jari pertama berhasil diambil!", 1, 4);
         break;
       case FINGERPRINT_NOFINGER:
         // No finger, keep waiting
         break;
       case FINGERPRINT_PACKETRECIEVEERR:
         Serial.println("Communication error!");
-        publishProgress("❌ Error komunikasi sensor!", 0, 4);
         return p;
       case FINGERPRINT_IMAGEFAIL:
         Serial.println("Imaging error!");
-        publishProgress("❌ Gagal mengambil gambar!", 0, 4);
         return p;
       default:
         Serial.println("Unknown error!");
-        publishProgress("❌ Error tidak dikenal!", 0, 4);
         return p;
     }
   }
@@ -519,29 +451,22 @@ int getFingerprintEnroll(int id) {
       break;
     case FINGERPRINT_IMAGEMESS:
       Serial.println("Image too messy!");
-      publishProgress("❌ Gambar terlalu kotor, coba lagi!", 0, 4);
       return p;
     case FINGERPRINT_PACKETRECIEVEERR:
       Serial.println("Communication error!");
-      publishProgress("❌ Error komunikasi sensor!", 0, 4);
       return p;
     case FINGERPRINT_FEATUREFAIL:
       Serial.println("Could not find fingerprint features!");
-      publishProgress("❌ Sidik jari tidak terdeteksi dengan jelas!", 0, 4);
       return p;
     case FINGERPRINT_INVALIDIMAGE:
       Serial.println("Invalid image!");
-      publishProgress("❌ Gambar tidak valid!", 0, 4);
       return p;
     default:
       Serial.println("Unknown error!");
-      publishProgress("❌ Error tidak dikenal!", 0, 4);
       return p;
   }
 
-  // Step 2: Angkat jari
   Serial.println("\nRemove finger...");
-  publishProgress("📍 Langkah 2/4: Angkat jari dari sensor...", 2, 4);
   delay(2000);
   setLED(0, 0, 0);
 
@@ -550,9 +475,7 @@ int getFingerprintEnroll(int id) {
     p = finger.getImage();
   }
 
-  // Step 3: Tempelkan jari lagi
   Serial.println("Place SAME finger again...");
-  publishProgress("📍 Langkah 3/4: Tempelkan jari yang SAMA lagi...", 3, 4);
 
   // Get second image
   p = -1;
@@ -570,7 +493,6 @@ int getFingerprintEnroll(int id) {
     // Timeout
     if (millis() - startTime > 30000) {
       Serial.println("Timeout! No finger detected.");
-      publishProgress("⏱️ Timeout! Tidak ada jari terdeteksi", 0, 4);
       return FINGERPRINT_TIMEOUT;
     }
 
@@ -578,21 +500,17 @@ int getFingerprintEnroll(int id) {
       case FINGERPRINT_OK:
         Serial.println("Image taken!");
         setLED(0, 1, 0);
-        publishProgress("✅ Gambar jari kedua berhasil diambil!", 3, 4);
         break;
       case FINGERPRINT_NOFINGER:
         break;
       case FINGERPRINT_PACKETRECIEVEERR:
         Serial.println("Communication error!");
-        publishProgress("❌ Error komunikasi sensor!", 0, 4);
         return p;
       case FINGERPRINT_IMAGEFAIL:
         Serial.println("Imaging error!");
-        publishProgress("❌ Gagal mengambil gambar!", 0, 4);
         return p;
       default:
         Serial.println("Unknown error!");
-        publishProgress("❌ Error tidak dikenal!", 0, 4);
         return p;
     }
   }
@@ -605,29 +523,23 @@ int getFingerprintEnroll(int id) {
       break;
     case FINGERPRINT_IMAGEMESS:
       Serial.println("Image too messy!");
-      publishProgress("❌ Gambar terlalu kotor, coba lagi!", 0, 4);
       return p;
     case FINGERPRINT_PACKETRECIEVEERR:
       Serial.println("Communication error!");
-      publishProgress("❌ Error komunikasi sensor!", 0, 4);
       return p;
     case FINGERPRINT_FEATUREFAIL:
       Serial.println("Could not find fingerprint features!");
-      publishProgress("❌ Sidik jari tidak terdeteksi dengan jelas!", 0, 4);
       return p;
     case FINGERPRINT_INVALIDIMAGE:
       Serial.println("Invalid image!");
-      publishProgress("❌ Gambar tidak valid!", 0, 4);
       return p;
     default:
       Serial.println("Unknown error!");
-      publishProgress("❌ Error tidak dikenal!", 0, 4);
       return p;
   }
 
-  // Step 4: Create model and store
+  // Create model
   Serial.println("Creating model...");
-  publishProgress("📍 Langkah 4/4: Menyimpan sidik jari...", 4, 4);
   setLED(0, 0, 1); // Blue = processing
 
   p = finger.createModel();
@@ -635,15 +547,12 @@ int getFingerprintEnroll(int id) {
     Serial.println("Prints matched!");
   } else if (p == FINGERPRINT_PACKETRECIEVEERR) {
     Serial.println("Communication error!");
-    publishProgress("❌ Error komunikasi sensor!", 0, 4);
     return p;
   } else if (p == FINGERPRINT_ENROLLMISMATCH) {
     Serial.println("Fingerprints did not match!");
-    publishProgress("❌ Kedua sidik jari tidak cocok! Ulangi dari awal.", 0, 4);
     return p;
   } else {
     Serial.println("Unknown error!");
-    publishProgress("❌ Error tidak dikenal!", 0, 4);
     return p;
   }
 
@@ -690,25 +599,6 @@ void publishEnrollmentResponse(bool success, String message) {
   } else {
     Serial.println("\n[MQTT] Publish failed!");
   }
-}
-
-// Publish progress update ke frontend
-void publishProgress(String message, int step, int totalSteps) {
-  StaticJsonDocument<256> doc;
-
-  doc["pegawai_id"] = currentPegawaiID;
-  doc["fingerprint_id"] = currentEnrollID;
-  doc["message"] = message;
-  doc["step"] = step;
-  doc["total_steps"] = totalSteps;
-  doc["timestamp"] = millis();
-
-  char buffer[256];
-  serializeJson(doc, buffer);
-
-  mqttClient.publish(topic_enroll_progress, buffer);
-  Serial.print("[PROGRESS] ");
-  Serial.println(message);
 }
 
 // ============================================

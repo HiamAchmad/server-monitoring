@@ -996,9 +996,22 @@
             }
 
             // Check IoT Status
-            function checkIoTStatus() {
-                statusIotEl.textContent = 'Online';
-                statusIotEl.style.color = 'var(--success)';
+            async function checkIoTStatus() {
+                try {
+                    const response = await fetch('/api/mqtt-status');
+                    const data = await response.json();
+
+                    if (data.esp32 === 'online') {
+                        statusIotEl.textContent = 'Online';
+                        statusIotEl.style.color = 'var(--success)';
+                    } else {
+                        statusIotEl.textContent = 'Offline';
+                        statusIotEl.style.color = 'var(--danger)';
+                    }
+                } catch (error) {
+                    statusIotEl.textContent = 'Offline';
+                    statusIotEl.style.color = 'var(--danger)';
+                }
             }
 
             // Load Employee Statistics
@@ -1320,6 +1333,18 @@
                     notification.style.animation = 'slideOutRight 0.3s ease-out';
                     setTimeout(() => notification.remove(), 300);
                 }, 5000);
+            });
+
+            // Listen for ESP32 status changes (real-time)
+            socket.on('esp32_status', (data) => {
+                console.log('📡 ESP32 status update:', data);
+                if (data.status === 'online') {
+                    statusIotEl.textContent = 'Online';
+                    statusIotEl.style.color = 'var(--success)';
+                } else {
+                    statusIotEl.textContent = 'Offline';
+                    statusIotEl.style.color = 'var(--danger)';
+                }
             });
 
             // Make function global
