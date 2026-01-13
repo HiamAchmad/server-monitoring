@@ -107,13 +107,16 @@ void setup() {
   setupMQTT();
 
   Serial.println("\n✅ System Ready!");
-  Serial.println("Waiting for enrollment command...\n");
+  Serial.println("Mode: Absensi aktif - Silakan tempelkan jari untuk absen\n");
 
   // LED hijau = ready
   setLED(0, 1, 0);
   delay(1000);
   setLED(0, 0, 0);
 }
+
+// Variable untuk debug
+unsigned long lastDebugTime = 0;
 
 // ============================================
 //               MAIN LOOP
@@ -136,6 +139,12 @@ void loop() {
   // Jika ada enrollment in progress, tidak perlu cek absensi
   if (enrollmentInProgress) {
     return;
+  }
+
+  // Debug: print setiap 10 detik untuk konfirmasi loop berjalan
+  if (millis() - lastDebugTime > 10000) {
+    lastDebugTime = millis();
+    Serial.println("⏳ Menunggu sidik jari untuk absensi...");
   }
 
   // Attendance scanning - cek fingerprint
