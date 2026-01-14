@@ -207,11 +207,10 @@ mqttClient.on('message', async (topic, message) => {
 
             const pegawai = pegawaiResult.rows[0];
             const pegawaiId = pegawai.id_pegawai;
-            const waktuAbsen = new Date();
-            const jamSekarang = waktuAbsen.getHours();
-            const menitSekarang = waktuAbsen.getMinutes();
-            const detikSekarang = waktuAbsen.getSeconds();
-            const waktuAbsenStr = `${String(jamSekarang).padStart(2, '0')}:${String(menitSekarang).padStart(2, '0')}:${String(detikSekarang).padStart(2, '0')}`;
+            // Gunakan timezone Jakarta (WIB/UTC+7)
+            const waktuJakarta = moment().tz('Asia/Jakarta');
+            const jamSekarang = waktuJakarta.hours();
+            const waktuAbsenStr = waktuJakarta.format('HH:mm:ss');
 
             console.log('👤 Pegawai detected:', pegawai.nama_pegawai, '(NIP:', pegawai.nip, ')');
             console.log('⏰ Waktu sekarang:', waktuAbsenStr, '- Jam:', jamSekarang);
@@ -234,13 +233,58 @@ mqttClient.on('message', async (topic, message) => {
                 // BELUM ABSEN MASUK → Catat sebagai MASUK
                 console.log('📥 Belum ada absen masuk hari ini, mencatat MASUK...');
 
+                // Cek keterlambatan berdasarkan shift pegawai
+                let keterangan = 'Hadir';
+                const hariIni = waktuJakarta.day(); // 0=Minggu, 1=Senin, ..., 6=Sabtu
+                const hariKolom = ['shift_minggu', 'shift_senin', 'shift_selasa', 'shift_rabu', 'shift_kamis', 'shift_jumat', 'shift_sabtu'][hariIni];
+
+                if (pegawai.jadwal_kerja_id) {
+                    try {
+                        const jadwalQuery = `
+                            SELECT jk.${hariKolom} as shift_id, s.jam_masuk, s.toleransi_terlambat
+                            FROM jadwal_kerja jk
+                            LEFT JOIN shift s ON jk.${hariKolom} = s.id_shift
+                            WHERE jk.id_jadwal = $1
+                        `;
+                        const jadwalResult = await db.query(jadwalQuery, [pegawai.jadwal_kerja_id]);
+
+                        if (jadwalResult.rows.length > 0 && jadwalResult.rows[0].jam_masuk) {
+                            const shiftData = jadwalResult.rows[0];
+                            const jamMasukShift = shiftData.jam_masuk; // format: HH:mm:ss
+                            const toleransi = shiftData.toleransi_terlambat || 15; // default 15 menit
+
+                            // Parse waktu untuk perbandingan
+                            const [jamShift, menitShift] = jamMasukShift.split(':').map(Number);
+                            const batasWaktu = jamShift * 60 + menitShift + toleransi; // dalam menit
+
+                            const [jamAbsen, menitAbsen] = waktuAbsenStr.split(':').map(Number);
+                            const waktuAbsenMenit = jamAbsen * 60 + menitAbsen;
+
+                            if (waktuAbsenMenit > batasWaktu) {
+                                keterangan = 'Terlambat';
+                                const telatMenit = waktuAbsenMenit - (jamShift * 60 + menitShift);
+                                console.log(`⚠️ Pegawai TERLAMBAT ${telatMenit} menit (Batas: ${jamMasukShift} + ${toleransi} menit toleransi)`);
+                            } else {
+                                console.log(`✓ Pegawai tepat waktu (Shift: ${jamMasukShift}, Toleransi: ${toleransi} menit)`);
+                            }
+                        } else {
+                            console.log('ℹ️ Tidak ada shift untuk hari ini, default: Hadir');
+                        }
+                    } catch (shiftErr) {
+                        console.error('⚠️ Error cek shift:', shiftErr.message);
+                    }
+                } else {
+                    console.log('ℹ️ Pegawai tidak punya jadwal kerja, default: Hadir');
+                }
+
                 const insertQuery = `
                     INSERT INTO absensi (pegawai_id, waktu_absen, keterangan, tipe_absen, timestamp)
-                    VALUES ($1, $2, 'Hadir', 'Masuk', NOW())
+                    VALUES ($1, $2, $3, 'Masuk', NOW())
                     RETURNING id_absensi
                 `;
-                const insertResult = await db.query(insertQuery, [pegawaiId, waktuAbsenStr]);
+                const insertResult = await db.query(insertQuery, [pegawaiId, waktuAbsenStr, keterangan]);
 
+                const statusMsg = keterangan === 'Terlambat' ? ' (TERLAMBAT)' : '';
                 io.emit('attendance_success', {
                     success: true,
                     tipe: 'masuk',
@@ -248,13 +292,14 @@ mqttClient.on('message', async (topic, message) => {
                     pegawai_id: pegawaiId,
                     nama: pegawai.nama_pegawai,
                     nip: pegawai.nip,
-                    waktu: waktuAbsen,
-                    message: `Selamat datang, ${pegawai.nama_pegawai}! Absensi MASUK berhasil.`
+                    waktu: waktuAbsenStr,
+                    keterangan: keterangan,
+                    message: `Selamat datang, ${pegawai.nama_pegawai}! Absensi MASUK berhasil${statusMsg}.`
                 });
 
                 // Broadcast update
                 broadcastAbsensiUpdate(insertResult.rows[0].id_absensi);
-                console.log('✅ Absen MASUK berhasil untuk', pegawai.nama_pegawai);
+                console.log(`✅ Absen MASUK berhasil untuk ${pegawai.nama_pegawai} - Status: ${keterangan}`);
 
             } else {
                 // SUDAH ABSEN MASUK
@@ -298,7 +343,7 @@ mqttClient.on('message', async (topic, message) => {
                         pegawai_id: pegawaiId,
                         nama: pegawai.nama_pegawai,
                         nip: pegawai.nip,
-                        waktu: waktuAbsen,
+                        waktu: waktuAbsenStr,
                         durasi_kerja: durasiFormatted,
                         lembur: status_lembur === 'Ya' ? attendanceLogic.formatDurasi(durasi_lembur) : null,
                         message: `Sampai jumpa, ${pegawai.nama_pegawai}! Absensi KELUAR berhasil. Durasi kerja: ${durasiFormatted}`
