@@ -11,6 +11,7 @@ const moment = require('moment-timezone');
 const { Pool } = require('pg');
 const os = require('os');
 const { createClient } = require("webdav");
+const ExcelJS = require('exceljs');
 const multer = require('multer');
 const aedes = require('aedes');
 const net = require('net');
@@ -68,32 +69,32 @@ mqttBroker.on('clientDisconnect', (client) => {
 const mqttClient = mqtt.connect('mqtt://localhost:1883');
 
 mqttClient.on('connect', () => {
-    console.log('✅ MQTT Client connected to broker');
+    console.log('MQTT Client connected to broker');
 
     // Subscribe to enrollment response topic
     mqttClient.subscribe('fingerprint/enroll/response', (err) => {
         if (err) {
-            console.error('❌ Error subscribe to enrollment response:', err);
+            console.error('Error subscribe to enrollment response:', err);
         } else {
-            console.log('📥 Subscribed to: fingerprint/enroll/response');
+            console.log('Subscribed to: fingerprint/enroll/response');
         }
     });
 
     // Subscribe to attendance topic
     mqttClient.subscribe('fingerprint/attendance', (err) => {
         if (err) {
-            console.error('❌ Error subscribe to attendance:', err);
+            console.error('Error subscribe to attendance:', err);
         } else {
-            console.log('📥 Subscribed to: fingerprint/attendance');
+            console.log('Subscribed to: fingerprint/attendance');
         }
     });
 
     // Subscribe to enrollment progress topic
     mqttClient.subscribe('fingerprint/enroll/progress', (err) => {
         if (err) {
-            console.error('❌ Error subscribe to enrollment progress:', err);
+            console.error('Error subscribe to enrollment progress:', err);
         } else {
-            console.log('📥 Subscribed to: fingerprint/enroll/progress');
+            console.log('Subscribed to: fingerprint/enroll/progress');
         }
     });
 });
@@ -710,7 +711,7 @@ mqttServer.listen(mqttPort, '0.0.0.0', () => {
 
 io.on('connection', (socket) => {
     console.log('🔌 Client website terhubung.');
-    const initialQuery = `SELECT a.*, p.nama_pegawai
+    const initialQuery = `SELECT a.*, p.nama_pegawai, p.nip
                           FROM absensi a
                           JOIN pegawai p ON a.pegawai_id = p.id_pegawai
                           ORDER BY a.timestamp DESC LIMIT 10`;
@@ -1197,7 +1198,7 @@ app.post('/api/change-password', async (req, res) => {
     }
 });
 
-// Endpoint untuk backup manual ke OwnCloud
+// Endpoint untuk backup manual ke OwnCloud (format Excel)
 app.post('/api/backup-owncloud', async (req, res) => {
     try {
         const client = createClient(
@@ -1227,14 +1228,74 @@ app.post('/api/backup-owncloud', async (req, res) => {
         `;
         const result = await db.query(query);
 
-        // Buat file CSV
+        // Buat file Excel
         const timestamp = moment().format('YYYY-MM-DD_HH-mm-ss');
-        const fileName = `Backup-Absensi-${timestamp}.csv`;
+        const fileName = `Backup-Absensi-${timestamp}.xlsx`;
 
-        let csvContent = 'ID,NIP,Nama,Waktu Masuk,Waktu Keluar,Keterangan,Durasi Kerja,Durasi Lembur,Status Lembur,Timestamp\n';
-        result.rows.forEach(row => {
-            csvContent += `${row.id_absensi},${row.nip},"${row.nama_pegawai}",${row.waktu_absen || ''},${row.waktu_keluar || ''},${row.keterangan || ''},${row.durasi_kerja || ''},${row.durasi_lembur || ''},${row.status_lembur || ''},${row.timestamp}\n`;
+        const workbook = new ExcelJS.Workbook();
+        workbook.creator = 'Sistem Absensi';
+        workbook.created = new Date();
+
+        const worksheet = workbook.addWorksheet('Data Absensi');
+
+        // Header dengan style
+        worksheet.columns = [
+            { header: 'No', key: 'no', width: 5 },
+            { header: 'NIP', key: 'nip', width: 15 },
+            { header: 'Nama Karyawan', key: 'nama', width: 25 },
+            { header: 'Tanggal', key: 'tanggal', width: 15 },
+            { header: 'Waktu Masuk', key: 'waktu_masuk', width: 12 },
+            { header: 'Waktu Keluar', key: 'waktu_keluar', width: 12 },
+            { header: 'Keterangan', key: 'keterangan', width: 12 },
+            { header: 'Durasi Kerja', key: 'durasi_kerja', width: 12 },
+            { header: 'Status Lembur', key: 'status_lembur', width: 12 }
+        ];
+
+        // Style header
+        worksheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        worksheet.getRow(1).fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FF4472C4' }
+        };
+        worksheet.getRow(1).alignment = { horizontal: 'center', vertical: 'middle' };
+
+        // Tambah data
+        result.rows.forEach((row, index) => {
+            const tanggal = row.timestamp ? moment(row.timestamp).format('DD/MM/YYYY') : '';
+            worksheet.addRow({
+                no: index + 1,
+                nip: row.nip || '',
+                nama: row.nama_pegawai || '',
+                tanggal: tanggal,
+                waktu_masuk: row.waktu_absen || '-',
+                waktu_keluar: row.waktu_keluar || '-',
+                keterangan: row.keterangan || '',
+                durasi_kerja: row.durasi_kerja || '-',
+                status_lembur: row.status_lembur || '-'
+            });
         });
+
+        // Auto-filter
+        worksheet.autoFilter = {
+            from: 'A1',
+            to: `I${result.rows.length + 1}`
+        };
+
+        // Border untuk semua cell
+        worksheet.eachRow((row, rowNumber) => {
+            row.eachCell((cell) => {
+                cell.border = {
+                    top: { style: 'thin' },
+                    left: { style: 'thin' },
+                    bottom: { style: 'thin' },
+                    right: { style: 'thin' }
+                };
+            });
+        });
+
+        // Convert workbook ke buffer
+        const buffer = await workbook.xlsx.writeBuffer();
 
         // Buat direktori backup jika belum ada
         try {
@@ -1245,13 +1306,13 @@ app.post('/api/backup-owncloud', async (req, res) => {
 
         // Upload ke OwnCloud
         const remotePath = `/Backup-Absensi/${fileName}`;
-        await client.putFileContents(remotePath, csvContent);
+        await client.putFileContents(remotePath, buffer);
 
-        console.log(`☁️ Backup uploaded to OwnCloud: ${remotePath}`);
+        console.log(`☁️ Backup Excel uploaded to OwnCloud: ${remotePath}`);
 
         res.json({
             success: true,
-            message: 'Backup berhasil diupload ke OwnCloud',
+            message: 'Backup Excel berhasil diupload ke OwnCloud',
             path: remotePath,
             records: result.rows.length
         });
@@ -1692,7 +1753,7 @@ app.get('/stats/employees', (req, res) => {
 });
 
 
-// Fungsi untuk membuat dan mengarsipkan data
+// Fungsi untuk membuat dan mengarsipkan data (format Excel)
 async function createAndArchiveData() {
     console.log('🗂️  Memulai proses arsip...');
 
@@ -1722,18 +1783,65 @@ async function createAndArchiveData() {
                 return;
             }
 
-            // Buat CSV
-            let csvContent = 'Nama Pegawai,NIP,Waktu Absensi,Keterangan,Timestamp\n';
-            result.rows.forEach(row => {
-                csvContent += `${row.nama_pegawai},${row.nip},${row.waktu_absen},${row.keterangan},${row.timestamp}\n`;
+            // Buat Excel
+            const workbook = new ExcelJS.Workbook();
+            workbook.creator = 'Sistem Absensi';
+            workbook.created = new Date();
+l
+            const worksheet = workbook.addWorksheet(`Absensi ${namaBulan}`);
+
+            // Header
+            worksheet.columns = [
+                { header: 'No', key: 'no', width: 5 },
+                { header: 'NIP', key: 'nip', width: 15 },
+                { header: 'Nama Karyawan', key: 'nama', width: 25 },
+                { header: 'Tanggal', key: 'tanggal', width: 15 },
+                { header: 'Waktu Masuk', key: 'waktu_masuk', width: 12 },
+                { header: 'Waktu Keluar', key: 'waktu_keluar', width: 12 },
+                { header: 'Keterangan', key: 'keterangan', width: 12 }
+            ];
+
+            // Style header
+            worksheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+            worksheet.getRow(1).fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FF4472C4' }
+            };
+            worksheet.getRow(1).alignment = { horizontal: 'center', vertical: 'middle' };
+
+            // Tambah data
+            result.rows.forEach((row, index) => {
+                const tanggal = row.timestamp ? moment(row.timestamp).format('DD/MM/YYYY') : '';
+                worksheet.addRow({
+                    no: index + 1,
+                    nip: row.nip || '',
+                    nama: row.nama_pegawai || '',
+                    tanggal: tanggal,
+                    waktu_masuk: row.waktu_absen || '-',
+                    waktu_keluar: row.waktu_keluar || '-',
+                    keterangan: row.keterangan || ''
+                });
             });
 
-            const namaFile = `Absensi-${namaBulan}.csv`;
+            // Border untuk semua cell
+            worksheet.eachRow((row) => {
+                row.eachCell((cell) => {
+                    cell.border = {
+                        top: { style: 'thin' },
+                        left: { style: 'thin' },
+                        bottom: { style: 'thin' },
+                        right: { style: 'thin' }
+                    };
+                });
+            });
+
+            const namaFile = `Absensi-${namaBulan}.xlsx`;
             const pathFile = path.join(__dirname, namaFile);
 
-            // Simpan file CSV sementara
-            fs.writeFileSync(pathFile, csvContent);
-            console.log(`✅ File CSV dibuat: ${namaFile}`);
+            // Simpan file Excel sementara
+            await workbook.xlsx.writeFile(pathFile);
+            console.log(`✅ File Excel dibuat: ${namaFile}`);
 
             // Upload ke OwnCloud
             try {
