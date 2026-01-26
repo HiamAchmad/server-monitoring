@@ -115,8 +115,7 @@
                     <option value="12">Desember</option>
                 </select>
                 <select class="filter-select" id="filterTahun">
-                    <option value="2024">2024</option>
-                    <option value="2025">2025</option>
+                    <!-- Akan di-generate otomatis oleh JavaScript -->
                 </select>
                 <button class="btn btn-primary" onclick="loadCurrentReport()"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>Tampilkan</button>
                 <button class="btn btn-success" onclick="exportReport()"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>Export CSV</button>
@@ -248,8 +247,19 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             const now = new Date();
+            const currentYear = now.getFullYear();
+
+            // Generate tahun dari 2024 sampai tahun sekarang
+            const tahunSelect = document.getElementById('filterTahun');
+            for (let year = 2024; year <= currentYear; year++) {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                tahunSelect.appendChild(option);
+            }
+
             document.getElementById('filterBulan').value = now.getMonth() + 1;
-            document.getElementById('filterTahun').value = now.getFullYear();
+            document.getElementById('filterTahun').value = currentYear;
         });
 
         function showTab(tab) {
