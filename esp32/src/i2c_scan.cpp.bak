@@ -1,0 +1,45 @@
+// I2C Scanner - untuk test apakah OLED terdeteksi
+// Rename file ini ke main.cpp jika mau test
+
+#include <Wire.h>
+
+void setup() {
+  Serial.begin(115200);
+  delay(1000);
+
+  Wire.begin(21, 22);  // SDA=21, SCL=22
+
+  Serial.println("\n\nI2C Scanner");
+  Serial.println("Scanning...\n");
+}
+
+void loop() {
+  byte error, address;
+  int deviceCount = 0;
+
+  for(address = 1; address < 127; address++) {
+    Wire.beginTransmission(address);
+    error = Wire.endTransmission();
+
+    if (error == 0) {
+      Serial.print("I2C device found at 0x");
+      if (address < 16) Serial.print("0");
+      Serial.println(address, HEX);
+      deviceCount++;
+    }
+  }
+
+  if (deviceCount == 0) {
+    Serial.println("No I2C devices found!\n");
+    Serial.println("Check wiring:");
+    Serial.println("  SDA -> GPIO21");
+    Serial.println("  SCL -> GPIO22");
+  } else {
+    Serial.print("\nFound ");
+    Serial.print(deviceCount);
+    Serial.println(" device(s)\n");
+    Serial.println("OLED biasanya di alamat 0x3C atau 0x3D");
+  }
+
+  delay(3000);
+}

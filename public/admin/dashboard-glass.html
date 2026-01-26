@@ -140,7 +140,8 @@
             </span>
             <span>Karyawan</span>
         </div>
-        <div class="sidebar-item" onclick="location.href='cuti-glass.html'">
+        <!-- HIDDEN FOR PRESENTATION: Cuti/Izin -->
+        <div class="sidebar-item" onclick="location.href='cuti-glass.html'" style="display: none;">
             <span class="sidebar-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -152,7 +153,8 @@
             </span>
             <span>Cuti/Izin</span>
         </div>
-        <div class="sidebar-item" onclick="location.href='jadwal-shift-glass.html'">
+        <!-- HIDDEN FOR PRESENTATION: Jadwal -->
+        <div class="sidebar-item" onclick="location.href='jadwal-shift-glass.html'" style="display: none;">
             <span class="sidebar-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
@@ -284,8 +286,8 @@
                 </div>
             </div>
 
-            <!-- Pengajuan Cuti/Izin Terbaru -->
-            <div class="glass-card-no-hover fade-in-up" style="animation-delay: 0.22s; margin-bottom: var(--space-8);">
+            <!-- HIDDEN FOR PRESENTATION: Pengajuan Cuti/Izin Terbaru -->
+            <div class="glass-card-no-hover fade-in-up" style="display: none; animation-delay: 0.22s; margin-bottom: var(--space-8);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4); flex-wrap: wrap; gap: var(--space-3);">
                     <h3 style="margin: 0; display: flex; align-items: center; gap: 10px;">
                         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1015,12 +1017,31 @@
             }
 
             // Load Employee Statistics
-            async function loadEmployeeStats() {
+            async function loadEmployeeStats(retryCount = 0) {
+                const maxRetries = 3;
+
                 try {
-                    const response = await fetch('/stats/employees');
+                    // Show loading state
+                    if (retryCount === 0) {
+                        tabelKaryawan.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: var(--space-8); color: var(--text-secondary);"><div class="loading-spinner"></div> Memuat data...</td></tr>';
+                    }
+
+                    const response = await fetch('/stats/employees', {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Cache-Control': 'no-cache'
+                        }
+                    });
+
+                    // Check HTTP status
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+
                     const result = await response.json();
 
-                    if (result.success && result.data.length > 0) {
+                    if (result.success && result.data && result.data.length > 0) {
                         tabelKaryawan.innerHTML = '';
                         result.data.forEach((karyawan, index) => {
                             const row = document.createElement('tr');
@@ -1037,10 +1058,13 @@
                                 });
                             }
 
+                            // Parse total_absensi sebagai integer
+                            const totalAbsensi = parseInt(karyawan.total_absensi) || 0;
+
                             let badgeClass = 'badge-success';
-                            if (karyawan.total_absensi === 0) {
+                            if (totalAbsensi === 0) {
                                 badgeClass = 'badge-error';
-                            } else if (karyawan.total_absensi < 5) {
+                            } else if (totalAbsensi < 5) {
                                 badgeClass = 'badge-warning';
                             }
 
@@ -1055,19 +1079,46 @@
                                 <td>${karyawan.posisi || '-'}</td>
                                 <td style="text-align: center;">${fingerprintStatus}</td>
                                 <td style="text-align: center;">
-                                    <span class="badge ${badgeClass}">${karyawan.total_absensi || 0}</span>
+                                    <span class="badge ${badgeClass}">${totalAbsensi}</span>
                                 </td>
                                 <td style="text-align: center; font-size: var(--text-sm);">${absensiTerakhir}</td>
                             `;
                             row.classList.add('fade-in');
                             tabelKaryawan.appendChild(row);
                         });
+                    } else if (result.success && (!result.data || result.data.length === 0)) {
+                        tabelKaryawan.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: var(--space-8); color: var(--text-secondary);">📋 Tidak ada data karyawan</td></tr>';
                     } else {
-                        tabelKaryawan.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: var(--space-8); color: var(--text-secondary);">Tidak ada data karyawan</td></tr>';
+                        throw new Error(result.message || 'Gagal memuat data');
                     }
                 } catch (error) {
                     console.error('Error memuat statistik karyawan:', error);
-                    tabelKaryawan.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: var(--space-8); color: var(--error);">❌ Error memuat data</td></tr>';
+
+                    // Retry logic
+                    if (retryCount < maxRetries) {
+                        console.log(`Retry ${retryCount + 1}/${maxRetries}...`);
+                        setTimeout(() => loadEmployeeStats(retryCount + 1), 2000);
+                        return;
+                    }
+
+                    // Show detailed error message
+                    let errorMsg = 'Error memuat data';
+                    if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                        errorMsg = 'Tidak dapat terhubung ke server';
+                    } else if (error.message.includes('HTTP 500')) {
+                        errorMsg = 'Server error (500)';
+                    } else if (error.message.includes('HTTP 404')) {
+                        errorMsg = 'Endpoint tidak ditemukan (404)';
+                    }
+
+                    tabelKaryawan.innerHTML = `
+                        <tr><td colspan="7" style="text-align: center; padding: var(--space-8);">
+                            <div style="color: var(--error);">❌ ${errorMsg}</div>
+                            <button onclick="loadEmployeeStats()" class="btn-glass" style="margin-top: 10px; padding: 8px 16px; font-size: 12px;">
+                                🔄 Coba Lagi
+                            </button>
+                        </td></tr>
+                    `;
                 }
             }
 
@@ -1156,10 +1207,28 @@
             setInterval(loadEmployeeStats, 60000);
 
             // Helper function to format duration (menit to HH:MM)
-            function formatDurasi(menit) {
-                if (!menit || menit === 0) return '-';
-                const jam = Math.floor(menit / 60);
-                const sisa_menit = menit % 60;
+            function formatDurasi(value) {
+                // Handle null, undefined, empty
+                if (value === null || value === undefined || value === '') return '-';
+
+                // Jika sudah dalam format waktu (HH:MM atau HH:MM:SS), langsung return
+                if (typeof value === 'string' && value.includes(':')) {
+                    const parts = value.split(':');
+                    if (parts.length >= 2) {
+                        const jam = parseInt(parts[0]) || 0;
+                        const menit = parseInt(parts[1]) || 0;
+                        return `${String(jam).padStart(2, '0')}:${String(menit).padStart(2, '0')}`;
+                    }
+                }
+
+                // Konversi ke number jika string
+                const menitNum = parseInt(value);
+
+                // Handle NaN atau 0
+                if (isNaN(menitNum) || menitNum === 0) return '-';
+
+                const jam = Math.floor(menitNum / 60);
+                const sisa_menit = menitNum % 60;
                 return `${String(jam).padStart(2, '0')}:${String(sisa_menit).padStart(2, '0')}`;
             }
 

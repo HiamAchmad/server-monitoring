@@ -647,10 +647,29 @@
         }
 
         // Format durasi
-        function formatDurasi(menit) {
-            if (!menit || menit === 0) return '-';
-            const jam = Math.floor(menit / 60);
-            const sisa_menit = menit % 60;
+        function formatDurasi(value) {
+            // Handle null, undefined, empty
+            if (value === null || value === undefined || value === '') return '-';
+
+            // Jika sudah dalam format waktu (HH:MM atau HH:MM:SS), parse dan format
+            if (typeof value === 'string' && value.includes(':')) {
+                const parts = value.split(':');
+                if (parts.length >= 2) {
+                    const jam = parseInt(parts[0]) || 0;
+                    const menit = parseInt(parts[1]) || 0;
+                    if (jam === 0 && menit === 0) return '-';
+                    return `${jam} jam ${menit} menit`;
+                }
+            }
+
+            // Konversi ke number jika string
+            const menitNum = parseInt(value);
+
+            // Handle NaN atau 0
+            if (isNaN(menitNum) || menitNum === 0) return '-';
+
+            const jam = Math.floor(menitNum / 60);
+            const sisa_menit = menitNum % 60;
             return `${jam} jam ${sisa_menit} menit`;
         }
 
