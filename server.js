@@ -2494,7 +2494,7 @@ app.post('/api/payroll/generate', async (req, res) => {
                 ON CONFLICT (pegawai_id, bulan, tahun)
                 DO UPDATE SET total_hadir = $4, total_terlambat = $5, total_izin = $6, total_sakit = $7,
                     total_jam_lembur = $8, gaji_pokok = $9, uang_lembur = $10, tunjangan = $11,
-                    potongan_absen = $12, total_gaji = $13, updated_at = NOW()
+                    potongan_absen = $12, total_gaji = $13
             `;
 
             await db.query(insertQuery, [
