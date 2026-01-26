@@ -2460,13 +2460,36 @@ app.post('/api/payroll/generate', async (req, res) => {
                     COUNT(CASE WHEN keterangan = 'Terlambat' THEN 1 END) as terlambat,
                     COUNT(CASE WHEN keterangan = 'Izin' THEN 1 END) as izin,
                     COUNT(CASE WHEN keterangan = 'Sakit' THEN 1 END) as sakit,
-                    COALESCE(SUM(CASE WHEN status_lembur = 'Ya' AND durasi_lembur IS NOT NULL THEN EXTRACT(EPOCH FROM durasi_lembur) / 3600.0 ELSE 0 END), 0) as jam_lembur
+                    COALESCE(SUM(CASE
+                        WHEN status_lembur = 'Ya' AND durasi_lembur IS NOT NULL
+                        THEN durasi_lembur / 60.0
+                        ELSE 0
+                    END), 0) as jam_lembur
                 FROM absensi
                 WHERE pegawai_id = $1
                 AND EXTRACT(MONTH FROM "timestamp") = $2
                 AND EXTRACT(YEAR FROM "timestamp") = $3
             `;
-            const absensi = (await db.query(absensiQuery, [pegawai.id_pegawai, parseInt(bulan), parseInt(tahun)])).rows[0];
+
+            let absensi;
+            try {
+                absensi = (await db.query(absensiQuery, [pegawai.id_pegawai, parseInt(bulan), parseInt(tahun)])).rows[0];
+            } catch (queryError) {
+                // Fallback jika kolom lembur belum ada
+                const fallbackQuery = `
+                    SELECT
+                        COUNT(*) as total_hadir,
+                        COUNT(CASE WHEN keterangan = 'Terlambat' THEN 1 END) as terlambat,
+                        COUNT(CASE WHEN keterangan = 'Izin' THEN 1 END) as izin,
+                        COUNT(CASE WHEN keterangan = 'Sakit' THEN 1 END) as sakit,
+                        0 as jam_lembur
+                    FROM absensi
+                    WHERE pegawai_id = $1
+                    AND EXTRACT(MONTH FROM "timestamp") = $2
+                    AND EXTRACT(YEAR FROM "timestamp") = $3
+                `;
+                absensi = (await db.query(fallbackQuery, [pegawai.id_pegawai, parseInt(bulan), parseInt(tahun)])).rows[0];
+            }
 
             // Hitung gaji
             const totalHadir = parseInt(absensi.total_hadir) || 0;
