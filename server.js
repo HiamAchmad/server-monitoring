@@ -1217,7 +1217,7 @@ app.post('/api/backup-owncloud', async (req, res) => {
             ownCloudConfig.url,
             {
                 username: ownCloudConfig.username,
-                password: ownCloudConfig.password
+                password: ownCloudConfig.password,
                 authType: AuthType.Password
             }
         );
