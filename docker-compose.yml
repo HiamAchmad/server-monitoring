@@ -15,7 +15,9 @@ services:
       - DB_PASSWORD=absensi_password
       - DB_NAME=db_absensi
       # Add other environment variables from .env here if needed
-      # - OWNCLOUD_URL=...
+      - OWNCLOUD_URL=${OWNCLOUD_URL}
+      - OWNCLOUD_USERNAME=${OWNCLOUD_USERNAME}
+      - OWNCLOUD_PASSWORD=${OWNCLOUD_PASSWORD}
     depends_on:
       postgres:
         condition: service_healthy

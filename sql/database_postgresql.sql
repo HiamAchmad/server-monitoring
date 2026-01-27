@@ -67,6 +67,11 @@ CREATE TABLE IF NOT EXISTS absensi (
     id_absensi SERIAL PRIMARY KEY,
     pegawai_id INT NOT NULL,
     waktu_absen VARCHAR(10) NOT NULL,
+    waktu_keluar VARCHAR(10),
+    durasi_kerja INTEGER DEFAULT 0,
+    durasi_lembur INTEGER DEFAULT 0,
+    status_lembur VARCHAR(20) DEFAULT 'Tidak',
+    tipe_absen VARCHAR(10) DEFAULT 'Masuk',
     keterangan keterangan_absensi DEFAULT 'Hadir',
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (pegawai_id) REFERENCES pegawai(id_pegawai) ON DELETE CASCADE

@@ -10,7 +10,7 @@ const fs = require('fs');
 const moment = require('moment-timezone');
 const { Pool } = require('pg');
 const os = require('os');
-const { createClient } = require("webdav");
+const { createClient, AuthType } = require("webdav");
 const ExcelJS = require('exceljs');
 const multer = require('multer');
 const aedes = require('aedes');
@@ -551,6 +551,18 @@ db.query('SELECT NOW()', async (err, result) => {
         console.log('✅ Tabel notifikasi siap.');
     } catch (e) {
         console.log('ℹ️ Tabel notifikasi sudah ada atau error:', e.message);
+    }
+
+    // Auto-migration: Tambah kolom absensi keluar & lembur jika belum ada
+    try {
+        await db.query(`ALTER TABLE absensi ADD COLUMN IF NOT EXISTS waktu_keluar VARCHAR(10)`);
+        await db.query(`ALTER TABLE absensi ADD COLUMN IF NOT EXISTS durasi_kerja INTEGER DEFAULT 0`);
+        await db.query(`ALTER TABLE absensi ADD COLUMN IF NOT EXISTS durasi_lembur INTEGER DEFAULT 0`);
+        await db.query(`ALTER TABLE absensi ADD COLUMN IF NOT EXISTS status_lembur VARCHAR(20) DEFAULT 'Tidak'`);
+        await db.query(`ALTER TABLE absensi ADD COLUMN IF NOT EXISTS tipe_absen VARCHAR(10) DEFAULT 'Masuk'`);
+        console.log('✅ Kolom absensi (waktu_keluar, durasi_kerja, lembur, tipe_absen) siap.');
+    } catch (e) {
+        console.log('ℹ️ Kolom absensi sudah lengkap atau error:', e.message);
     }
 });
 
@@ -1206,6 +1218,7 @@ app.post('/api/backup-owncloud', async (req, res) => {
             {
                 username: ownCloudConfig.username,
                 password: ownCloudConfig.password
+                authType: AuthType.Password
             }
         );
 
@@ -1301,21 +1314,52 @@ app.post('/api/backup-owncloud', async (req, res) => {
         try {
             await client.createDirectory('/Backup-Absensi/');
         } catch (e) {
-            // Directory mungkin sudah ada
+            // Directory mungkin sudah ada, cek apakah memang ada
+            try {
+                await client.getDirectoryContents('/Backup-Absensi/');
+            } catch (dirErr) {
+                console.error('❌ Gagal membuat/mengakses direktori Backup-Absensi:', dirErr.message);
+                return res.status(500).json({
+                    success: false,
+                    message: 'Gagal membuat direktori Backup-Absensi di OwnCloud: ' + dirErr.message
+                });
+            }
         }
 
         // Upload ke OwnCloud
         const remotePath = `/Backup-Absensi/${fileName}`;
-        await client.putFileContents(remotePath, buffer);
+        const uploaded = await client.putFileContents(remotePath, buffer);
 
-        console.log(`☁️ Backup Excel uploaded to OwnCloud: ${remotePath}`);
+        if (!uploaded) {
+            console.error('❌ putFileContents returned false untuk:', remotePath);
+            return res.status(500).json({
+                success: false,
+                message: 'Upload ke OwnCloud gagal - file tidak tersimpan'
+            });
+        }
 
-        res.json({
-            success: true,
-            message: 'Backup Excel berhasil diupload ke OwnCloud',
-            path: remotePath,
-            records: result.rows.length
-        });
+        // Verifikasi file benar-benar ada di OwnCloud
+        try {
+            const stat = await client.stat(remotePath);
+            console.log(`☁️ Backup Excel uploaded & verified: ${remotePath} (${stat.size} bytes)`);
+
+            res.json({
+                success: true,
+                message: 'Backup Excel berhasil diupload ke OwnCloud',
+                path: remotePath,
+                records: result.rows.length,
+                fileSize: stat.size
+            });
+        } catch (verifyErr) {
+            console.error('⚠️ File uploaded tapi tidak terverifikasi:', verifyErr.message);
+            res.json({
+                success: true,
+                message: 'Backup diupload tapi belum terverifikasi di OwnCloud. Coba refresh OwnCloud.',
+                path: remotePath,
+                records: result.rows.length,
+                warning: 'File belum terverifikasi'
+            });
+        }
 
     } catch (error) {
         console.error('❌ Error backing up to OwnCloud:', error);
@@ -1596,7 +1640,7 @@ app.get('/api/employee/:id/stats', async (req, res) => {
 app.get('/absensi', (req, res) => {
     const limit = req.query.limit || 50;
     const query = `
-        SELECT a.*, p.nama_pegawai
+        SELECT a.*, p.nama_pegawai, p.nip
         FROM absensi a
         JOIN pegawai p ON a.pegawai_id = p.id_pegawai
         ORDER BY a.timestamp DESC
