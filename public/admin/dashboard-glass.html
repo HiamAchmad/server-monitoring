@@ -320,7 +320,7 @@
                     <!-- Absen Masuk Form -->
                     <div style="background: rgba(102, 126, 234, 0.05); border: 1px solid rgba(102, 126, 234, 0.2); border-radius: var(--radius-lg); padding: var(--space-6);">
                         <h4 style="margin-bottom: var(--space-4); color: var(--primary-start); display: flex; align-items: center; gap: var(--space-2);">
-                            <span>🟢</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#10b981" stroke="none"><circle cx="12" cy="12" r="10"></circle></svg>
                             <span>Absen Masuk</span>
                         </h4>
 
@@ -346,7 +346,7 @@
                             </div>
 
                             <button type="submit" class="btn-primary" style="width: 100%; background: linear-gradient(135deg, #10b981, #059669);">
-                                <span>✅</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                                 <span>Catat Absen Masuk</span>
                             </button>
                         </form>
@@ -355,7 +355,7 @@
                     <!-- Absen Keluar Form -->
                     <div style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: var(--radius-lg); padding: var(--space-6);">
                         <h4 style="margin-bottom: var(--space-4); color: #ef4444; display: flex; align-items: center; gap: var(--space-2);">
-                            <span>🔴</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#ef4444" stroke="none"><circle cx="12" cy="12" r="10"></circle></svg>
                             <span>Absen Keluar</span>
                         </h4>
 
@@ -373,13 +373,14 @@
                             </div>
 
                             <div class="input-group" style="margin-bottom: 0;">
-                                <div style="background: rgba(255, 193, 7, 0.1); border-left: 3px solid #ffc107; padding: var(--space-3); border-radius: var(--radius-md); font-size: var(--text-sm);">
-                                    <strong>📋 Info:</strong> Durasi kerja dan lembur akan dihitung otomatis
+                                <div style="background: rgba(255, 193, 7, 0.1); border-left: 3px solid #ffc107; padding: var(--space-3); border-radius: var(--radius-md); font-size: var(--text-sm); display: flex; align-items: center; gap: 6px;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ffc107" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                                    <span><strong>Info:</strong> Durasi kerja dan lembur akan dihitung otomatis</span>
                                 </div>
                             </div>
 
                             <button type="submit" class="btn-primary" style="width: 100%; margin-top: var(--space-4); background: linear-gradient(135deg, #ef4444, #dc2626);">
-                                <span>🚪</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
                                 <span>Catat Absen Keluar</span>
                             </button>
                         </form>
@@ -1094,7 +1095,7 @@
                             tabelKaryawan.appendChild(row);
                         });
                     } else if (result.success && (!result.data || result.data.length === 0)) {
-                        tabelKaryawan.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: var(--space-8); color: var(--text-secondary);">📋 Tidak ada data karyawan</td></tr>';
+                        tabelKaryawan.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: var(--space-8); color: var(--text-secondary);"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 6px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>Tidak ada data karyawan</td></tr>';
                     } else {
                         throw new Error(result.message || 'Gagal memuat data');
                     }

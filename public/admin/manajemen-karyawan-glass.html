@@ -216,15 +216,16 @@
                     <label class="form-label">Sidik Jari</label>
                     <div style="display: flex; align-items: center; gap: var(--space-3);">
                         <span id="edit-fingerprint-status" class="badge badge-nonaktif">Belum Terdaftar</span>
-                        <button type="button" class="btn-action btn-success" id="btn-enroll-fingerprint" onclick="enrollFingerprint()">
-                            🖐️ Daftarkan Sidik Jari
+                        <button type="button" class="btn-action btn-success" id="btn-enroll-fingerprint" onclick="enrollFingerprint()" style="display: inline-flex; align-items: center; gap: 6px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04c.918-2.312 1.405-4.807 1.405-7.531 0-2.036-.57-3.772-1.617-4.941M4.75 15.693c.792-1.792 1.25-3.811 1.25-6.693C6 5.686 9.582 3 12 3c2.418 0 6 2.686 6 6 0 .81-.023 1.604-.07 2.381m-10.686 9.12C8.532 17.48 9 13.918 9 9c0-.65.095-1.279.273-1.87m2.727-.13c1.657 0 3 1.343 3 3 0 3.37-.497 6.59-1.417 9.56m-2.09 1.94c1.082-3.583 1.507-7.22 1.507-11.5 0-.553.448-1 1-1s1 .447 1 1c0 1.2-.094 2.38-.278 3.53"></path></svg>
+                            Daftarkan Sidik Jari
                         </button>
                     </div>
                     <p id="enroll-progress" style="font-size: 12px; color: var(--text-tertiary); margin-top: 8px; display: none;"></p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn-action btn-secondary" onclick="closeModal('editModal')">Batal</button>
-                    <button type="submit" class="btn-action btn-primary">💾 Simpan</button>
+                    <button type="submit" class="btn-action btn-primary" style="display: inline-flex; align-items: center; gap: 6px;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Simpan</button>
                 </div>
             </form>
         </div>
@@ -234,7 +235,7 @@
     <div class="modal-overlay" id="importModal">
         <div class="modal">
             <div class="modal-header">
-                <h3 class="modal-title">📥 Import Data Karyawan</h3>
+                <h3 class="modal-title" style="display: flex; align-items: center; gap: 8px;"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Import Data Karyawan</h3>
                 <button class="modal-close" onclick="closeModal('importModal')">&times;</button>
             </div>
             <form id="importForm" enctype="multipart/form-data">
@@ -248,7 +249,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn-action btn-secondary" onclick="closeModal('importModal')">Batal</button>
-                    <button type="submit" class="btn-action btn-primary">📥 Import</button>
+                    <button type="submit" class="btn-action btn-primary" style="display: inline-flex; align-items: center; gap: 6px;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> Import</button>
                 </div>
             </form>
         </div>
@@ -288,7 +289,7 @@
     <div class="modal-overlay" id="cutiModal">
         <div class="modal" style="max-width: 700px;">
             <div class="modal-header">
-                <h3 class="modal-title">📋 Kelola Cuti - <span id="cutiEmployeeName">-</span></h3>
+                <h3 class="modal-title" style="display: flex; align-items: center; gap: 8px;"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg> Kelola Cuti - <span id="cutiEmployeeName">-</span></h3>
                 <button class="modal-close" onclick="closeModal('cutiModal')">&times;</button>
             </div>
             <input type="hidden" id="cuti-pegawai-id">
@@ -329,7 +330,7 @@
 
             <!-- Form Tambah/Edit Cuti -->
             <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: var(--space-4);">
-                <h4 style="margin-bottom: var(--space-3); color: var(--text-primary);">➕ Tambah Cuti Manual</h4>
+                <h4 style="margin-bottom: var(--space-3); color: var(--text-primary); display: flex; align-items: center; gap: 8px;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Tambah Cuti Manual</h4>
                 <form id="addCutiForm">
                     <div class="form-row">
                         <div class="form-group">
@@ -366,7 +367,7 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn-action btn-secondary" onclick="closeModal('cutiModal')">Tutup</button>
-                        <button type="submit" class="btn-action btn-primary">💾 Simpan Cuti</button>
+                        <button type="submit" class="btn-action btn-primary" style="display: inline-flex; align-items: center; gap: 6px;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Simpan Cuti</button>
                     </div>
                 </form>
             </div>
@@ -504,9 +505,9 @@
                     <td><span class="badge ${emp.status === 'Nonaktif' ? 'badge-nonaktif' : 'badge-aktif'}">${emp.status || 'Aktif'}</span></td>
                     <td>
                         <div class="action-btns">
-                            <button class="btn-sm btn-edit" onclick="editEmployee(${emp.id_pegawai})" title="Edit">✏️</button>
-                            <button class="btn-sm btn-cuti" onclick="manageCuti(${emp.id_pegawai}, '${emp.nama_pegawai}')" title="Kelola Cuti">📋</button>
-                            <button class="btn-sm btn-danger" onclick="deleteEmployee(${emp.id_pegawai}, '${emp.nama_pegawai}')" title="Hapus">🗑️</button>
+                            <button class="btn-sm btn-edit" onclick="editEmployee(${emp.id_pegawai})" title="Edit"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg></button>
+                            <button class="btn-sm btn-cuti" onclick="manageCuti(${emp.id_pegawai}, '${emp.nama_pegawai}')" title="Kelola Cuti"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg></button>
+                            <button class="btn-sm btn-danger" onclick="deleteEmployee(${emp.id_pegawai}, '${emp.nama_pegawai}')" title="Hapus"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
                         </div>
                     </td>
                 </tr>
@@ -878,7 +879,7 @@
                                     <button class="btn-sm btn-edit" onclick="approveCuti(${cuti.id_cuti}, 'Disetujui')" title="Setujui">✓</button>
                                     <button class="btn-sm btn-danger" onclick="approveCuti(${cuti.id_cuti}, 'Ditolak')" title="Tolak">✗</button>
                                 ` : ''}
-                                <button class="btn-sm btn-danger" onclick="deleteCuti(${cuti.id_cuti})" title="Hapus">🗑️</button>
+                                <button class="btn-sm btn-danger" onclick="deleteCuti(${cuti.id_cuti})" title="Hapus"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
                             </div>
                         </td>
                     </tr>
