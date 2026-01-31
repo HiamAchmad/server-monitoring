@@ -1639,15 +1639,34 @@ app.get('/api/employee/:id/stats', async (req, res) => {
 // Endpoint untuk mendapatkan riwayat absensi
 app.get('/absensi', (req, res) => {
     const limit = req.query.limit || 50;
-    const query = `
-        SELECT a.*, p.nama_pegawai, p.nip
-        FROM absensi a
-        JOIN pegawai p ON a.pegawai_id = p.id_pegawai
-        ORDER BY a.timestamp DESC
-        LIMIT $1
-    `;
+    const date = req.query.date; // Format: YYYY-MM-DD
 
-    db.query(query, [parseInt(limit)], (err, result) => {
+    let query;
+    let params;
+
+    if (date) {
+        // Filter berdasarkan tanggal spesifik (timezone Asia/Jakarta)
+        query = `
+            SELECT a.*, p.nama_pegawai, p.nip
+            FROM absensi a
+            JOIN pegawai p ON a.pegawai_id = p.id_pegawai
+            WHERE DATE(a.timestamp AT TIME ZONE 'Asia/Jakarta') = $1
+            ORDER BY a.timestamp DESC
+        `;
+        params = [date];
+    } else {
+        // Tanpa filter tanggal (all data dengan limit)
+        query = `
+            SELECT a.*, p.nama_pegawai, p.nip
+            FROM absensi a
+            JOIN pegawai p ON a.pegawai_id = p.id_pegawai
+            ORDER BY a.timestamp DESC
+            LIMIT $1
+        `;
+        params = [parseInt(limit)];
+    }
+
+    db.query(query, params, (err, result) => {
         if (err) {
             console.error('Error mengambil riwayat absensi:', err.message);
             return res.status(500).json({ success: false, message: 'Gagal mengambil data' });

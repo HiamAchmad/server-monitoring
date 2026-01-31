@@ -1,18 +1,18 @@
 /*
  * ============================================
- * ESP32 FINGERPRINT - STANDBY OFF MODE
+ * ESP32 FINGERPRINT - FINAL FIX (COOLDOWN ADDED)
  * ============================================
  */
 
-#include <Arduino.h> // Wajib untuk PlatformIO
+#include <Arduino.h> 
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include <Adafruit_Fingerprint.h>
 #include <ArduinoJson.h>
 
 // ===== WIFI & MQTT CONFIGURATION =====
-const char* ssid = "Kari ayam";
-const char* password = "023311129";
+const char* ssid = "a";
+const char* password = "1234567891011121314151617";
 const char* mqtt_server = "47.84.67.102"; 
 const int mqtt_port = 1883;
 const char* mqtt_client_id = "ESP32_Fingerprint";
@@ -26,8 +26,7 @@ const char* topic_attendance = "fingerprint/attendance";
 // ===== LED CONFIGURATION =====
 #define USE_LED true 
 
-// ===== LED PINS =====
-// Pastikan posisi kabel sesuai:
+// ===== LED PINS (FIXED) =====
 #define LED_RED    12   // Merah (Gagal)
 #define LED_GREEN  13   // Hijau (Sukses)
 
@@ -56,7 +55,7 @@ void setupMQTT();
 void setupFingerprint();
 void setupLEDs();
 void blinkLED(int pin, int times, int delayMs);
-void standbyLED(); // Fungsi untuk mematikan semua LED
+void standbyLED(); 
 int checkFingerprint();
 void publishAttendance(int fingerprintID);
 bool mqttReconnect();
@@ -76,22 +75,19 @@ void setup() {
   delay(1000);
 
   Serial.println("\n\n=================================");
-  Serial.println("   FINGERPRINT SYSTEM (SILENT)");
+  Serial.println("   FINGERPRINT SYSTEM (FULL)");
   Serial.println("=================================\n");
 
   setupLEDs();
 
-  // Test Blink Awal (Cek nyawa LED)
-  blinkLED(LED_RED, 1, 200);
-  blinkLED(LED_GREEN, 1, 200);
+  blinkLED(LED_RED, 2, 100);
+  blinkLED(LED_GREEN, 2, 100);
 
   setupWiFi();       
   setupFingerprint();
   setupMQTT();
 
   Serial.println("\n✅ System Ready!");
-  
-  // Pastikan posisi terakhir adalah MATI (Standby)
   standbyLED();
 }
 
@@ -122,8 +118,10 @@ void loop() {
     Serial.print("\n✓ Fingerprint matched! ID: ");
     Serial.println(fingerprintID);
     publishAttendance(fingerprintID);
-    delay(2000); // Delay agar tidak spam
-    standbyLED(); // Kembali mati
+    
+    // Setelah sukses, delay sebentar lalu pastikan mati
+    delay(2000); 
+    standbyLED(); 
   }
 }
 
@@ -134,23 +132,18 @@ void loop() {
 void setupLEDs() {
   pinMode(LED_RED, OUTPUT);
   pinMode(LED_GREEN, OUTPUT);
-  // Default mati
   digitalWrite(LED_RED, LOW);
   digitalWrite(LED_GREEN, LOW);
 }
 
-// FUNGSI INI YANG DIUBAH:
-// Standby = Semua Mati
 void standbyLED() {
   if (!USE_LED) return;
-  digitalWrite(LED_RED, LOW);   // Merah Mati
-  digitalWrite(LED_GREEN, LOW); // Hijau Mati (Standby Silent)
+  digitalWrite(LED_RED, LOW);   // MATI
+  digitalWrite(LED_GREEN, LOW); // MATI
 }
 
 void blinkLED(int pin, int times, int delayMs) {
   if (!USE_LED) return;
-  
-  // Matikan dulu biar blink terlihat jelas
   digitalWrite(LED_RED, LOW);
   digitalWrite(LED_GREEN, LOW);
 
@@ -170,7 +163,6 @@ void setupWiFi() {
 
   int attempts = 0;
   while (WiFi.status() != WL_CONNECTED && attempts < 30) {
-    // Blink Hijau pelan saat connecting
     digitalWrite(LED_GREEN, !digitalRead(LED_GREEN)); 
     delay(250);
     Serial.print(".");
@@ -179,17 +171,11 @@ void setupWiFi() {
 
   if (WiFi.status() == WL_CONNECTED) {
     Serial.println("\n✓ WiFi connected!");
-    Serial.println(WiFi.localIP());
-    
-    // Blink Hijau 3x cepat tanda sukses connect
     blinkLED(LED_GREEN, 3, 200);
-    
-    // Lalu MATI (Standby)
     standbyLED(); 
   } else {
     Serial.println("\n✗ WiFi connection failed!");
-    digitalWrite(LED_GREEN, LOW);
-    digitalWrite(LED_RED, HIGH); // Merah nyala terus jika gagal WiFi
+    digitalWrite(LED_RED, HIGH); 
     while(1) { delay(1000); }
   }
 }
@@ -197,7 +183,6 @@ void setupWiFi() {
 void setupFingerprint() {
   mySerial.begin(57600, SERIAL_8N1, 26, 25);
   delay(100);
-  
   if (finger.verifyPassword()) {
     Serial.println("✓ Sensor Found");
   } else {
@@ -210,7 +195,6 @@ void setupMQTT() {
   mqttClient.setServer(mqtt_server, mqtt_port);
   mqttClient.setBufferSize(512);
   mqttClient.setCallback(mqttCallback);
-  
   if (mqttReconnect()) {
     Serial.println("✓ MQTT Ready");
   }
@@ -219,7 +203,6 @@ void setupMQTT() {
 bool mqttReconnect() {
   if (mqttClient.connect(mqtt_client_id)) {
     mqttClient.subscribe(topic_enroll_request);
-    // Blink Hijau sekali tanda Reconnected
     blinkLED(LED_GREEN, 1, 200);
     standbyLED();
     return true;
@@ -259,12 +242,8 @@ int checkFingerprint() {
     return finger.fingerID;
   } else {
     Serial.println("✗ Sidik jari tidak dikenal");
-    
-    // GAGAL: Blink Merah
     blinkLED(LED_RED, 3, 200); 
-    
-    // Kembali Mati
-    standbyLED();
+    standbyLED(); 
     return 0;
   }
 }
@@ -280,18 +259,15 @@ void publishAttendance(int fingerprintID) {
 
   if (mqttClient.publish(topic_attendance, buffer)) {
     Serial.println("✓ Attendance Sent");
-    // SUKSES: Blink Hijau 2x
-    blinkLED(LED_GREEN, 2, 300);
+    blinkLED(LED_GREEN, 3, 200); 
   } else {
-    // Gagal kirim MQTT -> Blink Merah
     blinkLED(LED_RED, 3, 200);
   }
-  // Kembali Mati
   standbyLED();
 }
 
 // ============================================
-//       ENROLLMENT
+//       ENROLLMENT (REVISI DISINI)
 // ============================================
 
 void handleEnrollmentRequest(JsonDocument& doc) {
@@ -305,74 +281,149 @@ void handleEnrollmentRequest(JsonDocument& doc) {
     }
 }
 
+// ↓↓↓ FUNGSI INI YANG DIREVISI ↓↓↓
 void startEnrollment(int id, int pegawai_id, String nip, String nama) {
     enrollmentInProgress = true;
     currentEnrollID = id;
-    
-    // Mulai process, pastikan mati dulu
-    standbyLED();
+    currentPegawaiID = pegawai_id;
+    currentNIP = nip;
+    currentNama = nama;
+
+    standbyLED(); 
     
     int result = getFingerprintEnroll(id);
     
     if (result == FINGERPRINT_OK) {
         publishEnrollmentResponse(true, "Success");
-        blinkLED(LED_GREEN, 3, 500); // Sukses Enroll
+        blinkLED(LED_GREEN, 3, 500); 
+
+        // ==========================================================
+        // [REVISI DIMULAI DISINI] 
+        // Mencegah absensi otomatis setelah enroll
+        // ==========================================================
+        Serial.println(">>> ENROLL SUKSES. Menunggu jari diangkat...");
+        
+        // 1. Jeda sebentar 2 detik
+        delay(2000); 
+
+        // 2. Loop penahan: Program akan STUCK disini sampai jari LEPAS
+        while (finger.getImage() != FINGERPRINT_NOFINGER) {
+            delay(100); // Cek setiap 100ms
+        }
+        
+        Serial.println(">>> Jari diangkat. Sensor bersih. Kembali ke loop.");
+        // ==========================================================
+        // [REVISI SELESAI]
+        // ==========================================================
+
     } else {
         publishEnrollmentResponse(false, "Failed");
-        blinkLED(LED_RED, 3, 500); // Gagal Enroll
+        blinkLED(LED_RED, 3, 500); 
     }
     enrollmentInProgress = false;
-    standbyLED(); // KEMBALI MATI
+    standbyLED(); 
 }
+// ↑↑↑ BATAS REVISI ↑↑↑
 
 int getFingerprintEnroll(int id) {
-    // Logika Enrollment Sederhana
-    int p = -1;
-    unsigned long start = millis();
-    
-    // Step 1
-    while (p != FINGERPRINT_OK) {
-        p = finger.getImage();
-        if (p == FINGERPRINT_OK) break;
-        // Blink Hijau sangat cepat tanda sedang scan mode
-        digitalWrite(LED_GREEN, !digitalRead(LED_GREEN));
-        delay(100);
-        if (millis() - start > 20000) return FINGERPRINT_TIMEOUT;
+  int p = -1;
+  Serial.println("Waiting for finger...");
+  publishProgress("📍 Langkah 1/4: Tempelkan jari...", 1, 4);
+
+  unsigned long startTime = millis();
+  while (p != FINGERPRINT_OK) {
+    p = finger.getImage();
+    if ((millis() - startTime) % 1000 < 500) {
+       digitalWrite(LED_GREEN, HIGH);
+    } else {
+       digitalWrite(LED_GREEN, LOW);
     }
-    
-    finger.image2Tz(1);
-    blinkLED(LED_GREEN, 1, 500); // Tanda berhasil ambil gambar 1
-    delay(2000);
-    
-    // Step 2
-    p = -1;
-    start = millis();
-    while (p != FINGERPRINT_OK) {
-        p = finger.getImage();
-        if (p == FINGERPRINT_OK) break;
-        digitalWrite(LED_GREEN, !digitalRead(LED_GREEN));
-        delay(100);
-        if (millis() - start > 20000) return FINGERPRINT_TIMEOUT;
+    if (millis() - startTime > 30000) { 
+      publishProgress("⏱️ Timeout!", 0, 4);
+      return FINGERPRINT_TIMEOUT;
     }
-    
-    finger.image2Tz(2);
-    p = finger.createModel();
     if (p == FINGERPRINT_OK) {
-        p = finger.storeModel(id);
-        if (p == FINGERPRINT_OK) return FINGERPRINT_OK;
+        digitalWrite(LED_GREEN, HIGH); 
+        publishProgress("✅ Gambar 1 OK", 1, 4);
     }
-    return -1;
+  }
+
+  p = finger.image2Tz(1);
+  if (p != FINGERPRINT_OK) return p;
+
+  Serial.println("Remove finger...");
+  publishProgress("📍 Langkah 2/4: Angkat jari...", 2, 4);
+  digitalWrite(LED_GREEN, LOW); 
+  delay(2000);
+  
+  p = 0;
+  while (p != FINGERPRINT_NOFINGER) {
+    p = finger.getImage();
+  }
+
+  Serial.println("Place SAME finger again...");
+  publishProgress("📍 Langkah 3/4: Tempelkan jari lagi...", 3, 4);
+
+  p = -1;
+  startTime = millis();
+  while (p != FINGERPRINT_OK) {
+    p = finger.getImage();
+    if ((millis() - startTime) % 1000 < 500) {
+       digitalWrite(LED_GREEN, HIGH);
+    } else {
+       digitalWrite(LED_GREEN, LOW);
+    }
+    if (millis() - startTime > 30000) return FINGERPRINT_TIMEOUT;
+    if (p == FINGERPRINT_OK) {
+        digitalWrite(LED_GREEN, HIGH);
+        publishProgress("✅ Gambar 2 OK", 3, 4);
+    }
+  }
+
+  p = finger.image2Tz(2);
+  if (p != FINGERPRINT_OK) return p;
+
+  publishProgress("📍 Langkah 4/4: Menyimpan...", 4, 4);
+  
+  p = finger.createModel();
+  if (p == FINGERPRINT_OK) {
+    Serial.println("Prints matched!");
+  } else if (p == FINGERPRINT_ENROLLMISMATCH) {
+    publishProgress("❌ Sidik jari tidak cocok!", 0, 4);
+    return p;
+  } else {
+    return p;
+  }
+
+  p = finger.storeModel(id);
+  if (p == FINGERPRINT_OK) {
+    publishProgress("✅ Berhasil disimpan!", 4, 4);
+    return FINGERPRINT_OK;
+  } else {
+    publishProgress("❌ Gagal simpan flash!", 0, 4);
+    return p;
+  }
 }
 
 void publishEnrollmentResponse(bool success, String message) {
     JsonDocument doc;
     doc["success"] = success;
     doc["message"] = message;
+    doc["fingerprint_id"] = currentEnrollID;
+    doc["pegawai_id"] = currentPegawaiID;
     char buffer[256];
     serializeJson(doc, buffer);
     mqttClient.publish(topic_enroll_response, buffer);
 }
 
 void publishProgress(String message, int step, int totalSteps) {
-   // Sama seperti sebelumnya
+  JsonDocument doc;
+  doc["pegawai_id"] = currentPegawaiID;
+  doc["fingerprint_id"] = currentEnrollID;
+  doc["message"] = message;
+  doc["step"] = step;
+  doc["total_steps"] = totalSteps;
+  char buffer[256];
+  serializeJson(doc, buffer);
+  mqttClient.publish(topic_enroll_progress, buffer);
 }
