@@ -132,9 +132,6 @@
                         <option value="Aktif">Aktif</option>
                         <option value="Nonaktif">Nonaktif</option>
                     </select>
-                    <select class="filter-select" id="filterDivisi" onchange="filterTable()">
-                        <option value="">Semua Divisi</option>
-                    </select>
                 </div>
 
                 <div class="table-container">
@@ -143,7 +140,6 @@
                             <tr>
                                 <th>Karyawan</th>
                                 <th>Posisi</th>
-                                <th>Divisi</th>
                                 <th>Kontak</th>
                                 <th>Fingerprint</th>
                                 <th>Status</th>
@@ -151,7 +147,7 @@
                             </tr>
                         </thead>
                         <tbody id="employeeTable">
-                            <tr><td colspan="7"><div class="empty-state">Memuat data...</div></td></tr>
+                            <tr><td colspan="6"><div class="empty-state">Memuat data...</div></td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -500,7 +496,6 @@
                         </div>
                     </td>
                     <td><span class="badge badge-position">${emp.posisi || '-'}</span></td>
-                    <td>${emp.divisi || '-'}</td>
                     <td>
                         <div style="font-size:12px;">${emp.email || '-'}</div>
                         <div style="font-size:11px;color:var(--text-tertiary);">${emp.no_telepon || '-'}</div>
@@ -521,15 +516,13 @@
         function filterTable() {
             const search = document.getElementById('searchInput').value.toLowerCase();
             const status = document.getElementById('filterStatus').value;
-            const divisi = document.getElementById('filterDivisi').value;
 
             const filtered = allEmployees.filter(emp => {
                 const matchSearch = emp.nama_pegawai.toLowerCase().includes(search) ||
                                   emp.nip.toLowerCase().includes(search) ||
                                   (emp.posisi && emp.posisi.toLowerCase().includes(search));
                 const matchStatus = !status || (emp.status || 'Aktif') === status;
-                const matchDivisi = !divisi || emp.divisi === divisi;
-                return matchSearch && matchStatus && matchDivisi;
+                return matchSearch && matchStatus;
             });
 
             renderTable(filtered);
