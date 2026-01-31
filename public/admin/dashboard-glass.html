@@ -991,7 +991,7 @@
                     const response = await fetch('/api/owncloud-status');
                     const data = await response.json();
 
-                    if (data.online) {
+                    if (data.status === 'online') {
                         statusCloudEl.textContent = 'Online';
                         statusCloudEl.style.color = 'var(--success)';
                     } else {
