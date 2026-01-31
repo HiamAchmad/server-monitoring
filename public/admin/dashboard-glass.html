@@ -985,12 +985,19 @@
                 }
             }
 
-            // Check Cloud Status
+            // Check Cloud Status via server API
             async function checkCloudStatus() {
                 try {
-                    const response = await fetch('http://localhost:8080', { mode: 'no-cors' });
-                    statusCloudEl.textContent = 'Online';
-                    statusCloudEl.style.color = 'var(--success)';
+                    const response = await fetch('/api/owncloud-status');
+                    const data = await response.json();
+
+                    if (data.online) {
+                        statusCloudEl.textContent = 'Online';
+                        statusCloudEl.style.color = 'var(--success)';
+                    } else {
+                        statusCloudEl.textContent = 'Offline';
+                        statusCloudEl.style.color = 'var(--error)';
+                    }
                 } catch (error) {
                     statusCloudEl.textContent = 'Offline';
                     statusCloudEl.style.color = 'var(--error)';
