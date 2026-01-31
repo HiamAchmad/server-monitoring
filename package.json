@@ -21,12 +21,16 @@
   ],
   "author": "Achmad Hasan <20210410700073>",
   "license": "MIT",
+  "overrides": {
+    "fast-xml-parser": "$fast-xml-parser"
+  },
   "dependencies": {
     "aedes": "^0.51.3",
     "axios": "^1.13.2",
     "dotenv": "^17.2.3",
     "exceljs": "^4.4.0",
     "express": "^5.1.0",
+    "fast-xml-parser": "^5.3.4",
     "moment": "^2.30.1",
     "moment-timezone": "^0.6.0",
     "mqtt": "^5.14.1",
@@ -35,7 +39,7 @@
     "node-cron": "^4.2.1",
     "pg": "^8.16.3",
     "socket.io": "^4.8.1",
-    "webdav": "^4.11.2"
+    "webdav": "^5.6.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.0"
