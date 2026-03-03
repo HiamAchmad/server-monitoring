@@ -6,12 +6,6 @@ Buka **GitHub Repository** > **Settings** > **Secrets and variables** > **Action
 
 Tambahkan 3 secrets berikut:
 
-| Secret Name | Value |
-|-------------|-------|
-| `SERVER_HOST` | `47.84.67.102` |
-| `SERVER_USER` | `root` |
-| `SERVER_PASSWORD` | `Admin#1234` |
-
 ## Cara Menambahkan Secret
 
 1. Buka repository GitHub Anda
